@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+/** @jsxImportSource react */
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 
-// ─── SUPABASE CLIENT ──────────────────────────────────────────────────────────
+// - SUPABASE CLIENT -
 const SUPABASE_URL = "https://ecxpqxtqdakfmjokudwn.supabase.co";
 const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVjeHBxeHRxZGFrZm1qb2t1ZHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjMzNjIsImV4cCI6MjA4NzQ5OTM2Mn0.q27mvz52Zr6Kcp-_Z16a5a7mLQ3YutZ3ruTq8W4Q9_4";
 
@@ -51,10 +52,10 @@ const sb = {
   }
 };
 
-// ─── DATI STRUTTURA ───────────────────────────────────────────────────────────
+// - DATI STRUTTURA -
 
 const ROOMS = [
-  // ── Piano 1 — Standard (10 camere) ──────────────────────────────────────────
+  // - Piano 1 — Standard (10 camere) -
   { id: 101, type: "Standard",            capacity: 2, price: 90,  floor: 1 },
   { id: 102, type: "Standard",            capacity: 2, price: 90,  floor: 1 },
   { id: 103, type: "Standard",            capacity: 2, price: 90,  floor: 1 },
@@ -66,7 +67,7 @@ const ROOMS = [
   { id: 109, type: "Standard Accessibile",capacity: 2, price: 95,  floor: 1 },
   { id: 110, type: "Standard Accessibile",capacity: 2, price: 95,  floor: 1 },
 
-  // ── Piano 2 — Standard / Superior (10 camere) ───────────────────────────────
+  // - Piano 2 — Standard / Superior (10 camere) -
   { id: 201, type: "Standard",            capacity: 2, price: 95,  floor: 2 },
   { id: 202, type: "Standard",            capacity: 2, price: 95,  floor: 2 },
   { id: 203, type: "Standard",            capacity: 2, price: 95,  floor: 2 },
@@ -78,7 +79,7 @@ const ROOMS = [
   { id: 209, type: "Superior",            capacity: 2, price: 135, floor: 2 },
   { id: 210, type: "Superior",            capacity: 2, price: 135, floor: 2 },
 
-  // ── Piano 3 — Superior / Deluxe (10 camere) ─────────────────────────────────
+  // - Piano 3 — Superior / Deluxe (10 camere) -
   { id: 301, type: "Superior",            capacity: 2, price: 140, floor: 3 },
   { id: 302, type: "Superior",            capacity: 2, price: 140, floor: 3 },
   { id: 303, type: "Superior",            capacity: 3, price: 155, floor: 3 },
@@ -90,7 +91,7 @@ const ROOMS = [
   { id: 309, type: "Deluxe",              capacity: 2, price: 180, floor: 3 },
   { id: 310, type: "Deluxe",              capacity: 2, price: 185, floor: 3 },
 
-  // ── Piano 4 — Deluxe / Junior Suite (10 camere) ─────────────────────────────
+  // - Piano 4 — Deluxe / Junior Suite (10 camere) -
   { id: 401, type: "Deluxe",              capacity: 2, price: 190, floor: 4 },
   { id: 402, type: "Deluxe",              capacity: 2, price: 190, floor: 4 },
   { id: 403, type: "Deluxe",              capacity: 3, price: 210, floor: 4 },
@@ -102,7 +103,7 @@ const ROOMS = [
   { id: 409, type: "Junior Suite",        capacity: 2, price: 245, floor: 4 },
   { id: 410, type: "Junior Suite",        capacity: 2, price: 245, floor: 4 },
 
-  // ── Piano 5 — Suite (10 camere) ─────────────────────────────────────────────
+  // - Piano 5 — Suite (10 camere) -
   { id: 501, type: "Suite",               capacity: 4, price: 280, floor: 5 },
   { id: 502, type: "Suite",               capacity: 4, price: 280, floor: 5 },
   { id: 503, type: "Suite",               capacity: 4, price: 290, floor: 5 },
@@ -114,7 +115,7 @@ const ROOMS = [
   { id: 509, type: "Suite Vista Laguna",  capacity: 4, price: 350, floor: 5 },
   { id: 510, type: "Suite Vista Laguna",  capacity: 5, price: 360, floor: 5 },
 
-  // ── Piano 6 — Suite Presidenziale / Penthouse (9 camere) ────────────────────
+  // - Piano 6 — Suite Presidenziale / Penthouse (9 camere) -
   { id: 601, type: "Suite Presidenziale", capacity: 6, price: 450, floor: 6 },
   { id: 602, type: "Suite Presidenziale", capacity: 6, price: 450, floor: 6 },
   { id: 603, type: "Suite Presidenziale", capacity: 6, price: 470, floor: 6 },
@@ -157,33 +158,42 @@ const TIPO_DOC = [
 
 // Palette chiara
 const C = {
-  bg:       "#f7f4ef",   // sfondo pagina
-  surface:  "#ffffff",   // card, modal
-  surface2: "#faf8f5",   // sfondo input, righe alternate
-  border:   "#e6e0d8",   // bordi generali
-  border2:  "#d4ccc0",   // bordi più marcati
-  text:     "#2a2018",   // testo primario
-  text2:    "#6b5f52",   // testo secondario
-  text3:    "#9c8f82",   // testo terziario/placeholder
-  gold:     "#a0720a",   // oro/accentuazione primaria
-  goldL:    "#f5ead0",   // oro chiaro sfondo
-  goldLb:   "#e8d5a0",   // oro chiaro bordo
-  navy:     "#1e3a6e",   // blu navy
-  navyL:    "#dce8f8",   // navy chiaro sfondo
-  navyLb:   "#a8c4e8",   // navy chiaro bordo
-  green:    "#166534",   // verde scuro
-  greenL:   "#dcfce7",   // verde chiaro sfondo
-  greenLb:  "#86efac",   // verde chiaro bordo
-  red:      "#b91c1c",   // rosso
-  redL:     "#fee2e2",   // rosso chiaro sfondo
-  redLb:    "#fca5a5",   // rosso chiaro bordo
-  amber:    "#b45309",   // ambra
-  amberL:   "#fef3c7",   // ambra chiaro sfondo
-  amberLb:  "#fcd34d",   // ambra chiaro bordo
-  purple:   "#6d28d9",   // viola
-  purpleL:  "#ede9fe",   // viola chiaro sfondo
-  gray:     "#6b7280",   // grigio
-  grayL:    "#f3f4f6",   // grigio chiaro sfondo
+  // Layout Opera Cloud: sidebar scura, contenuto bianco
+  bg:       "#f0f3f7",
+  surface:  "#ffffff",
+  surface2: "#f5f7fa",
+  border:   "#dde3ec",
+  border2:  "#c4cdd9",
+  text:     "#1a2535",
+  text2:    "#4a5568",
+  text3:    "#8896a8",
+  // Accento principale: blu Oracle
+  gold:     "#0f62fe",
+  goldL:    "#e8f0ff",
+  goldLb:   "#b3ccff",
+  // Sidebar scura
+  sidebar:  "#0a1929",
+  sidebarM: "#0d2137",
+  sidebarA: "#1565c0",
+  sidebarT: "#90b4d4",
+  sidebarAT:"#ffffff",
+  // Colori semantici
+  navy:     "#1565c0",
+  navyL:    "#e3f0ff",
+  navyLb:   "#90caf9",
+  green:    "#1b7a4a",
+  greenL:   "#e6f7ee",
+  greenLb:  "#6fcf97",
+  red:      "#c62828",
+  redL:     "#fdecea",
+  redLb:    "#ef9a9a",
+  amber:    "#e65100",
+  amberL:   "#fff3e0",
+  amberLb:  "#ffcc80",
+  purple:   "#5c35cc",
+  purpleL:  "#ede9fe",
+  gray:     "#607080",
+  grayL:    "#f0f3f7",
 };
 
 const STATUS_CFG = {
@@ -195,7 +205,7 @@ const STATUS_CFG = {
 
 const PAGES = ["Dashboard","Prenotazioni","Anagrafica","Check-In/Out","Disponibilità","Camere","Prezzi & Revenue","Cassa","Pubblica Sicurezza","ISTAT Veneto","API & Integrazioni","Ristorante POS"];
 
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
+// - HELPERS -
 
 const genId      = () => "RES" + Date.now().toString().slice(-6) + Math.floor(Math.random()*100);
 const genGuestId = () => "GST" + Date.now().toString().slice(-6) + Math.floor(Math.random()*100);
@@ -501,89 +511,7 @@ const COMUNI_IT = [
   {c:"Voghera",p:"PV",z:"27058",r:"Lombardia"},
 ];
 
-// ─── AUTOCOMPLETE COMUNE ITALIANO ────────────────────────────────────────────
-const ComuneInput = ({ label, value, onChange, placeholder="Cerca comune..." }) => {
-  const [query, setQuery]   = React.useState(value || "");
-  const [open, setOpen]     = React.useState(false);
-  const [hiIdx, setHiIdx]   = React.useState(0);
-  const inputRef            = React.useRef(null);
-  const listRef             = React.useRef(null);
-
-  // Sincronizza query con value esterno (es. reset form)
-  React.useEffect(() => { setQuery(value || ""); }, [value]);
-
-  const results = React.useMemo(() => {
-    if (!query || query.length < 2) return [];
-    const q = query.toLowerCase();
-    return COMUNI_IT.filter(x => x.c.toLowerCase().startsWith(q)).slice(0, 8)
-      .concat(COMUNI_IT.filter(x => !x.c.toLowerCase().startsWith(q) && x.c.toLowerCase().includes(q)).slice(0, 4));
-  }, [query]);
-
-  const select = (item) => {
-    setQuery(item.c);
-    setOpen(false);
-    onChange(item);
-  };
-
-  const handleKey = (e) => {
-    if (!open || !results.length) return;
-    if (e.key === "ArrowDown") { e.preventDefault(); setHiIdx(i => Math.min(i+1, results.length-1)); }
-    if (e.key === "ArrowUp")   { e.preventDefault(); setHiIdx(i => Math.max(i-1, 0)); }
-    if (e.key === "Enter")     { e.preventDefault(); if (results[hiIdx]) select(results[hiIdx]); }
-    if (e.key === "Escape")    { setOpen(false); }
-  };
-
-  // Scrolla il risultato evidenziato in vista
-  React.useEffect(() => {
-    if (listRef.current) {
-      const el = listRef.current.querySelector(`[data-idx="${hiIdx}"]`);
-      if (el) el.scrollIntoView({ block:"nearest" });
-    }
-  }, [hiIdx]);
-
-  return (
-    <div style={{ position:"relative" }}>
-      {label && <label className="label">{label}</label>}
-      <input
-        ref={inputRef}
-        className="input-field"
-        value={query}
-        placeholder={placeholder}
-        autoComplete="off"
-        onChange={e => { setQuery(e.target.value); setOpen(true); setHiIdx(0); if (!e.target.value) onChange({c:"",p:"",z:""}); }}
-        onFocus={() => { if (query.length >= 2) setOpen(true); }}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
-        onKeyDown={handleKey}
-      />
-      {open && results.length > 0 && (
-        <div ref={listRef} style={{
-          position:"absolute", zIndex:9999, top:"100%", left:0, right:0,
-          background:"white", border:"1.5px solid #d4b896", borderRadius:"0 0 8px 8px",
-          boxShadow:"0 6px 20px rgba(0,0,0,.12)", maxHeight:220, overflowY:"auto"
-        }}>
-          {results.map((item, i) => (
-            <div key={item.c} data-idx={i}
-              onMouseDown={() => select(item)}
-              style={{
-                padding:"8px 12px", cursor:"pointer", fontSize:13,
-                background: i===hiIdx ? "#f5ead0" : "white",
-                borderBottom:"1px solid #f0ece6",
-                display:"flex", justifyContent:"space-between", alignItems:"center",
-              }}>
-              <span style={{ fontWeight: i===hiIdx ? 700 : 400 }}>{item.c}</span>
-              <span style={{ fontSize:11, color:"#9c8f82", display:"flex", gap:8 }}>
-                <span style={{ background:"#f5ead0", padding:"1px 6px", borderRadius:8, fontWeight:700, color:"#a0720a" }}>{item.p}</span>
-                <span style={{ color:"#c0b8b0" }}>{item.z}</span>
-                <span style={{ color:"#c0b8b0" }}>{item.r}</span>
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
+// - AUTOCOMPLETE COMUNE ITALIANO -
 const emptyGuest = () => ({
   id:genGuestId(), cognome:"", nome:"", sesso:"M", dataNascita:"",
   luogoNascita:"", provinciaNascita:"", nazionalita:"IT",
@@ -593,7 +521,7 @@ const emptyGuest = () => ({
   email:"", telefono:"", note:"",
 });
 
-// ─── DATI DEMO ────────────────────────────────────────────────────────────────
+// - DATI DEMO -
 
 const DEMO_GUESTS = [
   { id:"GST001", cognome:"Bianchi", nome:"Marco", sesso:"M",
@@ -634,7 +562,7 @@ const DEMO_RESERVATIONS = [
     psInviato:true, istatRegistrato:true },
 ];
 
-// ─── POS RISTORANTE — DATI STATICI ───────────────────────────────────────────
+// - POS RISTORANTE — DATI STATICI -
 
 const TAVOLI_LAYOUT = [
   // sala principale
@@ -714,180 +642,338 @@ const CAT_COLORS = {
   "Colazione": { bg:"#fef9c3", border:"#fef08a", text:"#854d0e" },
 };
 
-// ─── CSS ──────────────────────────────────────────────────────────────────────
+// - CSS -
 
 const CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Cormorant+Garamond:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: ${C.bg}; color: ${C.text}; }
+  body { background: ${C.bg}; color: ${C.text}; font-family: 'IBM Plex Sans', system-ui, sans-serif; }
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: ${C.bg}; }
   ::-webkit-scrollbar-thumb { background: ${C.border2}; border-radius: 3px; }
-  input, select, textarea { font-family: 'Inter', sans-serif; }
+  input, select, textarea { font-family: 'IBM Plex Sans', sans-serif; }
 
-  .nav-btn { background: none; border: none; cursor: pointer; padding: 0 14px; height: 56px;
-    font-family: 'Cormorant Garamond', serif; font-size: 12px; letter-spacing: 1.5px;
-    text-transform: uppercase; transition: all .2s; color: ${C.text3}; white-space: nowrap;
-    border-bottom: 3px solid transparent; }
-  .nav-btn:hover { color: ${C.gold}; }
-  .nav-btn.active { color: ${C.gold}; border-bottom-color: ${C.gold}; }
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0; width: 230px;
+    background: ${C.sidebar};
+    display: flex; flex-direction: column;
+    z-index: 100; overflow-y: auto; overflow-x: hidden;
+    box-shadow: 2px 0 12px rgba(0,0,0,.25);
+  }
+  .sidebar-logo {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .sidebar-logo-name {
+    font-size: 15px; font-weight: 700; color: #fff; letter-spacing: .5px;
+  }
+  .sidebar-logo-sub {
+    font-size: 9px; letter-spacing: 2.5px; color: ${C.sidebarT};
+    text-transform: uppercase; margin-top: 2px;
+  }
+  .sidebar-section {
+    font-size: 9px; letter-spacing: 2px; color: rgba(144,180,212,.5);
+    text-transform: uppercase; padding: 18px 20px 6px; font-weight: 600;
+  }
+  .nav-btn {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; padding: 9px 20px; border: none; background: none;
+    cursor: pointer; font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px; font-weight: 400; color: ${C.sidebarT};
+    transition: all .15s; text-align: left; border-radius: 0;
+    border-left: 3px solid transparent;
+    white-space: nowrap; overflow: hidden;
+  }
+  .nav-btn:hover {
+    background: ${C.sidebarM}; color: #fff;
+    border-left-color: rgba(21,101,192,.5);
+  }
+  .nav-btn.active {
+    background: ${C.sidebarA}; color: ${C.sidebarAT};
+    border-left-color: #5b9dff; font-weight: 600;
+  }
+  .nav-btn .nav-icon { font-size: 15px; width: 18px; flex-shrink: 0; }
+  .sidebar-bottom {
+    margin-top: auto; padding: 16px 20px;
+    border-top: 1px solid rgba(255,255,255,.08);
+    font-size: 11px; color: ${C.sidebarT};
+  }
 
-  .card { background: ${C.surface}; border: 1px solid ${C.border}; border-radius: 8px;
-    padding: 22px; box-shadow: 0 1px 4px rgba(0,0,0,.05); }
+  /* ── TOPBAR ── */
+  .topbar {
+    position: fixed; top: 0; left: 230px; right: 0; height: 52px;
+    background: ${C.surface}; border-bottom: 1px solid ${C.border};
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; z-index: 90;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+  .topbar-breadcrumb {
+    font-size: 13px; color: ${C.text2}; display: flex; align-items: center; gap: 8px;
+  }
+  .topbar-breadcrumb .current {
+    font-weight: 600; color: ${C.text};
+  }
+  .topbar-actions {
+    display: flex; align-items: center; gap: 10px;
+  }
 
-  .stat-card { background: ${C.surface}; border: 1px solid ${C.border}; border-radius: 8px;
-    padding: 22px; position: relative; overflow: hidden;
-    box-shadow: 0 1px 4px rgba(0,0,0,.05); }
-  .stat-card::before { content:''; position:absolute; top:0; left:0; width:4px;
-    height:100%; background: ${C.gold}; }
+  /* ── MAIN CONTENT ── */
+  .main-content {
+    margin-left: 230px;
+    padding: 72px 28px 32px;
+    min-height: 100vh;
+  }
 
-  .btn-primary { background: ${C.gold}; color: #fff; border: none; padding: 9px 20px;
-    font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600;
-    letter-spacing: .5px; cursor: pointer; border-radius: 6px; transition: all .2s;
-    box-shadow: 0 2px 6px rgba(160,114,10,.3); }
-  .btn-primary:hover { background: #8a6008; box-shadow: 0 4px 12px rgba(160,114,10,.4); }
+  /* ── PAGE HEADER ── */
+  .page-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid ${C.border};
+    display: flex; align-items: flex-end; justify-content: space-between;
+  }
+  .page-header h1 {
+    font-size: 22px; font-weight: 600; color: ${C.text}; letter-spacing: -.3px;
+  }
+  .page-header .page-subtitle {
+    font-size: 12px; color: ${C.text3}; margin-top: 3px;
+  }
 
-  .btn-secondary { background: ${C.surface}; border: 1px solid ${C.border2}; color: ${C.text2};
-    padding: 8px 16px; font-family: 'Inter', sans-serif; font-size: 12px;
-    cursor: pointer; border-radius: 6px; transition: all .2s; }
+  /* ── CARDS ── */
+  .card {
+    background: ${C.surface}; border: 1px solid ${C.border}; border-radius: 6px;
+    padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+  }
+  .stat-card {
+    background: ${C.surface}; border: 1px solid ${C.border}; border-radius: 6px;
+    padding: 18px 20px; position: relative; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    transition: box-shadow .2s;
+  }
+  .stat-card:hover { box-shadow: 0 4px 12px rgba(15,98,254,.1); }
+  .stat-card::before {
+    content:''; position:absolute; top:0; left:0; width:3px; height:100%;
+    background: ${C.gold};
+  }
+
+  /* ── BUTTONS ── */
+  .btn-primary {
+    background: ${C.gold}; color: #fff; border: none; padding: 8px 18px;
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; font-weight: 500;
+    cursor: pointer; border-radius: 4px; transition: all .15s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary:hover { background: #0050d8; box-shadow: 0 2px 8px rgba(15,98,254,.3); }
+
+  .btn-secondary {
+    background: ${C.surface}; border: 1px solid ${C.border2}; color: ${C.text2};
+    padding: 7px 16px; font-family: 'IBM Plex Sans', sans-serif; font-size: 13px;
+    cursor: pointer; border-radius: 4px; transition: all .15s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
   .btn-secondary:hover { border-color: ${C.gold}; color: ${C.gold}; background: ${C.goldL}; }
 
-  .btn-blue { background: ${C.navyL}; border: 1px solid ${C.navyLb}; color: ${C.navy};
-    padding: 7px 14px; font-family: 'Inter', sans-serif; font-size: 12px;
-    cursor: pointer; border-radius: 6px; transition: all .2s; }
+  .btn-blue {
+    background: ${C.navyL}; border: 1px solid ${C.navyLb}; color: ${C.navy};
+    padding: 7px 14px; font-family: 'IBM Plex Sans', sans-serif; font-size: 13px;
+    cursor: pointer; border-radius: 4px; transition: all .15s;
+  }
   .btn-blue:hover { background: ${C.navyLb}; }
 
-  .btn-danger { background: ${C.redL}; border: 1px solid ${C.redLb}; color: ${C.red};
-    padding: 7px 14px; font-family: 'Inter', sans-serif; font-size: 12px;
-    cursor: pointer; border-radius: 6px; transition: all .2s; }
+  .btn-danger {
+    background: ${C.redL}; border: 1px solid ${C.redLb}; color: ${C.red};
+    padding: 7px 14px; font-family: 'IBM Plex Sans', sans-serif; font-size: 13px;
+    cursor: pointer; border-radius: 4px; transition: all .15s;
+  }
   .btn-danger:hover { background: ${C.redLb}; }
 
-  .input-field { background: ${C.surface2}; border: 1px solid ${C.border};
-    color: ${C.text}; padding: 9px 12px; width: 100%; border-radius: 6px;
-    font-size: 14px; outline: none; transition: border .2s; }
-  .input-field:focus { border-color: ${C.gold}; box-shadow: 0 0 0 3px rgba(160,114,10,.1); }
-
-  .label { font-size: 11px; font-weight: 600; color: ${C.text3}; margin-bottom: 5px;
-    display: block; letter-spacing: .5px; }
-
-  .section-title { font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+  /* ── FORM ── */
+  .input-field {
+    background: ${C.surface}; border: 1px solid ${C.border2};
+    color: ${C.text}; padding: 8px 12px; width: 100%; border-radius: 4px;
+    font-size: 13px; outline: none; transition: border .15s;
+  }
+  .input-field:focus { border-color: ${C.gold}; box-shadow: 0 0 0 3px rgba(15,98,254,.1); }
+  .label {
+    font-size: 11px; font-weight: 600; color: ${C.text3}; margin-bottom: 4px;
+    display: block; letter-spacing: .3px; text-transform: uppercase;
+  }
+  .section-title {
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
     color: ${C.text3}; margin-bottom: 14px; padding-bottom: 8px;
-    border-bottom: 1px solid ${C.border}; font-weight: 600; }
-
-  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px;
-    font-size: 11px; font-weight: 600; letter-spacing: .3px; }
-
+    border-bottom: 1px solid ${C.border}; font-weight: 600;
+  }
+  .badge {
+    display: inline-block; padding: 2px 9px; border-radius: 3px;
+    font-size: 11px; font-weight: 600; letter-spacing: .2px;
+  }
   .divider { border: none; border-top: 1px solid ${C.border}; margin: 14px 0; }
-
-  .modal-overlay { position: fixed; inset: 0; background: rgba(42,32,24,.4);
-    z-index: 1000; display: flex; align-items: center; justify-content: center;
-    padding: 16px; backdrop-filter: blur(3px); }
-  .modal-box { background: ${C.surface}; border: 1px solid ${C.border}; border-radius: 12px;
-    width: 100%; max-width: 780px; max-height: 93vh; overflow-y: auto;
-    box-shadow: 0 20px 60px rgba(0,0,0,.18); }
-  .modal-header { padding: 20px 26px 14px; border-bottom: 1px solid ${C.border};
-    display: flex; justify-content: space-between; align-items: center;
-    position: sticky; top: 0; background: ${C.surface}; z-index: 2;
-    border-radius: 12px 12px 0 0; }
-  .modal-body { padding: 20px 26px; }
-  .modal-footer { padding: 14px 26px 20px; border-top: 1px solid ${C.border};
-    display: flex; gap: 8px; justify-content: flex-end;
-    position: sticky; bottom: 0; background: ${C.surface};
-    border-radius: 0 0 12px 12px; }
-
   .form-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
 
-  .res-row { padding: 13px 18px; border-bottom: 1px solid ${C.border};
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(10,25,41,.5);
+    z-index: 1000; display: flex; align-items: center; justify-content: center;
+    padding: 16px; backdrop-filter: blur(4px);
+  }
+  .modal-box {
+    background: ${C.surface}; border: 1px solid ${C.border}; border-radius: 6px;
+    width: 100%; max-width: 780px; max-height: 93vh; overflow-y: auto;
+    box-shadow: 0 24px 64px rgba(0,0,0,.22);
+  }
+  .modal-header {
+    padding: 18px 24px 14px; border-bottom: 1px solid ${C.border};
+    display: flex; justify-content: space-between; align-items: center;
+    position: sticky; top: 0; background: ${C.surface}; z-index: 2;
+    border-radius: 6px 6px 0 0;
+  }
+  .modal-body   { padding: 20px 24px; }
+  .modal-footer {
+    padding: 14px 24px 18px; border-top: 1px solid ${C.border};
+    display: flex; gap: 8px; justify-content: flex-end;
+    position: sticky; bottom: 0; background: ${C.surface};
+    border-radius: 0 0 6px 6px;
+  }
+
+  /* ── TABELLE ── */
+  .res-row {
+    padding: 11px 16px; border-bottom: 1px solid ${C.border};
     display: flex; align-items: center; gap: 12px;
-    transition: background .15s; cursor: pointer; }
-  .res-row:hover { background: ${C.surface2}; }
+    transition: background .1s; cursor: pointer; font-size: 13px;
+  }
+  .res-row:hover { background: ${C.goldL}; }
 
-  .room-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px,1fr)); gap: 10px; }
-  .room-card { background: ${C.surface}; border: 1px solid ${C.border}; border-radius: 8px;
-    padding: 16px; cursor: pointer; transition: all .2s;
-    box-shadow: 0 1px 3px rgba(0,0,0,.04); }
-  .room-card:hover { border-color: ${C.gold}; box-shadow: 0 4px 14px rgba(160,114,10,.15); transform: translateY(-1px); }
+  /* ── CAMERE ── */
+  .room-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px,1fr)); gap: 10px; }
+  .room-card {
+    background: ${C.surface}; border: 1px solid ${C.border}; border-radius: 5px;
+    padding: 14px; cursor: pointer; transition: all .15s;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .room-card:hover { border-color: ${C.gold}; box-shadow: 0 3px 10px rgba(15,98,254,.12); transform: translateY(-1px); }
 
-  .service-chip { display: inline-flex; align-items: center; gap: 5px;
+  /* ── CHIP SERVIZI ── */
+  .service-chip {
+    display: inline-flex; align-items: center; gap: 5px;
     background: ${C.surface2}; border: 1px solid ${C.border};
-    border-radius: 20px; padding: 5px 12px; font-size: 12px;
-    cursor: pointer; margin: 3px; transition: all .2s; color: ${C.text2}; }
+    border-radius: 3px; padding: 4px 10px; font-size: 12px;
+    cursor: pointer; margin: 3px; transition: all .15s; color: ${C.text2};
+  }
   .service-chip:hover { border-color: ${C.gold}; color: ${C.gold}; }
-  .service-chip.sel { background: ${C.goldL}; border-color: ${C.gold}; color: ${C.gold}; font-weight: 600; }
+  .service-chip.sel { background: ${C.goldL}; border-color: ${C.goldLb}; color: ${C.gold}; font-weight: 600; }
 
-  .guest-card { background: ${C.surface}; border: 1px solid ${C.border}; border-radius: 8px;
-    padding: 18px; transition: all .2s; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
-  .guest-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,.09); border-color: ${C.border2}; }
+  /* ── OSPITI ── */
+  .guest-card {
+    background: ${C.surface}; border: 1px solid ${C.border}; border-radius: 5px;
+    padding: 16px; transition: all .15s; box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .guest-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.08); border-color: ${C.border2}; }
 
-  .toast { position: fixed; bottom: 26px; right: 26px; z-index: 9999;
-    padding: 12px 20px; border-radius: 8px; font-size: 14px;
-    animation: fadeUp .3s ease; font-family: 'Inter', sans-serif;
-    box-shadow: 0 4px 20px rgba(0,0,0,.15); }
-  .toast.success { background: ${C.greenL}; border: 1px solid ${C.greenLb}; color: ${C.green}; }
-  .toast.error   { background: ${C.redL};   border: 1px solid ${C.redLb};   color: ${C.red}; }
-  @keyframes fadeUp { from { transform: translateY(16px); opacity:0; } to { transform: translateY(0); opacity:1; } }
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+    padding: 11px 18px; border-radius: 4px; font-size: 13px;
+    animation: fadeUp .25s ease; font-family: 'IBM Plex Sans', sans-serif;
+    box-shadow: 0 4px 16px rgba(0,0,0,.14); min-width: 220px;
+  }
+  .toast.success { background: ${C.greenL}; border-left: 3px solid ${C.green}; color: ${C.green}; }
+  .toast.error   { background: ${C.redL};   border-left: 3px solid ${C.red};   color: ${C.red}; }
+  @keyframes fadeUp { from { transform: translateY(12px); opacity:0; } to { transform: translateY(0); opacity:1; } }
 
-  .invoice-paper { background: white; color: #1a1a1a; border-radius: 4px;
-    padding: 36px; font-family: 'Inter', Georgia, sans-serif; }
-  .invoice-line { display: flex; justify-content: space-between; padding: 7px 0;
-    border-bottom: 1px solid #f0f0f0; font-size: 14px; }
+  /* ── INVOICE ── */
+  .invoice-paper {
+    background: white; color: #1a1a1a; border-radius: 4px;
+    padding: 36px; font-family: 'IBM Plex Sans', Georgia, sans-serif;
+  }
+  .invoice-line {
+    display: flex; justify-content: space-between; padding: 6px 0;
+    border-bottom: 1px solid #f0f0f0; font-size: 13px;
+  }
 
-  .ps-doc { background: white; color: #111; font-family: Arial, sans-serif;
-    padding: 28px; font-size: 12px; }
+  /* ── PS/ISTAT ── */
+  .ps-doc { background: white; color: #111; font-family: Arial, sans-serif; padding: 28px; font-size: 12px; }
   .ps-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
-  .ps-table th { background: #1a2a3a; color: white; padding: 5px 7px;
-    text-align: left; font-weight: 600; font-size: 10px; }
+  .ps-table th { background: #0a1929; color: white; padding: 5px 7px; text-align: left; font-weight: 600; font-size: 10px; }
   .ps-table td { padding: 5px 7px; border-bottom: 1px solid #e8e0d8; vertical-align: top; }
-  .ps-table tr:nth-child(even) td { background: #faf8f5; }
-
-  .istat-doc { background: white; color: #111; font-family: Arial, sans-serif;
-    padding: 28px; font-size: 12px; }
+  .ps-table tr:nth-child(even) td { background: #f5f7fa; }
+  .istat-doc { background: white; color: #111; font-family: Arial, sans-serif; padding: 28px; font-size: 12px; }
   .istat-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 11px; }
-  .istat-table th { background: #003580; color: white; padding: 6px 8px;
-    text-align: center; font-weight: 600; font-size: 10px; }
+  .istat-table th { background: #0f62fe; color: white; padding: 6px 8px; text-align: center; font-weight: 600; font-size: 10px; }
   .istat-table td { padding: 5px 8px; border: 1px solid #d0d4dc; text-align: center; }
-  .istat-table .lc { text-align: left; font-weight: 600; background: #f0f4ff; }
+  .istat-table .lc { text-align: left; font-weight: 600; background: #e8f0ff; }
 
   @media print { .no-print { display: none !important; } }
   div:hover > .tl-plus { opacity: 1 !important; }
-  .ai-panel { position:fixed; bottom:24px; right:24px; width:360px; max-height:520px; background:${C.surface}; border:1px solid ${C.border}; border-radius:14px; box-shadow:0 8px 40px rgba(0,0,0,.18); z-index:500; display:flex; flex-direction:column; overflow:hidden; }
-  .ai-msg-user { background:${C.goldL}; border:1px solid ${C.goldLb}; color:${C.text}; padding:8px 12px; border-radius:12px 12px 3px 12px; font-size:13px; max-width:90%; align-self:flex-end; }
-  .ai-msg-ai { background:${C.surface2}; border:1px solid ${C.border}; color:${C.text}; padding:8px 12px; border-radius:12px 12px 12px 3px; font-size:13px; max-width:92%; align-self:flex-start; white-space:pre-wrap; line-height:1.5; }
-  .ai-suggestion-box { background:linear-gradient(135deg,${C.goldL},#fff); border:1px solid ${C.goldLb}; border-left:3px solid ${C.gold}; border-radius:8px; padding:12px 16px; margin-bottom:16px; }
-  .api-tab { background:none; border:none; cursor:pointer; padding:8px 14px; font-size:12px; font-weight:600; color:${C.text3}; border-bottom:2px solid transparent; transition:all .2s; }
-  .api-tab.active { color:${C.gold}; border-bottom-color:${C.gold}; }
-  .api-tab:hover { color:${C.gold}; }
-  .endpoint-row { padding:10px 14px; border-bottom:1px solid ${C.border}; display:flex; align-items:center; gap:10px; font-size:12px; }
-  .endpoint-row:hover { background:${C.surface2}; }
-  .method-badge { padding:2px 7px; border-radius:4px; font-size:10px; font-weight:700; letter-spacing:.5px; }
-  .method-GET    { background:#dbeafe; color:#1d4ed8; }
-  .method-POST   { background:#dcfce7; color:#15803d; }
-  .method-PUT    { background:#fef3c7; color:#92400e; }
-  .method-DELETE { background:#fee2e2; color:#b91c1c; }
+
+  /* ── AI PANEL ── */
+  .ai-panel {
+    position: fixed; bottom: 24px; right: 24px; width: 360px; max-height: 520px;
+    background: ${C.surface}; border: 1px solid ${C.border}; border-radius: 8px;
+    box-shadow: 0 8px 40px rgba(0,0,0,.18); z-index: 500;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .ai-msg-user { background:${C.goldL}; border:1px solid ${C.goldLb}; color:${C.text}; padding:8px 12px; border-radius:8px 8px 2px 8px; font-size:13px; max-width:90%; align-self:flex-end; }
+  .ai-msg-ai   { background:${C.surface2}; border:1px solid ${C.border}; color:${C.text}; padding:8px 12px; border-radius:8px 8px 8px 2px; font-size:13px; max-width:92%; align-self:flex-start; white-space:pre-wrap; line-height:1.5; }
+  .ai-suggestion-box { background:${C.goldL}; border:1px solid ${C.goldLb}; border-left:3px solid ${C.gold}; border-radius:5px; padding:12px 16px; margin-bottom:16px; }
   @keyframes aiPulse { 0%,100%{opacity:1} 50%{opacity:.4} }
   .ai-loading-dot { animation:aiPulse 1.2s ease infinite; display:inline-block; }
   .ai-loading-dot:nth-child(2){animation-delay:.2s}
   .ai-loading-dot:nth-child(3){animation-delay:.4s}
-  /* ── POS Ristorante ── */
-  .pos-tab { background:none; border:none; cursor:pointer; padding:7px 16px; font-size:12px; font-weight:600; color:${C.text3}; border-radius:20px; transition:all .2s; }
-  .pos-tab:hover { background:${C.goldL}; color:${C.gold}; }
+
+  /* ── API TABS ── */
+  .api-tab { background:none; border:none; cursor:pointer; padding:8px 14px; font-size:12px; font-weight:600; color:${C.text3}; border-bottom:2px solid transparent; transition:all .2s; }
+  .api-tab.active { color:${C.gold}; border-bottom-color:${C.gold}; }
+  .api-tab:hover  { color:${C.gold}; }
+  .endpoint-row { padding:10px 14px; border-bottom:1px solid ${C.border}; display:flex; align-items:center; gap:10px; font-size:12px; }
+  .endpoint-row:hover { background:${C.surface2}; }
+  .method-badge { padding:2px 7px; border-radius:3px; font-size:10px; font-weight:700; letter-spacing:.5px; font-family:'IBM Plex Mono',monospace; }
+  .method-GET    { background:#dbeafe; color:#1d4ed8; }
+  .method-POST   { background:#dcfce7; color:#15803d; }
+  .method-PUT    { background:#fef3c7; color:#92400e; }
+  .method-DELETE { background:#fee2e2; color:#b91c1c; }
+
+  /* ── POS RISTORANTE ── */
+  .pos-tab { background:none; border:none; cursor:pointer; padding:7px 16px; font-size:12px; font-weight:600; color:${C.text3}; border-radius:3px; transition:all .15s; }
+  .pos-tab:hover  { background:${C.goldL}; color:${C.gold}; }
   .pos-tab.active { background:${C.gold}; color:#fff; }
-  .tavolo-svg { cursor:pointer; transition:all .2s; filter:drop-shadow(0 1px 2px rgba(0,0,0,.06)); }
-  .tavolo-svg:hover { filter:drop-shadow(0 3px 8px rgba(160,114,10,.25)); }
-  .menu-item-btn { background:${C.surface}; border:1px solid ${C.border}; border-radius:8px; padding:11px 12px; cursor:pointer; text-align:left; transition:all .15s; width:100%; }
-  .menu-item-btn:hover { border-color:${C.gold}; box-shadow:0 2px 8px rgba(160,114,10,.15); }
+  .tavolo-svg { cursor:pointer; transition:all .15s; filter:drop-shadow(0 1px 2px rgba(0,0,0,.06)); }
+  .tavolo-svg:hover { filter:drop-shadow(0 3px 8px rgba(15,98,254,.2)); }
+  .menu-item-btn { background:${C.surface}; border:1px solid ${C.border}; border-radius:5px; padding:11px 12px; cursor:pointer; text-align:left; transition:all .15s; width:100%; }
+  .menu-item-btn:hover { border-color:${C.gold}; box-shadow:0 2px 8px rgba(15,98,254,.1); }
   .order-row { padding:8px 12px; border-bottom:1px solid ${C.border}; display:flex; align-items:center; gap:8px; font-size:13px; }
-  .kitchen-ticket { background:white; border:2px solid #1a1a1a; border-radius:6px; padding:14px; font-family:monospace; font-size:12px; }
+  .kitchen-ticket { background:white; border:2px solid #1a2535; border-radius:5px; padding:14px; font-family:'IBM Plex Mono',monospace; font-size:12px; }
   .kitchen-ticket.urgent { border-color:${C.red}; background:${C.redL}; }
-  @keyframes ticketIn { from{transform:translateY(-10px);opacity:0} to{transform:translateY(0);opacity:1} }
-  .kitchen-ticket { animation:ticketIn .3s ease; }
+  @keyframes ticketIn { from{transform:translateY(-8px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .kitchen-ticket { animation:ticketIn .25s ease; }
   .precomanda-row { padding:9px 14px; border-bottom:1px solid ${C.border}; display:grid; grid-template-columns:1fr 60px 90px 90px; gap:8px; align-items:center; font-size:13px; }
-  .pos-stat { background:${C.surface}; border:1px solid ${C.border}; border-radius:8px; padding:16px 20px; position:relative; overflow:hidden; }
+  .pos-stat { background:${C.surface}; border:1px solid ${C.border}; border-radius:5px; padding:16px 20px; position:relative; overflow:hidden; }
   .pos-stat::before { content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:${C.gold}; }
 `;
 
-// ─── COMPONENTE PRINCIPALE ────────────────────────────────────────────────────
+// - COMPONENTE PRINCIPALE -
+
+const PAGE_ICONS = {
+  "Dashboard":         "⊞",
+  "Prenotazioni":      "📋",
+  "Anagrafica":        "👤",
+  "Check-In/Out":      "🏨",
+  "Disponibilità":     "📅",
+  "Camere":            "🛏",
+  "Prezzi & Revenue":  "💰",
+  "Cassa":             "🖨",
+  "Pubblica Sicurezza":"🛡",
+  "ISTAT Veneto":      "📊",
+  "API & Integrazioni":"⚡",
+  "Ristorante POS":    "🍽",
+};
+const PAGE_GROUPS = [
+  { label:"Front Office",   pages:["Dashboard","Prenotazioni","Anagrafica","Check-In/Out","Disponibilità"] },
+  { label:"Gestione",       pages:["Camere","Prezzi & Revenue","Cassa"] },
+  { label:"Reportistica",   pages:["Pubblica Sicurezza","ISTAT Veneto"] },
+  { label:"Integrazioni",   pages:["API & Integrazioni","Ristorante POS"] },
+];
+
 
 export default function HotelPMS() {
   const [page, setPage]               = useState("Dashboard");
@@ -916,7 +1002,7 @@ export default function HotelPMS() {
   const [priceViewMode, setPriceViewMode] = useState("tipologia"); // tipologia | camera
   const [ruleForm, setRuleForm]       = useState({ name:"", type:"occupancy", threshold:80, operator:"gte", adjustment:10, adjustType:"pct", enabled:true, roomTypes:"all", direction:"increase" });
   const [editRuleId, setEditRuleId]   = useState(null);
-  // ── POS Ristorante state ──────────────────────────────────────────────────
+  // - POS Ristorante state -
   const [posTab, setPosTab]           = useState("mappa");    // mappa | ordine | cucina | precomanda | cassa-pos
   const [posSala, setPosSala]         = useState("Sala Principale");
   const [tavoliState, setTavoliState] = useState(
@@ -929,12 +1015,12 @@ export default function HotelPMS() {
   const [precomandaForm, setPrecomandaForm] = useState({ servizio:"pranzo", data: new Date().toISOString().slice(0,10), note:"" });
   const [posContoModal, setPosContoModal] = useState(null);   // tavolo per checkout pos
   const [posCassaMethod, setPosCassaMethod] = useState("camera"); // camera | carta | contanti
-  // ── Supabase sync state ───────────────────────────────────────────────────
+  // - Supabase sync state -
   const [dbStatus, setDbStatus]   = useState("connecting"); // connecting | ok | error | offline
   const [dbError, setDbError]     = useState(null);
   const syncRef = useRef(false);
 
-  // ── Boot: carica dati da Supabase ─────────────────────────────────────────
+  // - Boot: carica dati da Supabase -
   useEffect(() => {
     if (syncRef.current) return;
     syncRef.current = true;
@@ -1028,7 +1114,7 @@ export default function HotelPMS() {
     })();
   }, []);
 
-  // ── DB helpers: wrap delle operazioni di scrittura ────────────────────────
+  // - DB helpers: wrap delle operazioni di scrittura -
   const dbSaveGuest = async (g) => {
     const row = { id:g.id, cognome:g.cognome, nome:g.nome, data_nascita:g.dataNascita||null,
       luogo_nascita:g.luogoNascita||null, nazionalita:g.nazionalita, tipo_doc:g.tipoDoc,
@@ -1110,7 +1196,7 @@ export default function HotelPMS() {
     dbLogApi(endpoint, method, status, ms, note).catch(()=>{});
   };
 
-  // ── AI: chiama Anthropic e aggiunge risposta ────────────────────────────────
+  // - AI: chiama Anthropic e aggiunge risposta -
   const callAI = async (userMsg, systemCtx="") => {
     if (!apiKeys.anthropic) {
       showToast("Inserisci la chiave API Anthropic nella sezione API & Integrazioni", "error");
@@ -1145,7 +1231,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
     }
   };
 
-  // ── AI: suggerimento contestuale per pagina ─────────────────────────────────
+  // - AI: suggerimento contestuale per pagina -
   const requestAiSuggestion = async (currentPage) => {
     if (!apiKeys.anthropic || aiLoading) return;
     setAiLoading(true); setAiSuggestion(null);
@@ -1169,7 +1255,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
     setAiLoading(false);
   };
 
-  // ── AI: chat libera ─────────────────────────────────────────────────────────
+  // - AI: chat libera -
   const sendAiChat = async () => {
     const msg = aiInput.trim(); if (!msg) return;
     const newMsgs = [...aiMessages, { role:"user", content: msg }];
@@ -1179,7 +1265,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
     setAiLoading(false);
   };
 
-  // ── REST API mock: simula risposta endpoint ─────────────────────────────────
+  // - REST API mock: simula risposta endpoint -
   const mockRestCall = (endpoint, method="GET") => {
     const t0 = Date.now();
     setTimeout(() => {
@@ -1189,7 +1275,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
     }, 100);
   };
 
-  // ── Booking.com mock sync ───────────────────────────────────────────────────
+  // - Booking.com mock sync -
   const syncBooking = () => {
     if (!apiKeys.booking) { showToast("Inserisci la chiave API Booking.com", "error"); return; }
     const t0 = Date.now();
@@ -1201,7 +1287,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
     }, 1200);
   };
 
-  // ── Stripe mock payment ─────────────────────────────────────────────────────
+  // - Stripe mock payment -
   const stripeCharge = (amount, guestName) => {
     if (!apiKeys.stripe) { showToast("Inserisci la chiave API Stripe", "error"); return; }
     const t0 = Date.now();
@@ -1220,7 +1306,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
 
   const getGuest = (id) => guests.find(g => g.id === id);
 
-  // ── Componente suggerimento AI contestuale ──────────────────────────────────
+  // - Componente suggerimento AI contestuale -
   const AiBar = ({ pg }) => (
     <div style={{ marginBottom:20 }}>
       {(!aiSuggestion || aiSuggestion.page !== pg) && !aiLoading && (
@@ -1256,7 +1342,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
     </div>
   );
 
-  // ── calcoli ─────────────────────────────────────────────────────────────────
+  // - calcoli -
 
   // POS helpers
   const posTavoloTotale = (tavoloId) => {
@@ -1346,7 +1432,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
   };
   const calcPaid  = (res) => (res.payments||[]).reduce((s,p) => s+p.amount, 0);
 
-  // ── Ospiti ───────────────────────────────────────────────────────────────────
+  // - Ospiti -
 
   const openNewGuest  = (forRes=null) => { setGuestForm(emptyGuest()); setModal(forRes ? "guest-form-for-"+forRes : "guest-form"); };
   const openEditGuest = (g) => { setGuestForm({...g}); setModal("guest-form"); };
@@ -1396,7 +1482,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
     showToast("Ospite eliminato");
   };
 
-  // ── Prenotazioni ─────────────────────────────────────────────────────────────
+  // - Prenotazioni -
 
   const openNewReservation = (prefill={}) => {
     setForm({ id:genId(), guestId:"", guestName:"", companions:[], roomId:"",
@@ -1494,7 +1580,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
     showToast(`Pagamento €${parseFloat(amount).toFixed(2)} registrato`);
   };
 
-  // ── Stats ────────────────────────────────────────────────────────────────────
+  // - Stats -
   const today = new Date().toISOString().slice(0,10);
   const occupied  = reservations.filter(r => r.status==="checked-in").length;
   const arriving  = reservations.filter(r => r.checkIn===today && r.status==="reserved").length;
@@ -1513,43 +1599,168 @@ Rispondi in italiano, in modo conciso e professionale.`;
   const psRes    = reservations.filter(r => r.status!=="cancelled" && r.checkIn?.startsWith(psMonth));
   const istatRes = reservations.filter(r => r.status!=="cancelled" && r.checkIn?.startsWith(istatMonth));
 
-  // ─── RENDER ─────────────────────────────────────────────────────────────────
+  // - RENDER -
 
   const dayStr = (d) => typeof d==="string" ? d : d.toISOString().slice(0,10);
 
+  // - COMPONENTE AUTOCOMPLETE COMUNE (definito dentro il componente) -
+  const ComuneInput = ({ label, value, onChange, placeholder="Cerca comune..." }) => {
+    const [query, setQuery]   = useState(value || "");
+    const [open, setOpen]     = useState(false);
+    const [hiIdx, setHiIdx]   = useState(0);
+    const inputRef            = useRef(null);
+    const listRef             = useRef(null);
+
+    // Sincronizza query con value esterno (es. reset form)
+    useEffect(() => { setQuery(value || ""); }, [value]);
+
+    const results = useMemo(() => {
+      if (!query || query.length < 2) return [];
+      const q = query.toLowerCase();
+      return COMUNI_IT.filter(x => x.c.toLowerCase().startsWith(q)).slice(0, 8)
+        .concat(COMUNI_IT.filter(x => !x.c.toLowerCase().startsWith(q) && x.c.toLowerCase().includes(q)).slice(0, 4));
+    }, [query]);
+
+    const select = (item) => {
+      setQuery(item.c);
+      setOpen(false);
+      onChange(item);
+    };
+
+    const handleKey = (e) => {
+      if (!open || !results.length) return;
+      if (e.key === "ArrowDown") { e.preventDefault(); setHiIdx(i => Math.min(i+1, results.length-1)); }
+      if (e.key === "ArrowUp")   { e.preventDefault(); setHiIdx(i => Math.max(i-1, 0)); }
+      if (e.key === "Enter")     { e.preventDefault(); if (results[hiIdx]) select(results[hiIdx]); }
+      if (e.key === "Escape")    { setOpen(false); }
+    };
+
+    // Scrolla il risultato evidenziato in vista
+    useEffect(() => {
+      if (listRef.current) {
+        const el = listRef.current.querySelector(`[data-idx="${hiIdx}"]`);
+        if (el) el.scrollIntoView({ block:"nearest" });
+      }
+    }, [hiIdx]);
+
+    return (
+      <div style={{ position:"relative" }}>
+        {label && <label className="label">{label}</label>}
+        <input
+          ref={inputRef}
+          className="input-field"
+          value={query}
+          placeholder={placeholder}
+          autoComplete="off"
+          onChange={e => { setQuery(e.target.value); setOpen(true); setHiIdx(0); if (!e.target.value) onChange({c:"",p:"",z:""}); }}
+          onFocus={() => { if (query.length >= 2) setOpen(true); }}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          onKeyDown={handleKey}
+        />
+        {open && results.length > 0 && (
+          <div ref={listRef} style={{
+            position:"absolute", zIndex:9999, top:"100%", left:0, right:0,
+            background:"white", border:"1.5px solid #d4b896", borderRadius:"0 0 8px 8px",
+            boxShadow:"0 6px 20px rgba(0,0,0,.12)", maxHeight:220, overflowY:"auto"
+          }}>
+            {results.map((item, i) => (
+              <div key={item.c} data-idx={i}
+                onMouseDown={() => select(item)}
+                style={{
+                  padding:"8px 12px", cursor:"pointer", fontSize:13,
+                  background: i===hiIdx ? "#f5ead0" : "white",
+                  borderBottom:"1px solid #f0ece6",
+                  display:"flex", justifyContent:"space-between", alignItems:"center",
+                }}>
+                <span style={{ fontWeight: i===hiIdx ? 700 : 400 }}>{item.c}</span>
+                <span style={{ fontSize:11, color:"#9c8f82", display:"flex", gap:8 }}>
+                  <span style={{ background:"#f5ead0", padding:"1px 6px", borderRadius:8, fontWeight:700, color:"#a0720a" }}>{item.p}</span>
+                  <span style={{ color:"#c0b8b0" }}>{item.z}</span>
+                  <span style={{ color:"#c0b8b0" }}>{item.r}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+
   return (
-    <div style={{ fontFamily:"'Inter',sans-serif", background:C.bg, minHeight:"100vh", color:C.text }}>
+    <div style={{ fontFamily:"IBM Plex Sans,system-ui,sans-serif", background:C.bg, minHeight:"100vh", color:C.text }}>
       <style>{CSS}</style>
 
-      {/* ── HEADER ── */}
-      <div style={{ background:C.surface, borderBottom:`1px solid ${C.border}`, boxShadow:"0 2px 8px rgba(0,0,0,.06)", position:"sticky", top:0, zIndex:50 }}>
-        <div style={{ maxWidth:1500, margin:"0 auto", padding:"0 24px", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:4 }}>
-          <div style={{ padding:"10px 0" }}>
-            <div style={{ fontSize:"20px", fontWeight:400, letterSpacing:"4px", color:C.gold, textTransform:"uppercase", fontFamily:"'Cormorant Garamond',serif" }}>HOTEL GASPARINI</div>
-            <div style={{ fontSize:"9px", letterSpacing:"3px", color:C.text3, fontWeight:600 }}>PROPERTY MANAGEMENT SYSTEM</div>
-          </div>
-          <nav style={{ display:"flex", flexWrap:"wrap" }}>
-            {PAGES.map(p => <button key={p} className={`nav-btn${page===p?" active":""}`} onClick={() => setPage(p)}>{p}</button>)}
-          </nav>
-          <div style={{ fontSize:"12px", color:C.text3, fontWeight:500, display:"flex", alignItems:"center", gap:10 }}>
-            {new Date().toLocaleDateString("it-IT",{weekday:"short",day:"2-digit",month:"short",year:"numeric"})}
-            {/* DB Status */}
-            <div title={dbError||"Supabase"} style={{ display:"flex", alignItems:"center", gap:4, padding:"3px 10px", background: dbStatus==="ok"?C.greenL:dbStatus==="connecting"||dbStatus==="seeding"?C.navyL:C.redL, border:`1px solid ${dbStatus==="ok"?C.greenLb:dbStatus==="connecting"||dbStatus==="seeding"?C.navyLb:C.redLb}`, borderRadius:20, fontSize:10, fontWeight:700, color:dbStatus==="ok"?C.green:dbStatus==="connecting"||dbStatus==="seeding"?C.navy:C.red }}>
-              <span style={{ fontSize:8 }}>{dbStatus==="ok"?"●":dbStatus==="seeding"?"⟳":dbStatus==="connecting"?"○":"✕"}</span>
-              {dbStatus==="ok"?"DB Online":dbStatus==="seeding"?"Inizializzazione…":dbStatus==="connecting"?"Connessione…":"DB Offline"}
+      {/*   SIDEBAR   */}
+      <aside className="sidebar" style={{ position:"fixed", left:0, top:0, bottom:0, width:230, background:"#0a1929", zIndex:100, overflowY:"auto", display:"flex", flexDirection:"column", boxShadow:"2px 0 12px rgba(0,0,0,.25)" }}>
+        {/* Logo */}
+        <div className="sidebar-logo" style={{ padding:"20px 20px 16px", borderBottom:"1px solid rgba(255,255,255,.08)" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:4 }}>
+            <div style={{ width:32, height:32, borderRadius:6, background:"linear-gradient(135deg,#1565c0,#0f62fe)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, fontWeight:700, color:"#fff", flexShrink:0 }}>G</div>
+            <div>
+              <div style={{ fontSize:15, fontWeight:700, color:"#fff", letterSpacing:.5 }}>Hotel Gasparini</div>
+              <div style={{ fontSize:9, letterSpacing:2.5, color:"#90b4d4", textTransform:"uppercase", marginTop:2 }}>PMS</div>
             </div>
-            <button onClick={() => setAiVisible(v=>!v)} title="Assistente AI" style={{ background: aiVisible ? C.gold : C.goldL, border:`1px solid ${C.goldLb}`, borderRadius:20, padding:"4px 12px", cursor:"pointer", fontSize:11, fontWeight:700, color: aiVisible ? "#fff" : C.gold, display:"flex", alignItems:"center", gap:5, transition:"all .2s" }}>
-              ✦ AI {aiLoading && <span><span className="ai-loading-dot">·</span><span className="ai-loading-dot">·</span><span className="ai-loading-dot">·</span></span>}
-            </button>
           </div>
+        </div>
+
+        {/* Nav Groups */}
+        {PAGE_GROUPS.map(group => (
+          <div key={group.label}>
+            <div className="sidebar-section" style={{ fontSize:9, letterSpacing:2, color:"rgba(144,180,212,.45)", textTransform:"uppercase", padding:"18px 20px 6px", fontWeight:600 }}>{group.label}</div>
+            {group.pages.map(p => (
+              <button key={p}
+                className={`nav-btn${page===p?" active":""}`}
+                onClick={() => setPage(p)}
+                style={{
+                  display:"flex", alignItems:"center", gap:10,
+                  width:"100%", padding:"9px 20px", border:"none",
+                  background: page===p ? "#1565c0" : "none",
+                  cursor:"pointer", fontSize:13, fontWeight: page===p ? 600 : 400,
+                  color: page===p ? "#fff" : "#90b4d4",
+                  textAlign:"left", borderLeft: page===p ? "3px solid #5b9dff" : "3px solid transparent",
+                  transition:"all .15s", whiteSpace:"nowrap",
+                }}>
+                <span style={{ fontSize:15, width:18, flexShrink:0 }}>{PAGE_ICONS[p]}</span>
+                <span>{p}</span>
+              </button>
+            ))}
+          </div>
+        ))}
+
+        {/* Bottom: DB status */}
+        <div className="sidebar-bottom">
+          <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:8 }}>
+            <span style={{ fontSize:8, color: dbStatus==="ok"?"#6fcf97":dbStatus==="connecting"||dbStatus==="seeding"?"#90caf9":"#ef9a9a" }}>●</span>
+            <span style={{ fontSize:11 }}>{dbStatus==="ok"?"Database online":dbStatus==="seeding"?"Inizializzazione…":dbStatus==="connecting"?"Connessione…":"Database offline"}</span>
+          </div>
+          <div style={{ fontSize:11, color:"rgba(144,180,212,.4)" }}>
+            {new Date().toLocaleDateString("it-IT",{day:"2-digit",month:"short",year:"numeric"})}
+          </div>
+        </div>
+      </aside>
+
+      {/*   TOPBAR CONTESTUALE   */}
+      <div className="topbar" style={{ position:"fixed", top:0, left:230, right:0, height:52, background:"#fff", borderBottom:"1px solid #dde3ec", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 24px", zIndex:90, boxShadow:"0 1px 4px rgba(0,0,0,.06)" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:13, color:C.text2 }}>
+          <span style={{ color:"#8896a8", fontSize:12 }}>Hotel Gasparini</span>
+          <span style={{ color:"#c4cdd9" }}>›</span>
+          <span style={{ fontWeight:600, color:"#1a2535" }}>{page}</span>
+        </div>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <button onClick={() => setAiVisible(v=>!v)}
+            style={{ background: aiVisible ? C.gold : C.goldL, border:`1px solid ${C.goldLb}`, borderRadius:4, padding:"6px 14px", cursor:"pointer", fontSize:12, fontWeight:600, color: aiVisible ? "#fff" : C.gold, display:"flex", alignItems:"center", gap:6, transition:"all .15s" }}>
+            ✦ AI Assistant {aiLoading && <span><span className="ai-loading-dot">·</span><span className="ai-loading-dot">·</span><span className="ai-loading-dot">·</span></span>}
+          </button>
         </div>
       </div>
 
-      <div style={{ maxWidth:1500, margin:"0 auto", padding:"28px 24px" }}>
+      {/*   CONTENUTO PRINCIPALE   */}
+      <div className="main-content" style={{ marginLeft:230, paddingTop:72, paddingLeft:28, paddingRight:28, paddingBottom:32, minHeight:"100vh" }}>
 
-        {/* ════════════════ DASHBOARD ════════════════ */}
+        {/*   DASHBOARD   */}
         {page==="Dashboard" && (() => {
-          // ── Metriche oggi ──────────────────────────────────────────────────
+          // - Metriche oggi -
           const todayStr   = new Date().toISOString().slice(0,10);
           const totalRooms = rooms.length;
 
@@ -1571,7 +1782,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
           // ADR oggi = revenue / camere occupate
           const adrToday = occToday > 0 ? Math.round((revenueToday / occToday) * 100) / 100 : 0;
 
-          // ── Stessa data anno scorso (simulata — ±15% random ma stabile) ───
+          // - Stessa data anno scorso (simulata — ±15% random ma stabile) -
           // Usiamo un seed basato sulla data per valori "stabili"
           const seed = parseInt(todayStr.replace(/-/g,"")) % 100;
           const lyFactor = (75 + (seed % 25)) / 100; // tra 0.75 e 1.00
@@ -1591,7 +1802,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
           const dRevPar = delta(revParToday, revParLY);
           const dAdr    = delta(adrToday, adrLY);
 
-          // ── Arrivi di oggi ─────────────────────────────────────────────────
+          // - Arrivi di oggi -
           const arrivalsToday = reservations.filter(r =>
             r.checkIn === todayStr && r.status === "reserved"
           );
@@ -1599,7 +1810,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
           const totBambini = arrivalsToday.reduce((s,r) => s + (r.bambini || 0), 0);
           const totOspiti  = totAdulti + totBambini;
 
-          // ── Partenze ───────────────────────────────────────────────────────
+          // - Partenze -
           const departuresToday = reservations.filter(r =>
             r.checkOut === todayStr && r.status === "checked-in"
           );
@@ -1612,7 +1823,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
             return (
               <svg width={size} height={size/2+10} viewBox={`0 0 ${size} ${size/2+10}`}>
                 <path d={`M8,${size/2} A${r2},${r2} 0 0,1 ${size-8},${size/2}`}
-                  fill="none" stroke="#e8e0d8" strokeWidth="8" strokeLinecap="round"/>
+                  fill="none" stroke="#dde3ec" strokeWidth="8" strokeLinecap="round"/>
                 <path d={`M8,${size/2} A${r2},${r2} 0 0,1 ${size-8},${size/2}`}
                   fill="none" stroke={color} strokeWidth="8" strokeLinecap="round"
                   strokeDasharray={`${dash} ${circ}`} style={{ transition:"stroke-dasharray .8s ease" }}/>
@@ -1643,38 +1854,44 @@ Rispondi in italiano, in modo conciso e professionale.`;
 
           return (
             <div>
-              {/* Titolo */}
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:26 }}>
+              {/*   Page header Opera Cloud style   */}
+              <div className="page-header">
                 <div>
-                  <div className="section-title">Panoramica</div>
-                  <h1 style={{ fontSize:32, fontWeight:300, letterSpacing:1, fontFamily:"'Cormorant Garamond',serif" }}>Dashboard</h1>
-                  <div style={{ fontSize:12, color:C.text3, marginTop:3 }}>
+                  <div style={{ fontSize:11, color:C.text3, fontWeight:600, letterSpacing:2, textTransform:"uppercase", marginBottom:4 }}>
                     {new Date().toLocaleDateString("it-IT",{weekday:"long",day:"2-digit",month:"long",year:"numeric"})}
                   </div>
+                  <h1>Dashboard</h1>
+                  <div className="page-subtitle">Panoramica operativa · {totalRooms} camere disponibili</div>
                 </div>
                 <button className="btn-primary" onClick={openNewReservation}>+ Nuova Prenotazione</button>
               </div>
               <AiBar pg="Dashboard" />
 
-              {/* ── Riga 1: KPI veloci ── */}
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14, marginBottom:16 }}>
+              {/*   KPI strip — stile Opera Cloud   */}
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:10, marginBottom:18 }}>
                 {[
-                  { l:"Camere Occupate", v:`${occToday}/${totalRooms}`, c:C.navy, icon:"🏨" },
-                  { l:"Arrivi Oggi",     v:arrivalsToday.length,       c:C.green, icon:"▲" },
-                  { l:"Partenze Oggi",   v:departuresToday.length,     c:C.amber, icon:"▼" },
-                  { l:"Ospiti Archivio", v:guests.length,              c:C.purple,icon:"👤" },
+                  { l:"Occupate oggi",   v:`${occToday}`,            sub:`/${totalRooms} camere`,  c:C.navy,   accent:"#0f62fe", icon:"🏨" },
+                  { l:"Occupazione %",   v:`${occPctToday}%`,        sub:"tasso oggi",             c:occPctToday>=80?C.green:occPctToday>=50?C.amber:C.red, accent:occPctToday>=80?"#1b7a4a":occPctToday>=50?"#e65100":"#c62828", icon:"📊" },
+                  { l:"Arrivi",          v:arrivalsToday.length,     sub:"da fare oggi",           c:C.green,  accent:"#1b7a4a", icon:"▲" },
+                  { l:"Partenze",        v:departuresToday.length,   sub:"da fare oggi",           c:C.amber,  accent:"#e65100", icon:"▼" },
+                  { l:"RevPAR",          v:`€${revParToday.toFixed(0)}`, sub:"revenue/camera",     c:C.navy,   accent:"#0f62fe", icon:"💰" },
+                  { l:"ADR",             v:`€${adrToday.toFixed(0)}`, sub:"tariffa media",         c:C.purple, accent:"#5c35cc", icon:"📈" },
                 ].map(s => (
-                  <div key={s.l} className="stat-card">
-                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8 }}>
-                      <span style={{ fontSize:10, fontWeight:700, color:C.text3, letterSpacing:1, textTransform:"uppercase" }}>{s.l}</span>
-                      <span style={{ fontSize:18 }}>{s.icon}</span>
+                  <div key={s.l} style={{
+                    background:C.surface, border:`1px solid ${C.border}`, borderRadius:5,
+                    padding:"14px 16px", borderTop:`3px solid ${s.accent}`,
+                    boxShadow:"0 1px 3px rgba(0,0,0,.04)"
+                  }}>
+                    <div style={{ fontSize:10, fontWeight:600, color:C.text3, letterSpacing:1, textTransform:"uppercase", marginBottom:8, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                      {s.l} <span style={{ fontSize:14 }}>{s.icon}</span>
                     </div>
-                    <div style={{ fontSize:36, fontWeight:300, color:s.c, lineHeight:1, fontFamily:"'Cormorant Garamond',serif" }}>{s.v}</div>
+                    <div style={{ fontSize:26, fontWeight:700, color:s.c, lineHeight:1, fontFamily:"IBM Plex Sans,sans-serif", letterSpacing:"-.5px" }}>{s.v}</div>
+                    <div style={{ fontSize:11, color:C.text3, marginTop:4 }}>{s.sub}</div>
                   </div>
                 ))}
               </div>
 
-              {/* ── Riga 2: Gadget avanzati (occupazione, RevPAR, ADR, Arrivi) ── */}
+              {/*   Riga 2: Gadget avanzati (occupazione, RevPAR, ADR, Arrivi)   */}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:14, marginBottom:20 }}>
 
                 {/* GADGET 1: Occupazione YoY */}
@@ -1682,7 +1899,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                   <div style={{ fontSize:10, fontWeight:700, color:C.text3, letterSpacing:2, textTransform:"uppercase", marginBottom:12 }}>Occupazione</div>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
                     <div>
-                      <div style={{ fontSize:34, fontWeight:300, color:occColor, lineHeight:1, fontFamily:"'Cormorant Garamond',serif" }}>{occPctToday}<span style={{ fontSize:16 }}>%</span></div>
+                      <div style={{ fontSize:32, fontWeight:700, color:occColor, lineHeight:1, letterSpacing:"-.5px" }}>{occPctToday}<span style={{ fontSize:16 }}>%</span></div>
                       <div style={{ fontSize:11, color:C.text3, marginTop:4 }}>Oggi · {occToday}/{totalRooms} cam.</div>
                     </div>
                     <Gauge pct={occPctToday} color={occColor} size={72} />
@@ -1692,7 +1909,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                       <div>
                         <div style={{ fontSize:10, color:C.text3 }}>Stesso giorno anno scorso</div>
-                        <div style={{ fontSize:18, fontWeight:600, color:C.text2, fontFamily:"'Cormorant Garamond',serif" }}>{occLY}%</div>
+                        <div style={{ fontSize:18, fontWeight:600, color:C.text2, fontFamily:"IBM Plex Sans,sans-serif" }}>{occLY}%</div>
                       </div>
                       <div style={{ textAlign:"right" }}>
                         <div style={{ fontSize:18, fontWeight:700, color: dOcc.up ? C.green : C.red }}>
@@ -1714,7 +1931,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
                     <div>
                       <div style={{ fontSize:11, color:C.text3, marginBottom:2 }}>Revenue Per Available Room</div>
-                      <div style={{ fontSize:34, fontWeight:300, color:C.navy, lineHeight:1, fontFamily:"'Cormorant Garamond',serif" }}>€{revParToday.toFixed(0)}</div>
+                      <div style={{ fontSize:32, fontWeight:700, color:C.navy, lineHeight:1, letterSpacing:"-.5px" }}>€{revParToday.toFixed(0)}</div>
                       <div style={{ fontSize:11, color:C.text3, marginTop:4 }}>Oggi · €{revenueToday.toLocaleString()}/{totalRooms} cam.</div>
                     </div>
                   </div>
@@ -1723,7 +1940,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                       <div>
                         <div style={{ fontSize:10, color:C.text3 }}>Stesso giorno anno scorso</div>
-                        <div style={{ fontSize:18, fontWeight:600, color:C.text2, fontFamily:"'Cormorant Garamond',serif" }}>€{revParLY.toFixed(0)}</div>
+                        <div style={{ fontSize:18, fontWeight:600, color:C.text2, fontFamily:"IBM Plex Sans,sans-serif" }}>€{revParLY.toFixed(0)}</div>
                       </div>
                       <div style={{ textAlign:"right" }}>
                         <div style={{ fontSize:18, fontWeight:700, color: dRevPar.up ? C.green : C.red }}>
@@ -1750,7 +1967,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
                     <div>
                       <div style={{ fontSize:11, color:C.text3, marginBottom:2 }}>Tariffa media giornaliera</div>
-                      <div style={{ fontSize:34, fontWeight:300, color:C.gold, lineHeight:1, fontFamily:"'Cormorant Garamond',serif" }}>€{adrToday.toFixed(0)}</div>
+                      <div style={{ fontSize:32, fontWeight:700, color:C.gold, lineHeight:1, letterSpacing:"-.5px" }}>€{adrToday.toFixed(0)}</div>
                       <div style={{ fontSize:11, color:C.text3, marginTop:4 }}>
                         {occToday > 0 ? `€${revenueToday.toLocaleString()} ÷ ${occToday} occ.` : "Nessuna camera occupata"}
                       </div>
@@ -1761,7 +1978,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                       <div>
                         <div style={{ fontSize:10, color:C.text3 }}>Stesso giorno anno scorso</div>
-                        <div style={{ fontSize:18, fontWeight:600, color:C.text2, fontFamily:"'Cormorant Garamond',serif" }}>€{adrLY.toFixed(0)}</div>
+                        <div style={{ fontSize:18, fontWeight:600, color:C.text2, fontFamily:"IBM Plex Sans,sans-serif" }}>€{adrLY.toFixed(0)}</div>
                       </div>
                       <div style={{ textAlign:"right" }}>
                         <div style={{ fontSize:18, fontWeight:700, color: dAdr.up ? C.green : C.red }}>
@@ -1785,7 +2002,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                 {/* GADGET 4: Arrivi adulti/bambini */}
                 <div className="card" style={{ padding:20 }}>
                   <div style={{ fontSize:10, fontWeight:700, color:C.text3, letterSpacing:2, textTransform:"uppercase", marginBottom:12 }}>Arrivi di Oggi</div>
-                  <div style={{ fontSize:34, fontWeight:300, color:C.green, lineHeight:1, fontFamily:"'Cormorant Garamond',serif", marginBottom:4 }}>
+                  <div style={{ fontSize:32, fontWeight:700, color:C.green, lineHeight:1, letterSpacing:"-.5px", marginBottom:4 }}>
                     {arrivalsToday.length} <span style={{ fontSize:16 }}>pren.</span>
                   </div>
                   {/* Donut adulti/bambini */}
@@ -1824,7 +2041,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                           <div style={{ width:10, height:10, borderRadius:"50%", background:C.green }} />
                           <span style={{ fontSize:12, color:C.text2 }}>Adulti</span>
                         </div>
-                        <span style={{ fontSize:20, fontWeight:700, color:C.green, fontFamily:"'Cormorant Garamond',serif" }}>{totAdulti}</span>
+                        <span style={{ fontSize:20, fontWeight:700, color:C.green, fontFamily:"IBM Plex Sans,sans-serif" }}>{totAdulti}</span>
                       </div>
                       <div style={{ height:6, background:C.surface2, borderRadius:3, marginBottom:10 }}>
                         <div style={{ height:6, width:`${totOspiti>0?(totAdulti/totOspiti)*100:0}%`, background:C.green, borderRadius:3, transition:"width .5s" }} />
@@ -1834,7 +2051,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                           <div style={{ width:10, height:10, borderRadius:"50%", background:C.amber }} />
                           <span style={{ fontSize:12, color:C.text2 }}>Bambini</span>
                         </div>
-                        <span style={{ fontSize:20, fontWeight:700, color:C.amber, fontFamily:"'Cormorant Garamond',serif" }}>{totBambini}</span>
+                        <span style={{ fontSize:20, fontWeight:700, color:C.amber, fontFamily:"IBM Plex Sans,sans-serif" }}>{totBambini}</span>
                       </div>
                       <div style={{ height:6, background:C.surface2, borderRadius:3 }}>
                         <div style={{ height:6, width:`${totOspiti>0?(totBambini/totOspiti)*100:0}%`, background:C.amber, borderRadius:3, transition:"width .5s" }} />
@@ -1866,7 +2083,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                 </div>
               </div>
 
-              {/* ── Riga 2b: Grafico Occupazione 30 giorni ── */}
+              {/*   Riga 2b: Grafico Occupazione 30 giorni   */}
               {(() => {
                 const hovIdx    = chartHovIdx;
                 const setHovIdx = setChartHovIdx;
@@ -2112,7 +2329,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                 );
               })()}
 
-              {/* ── Riga 3: Movimenti oggi + Mappa camere ── */}
+              {/*   Riga 3: Movimenti oggi + Mappa camere   */}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:18 }}>
                 <div className="card">
                   <div className="section-title" style={{ color:C.green }}>Movimenti Oggi</div>
@@ -2168,11 +2385,11 @@ Rispondi in italiano, in modo conciso e professionale.`;
           );
         })()}
 
-        {/* ════════════════ PRENOTAZIONI ════════════════ */}
+        {/*   PRENOTAZIONI   */}
         {page==="Prenotazioni" && (
           <div>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:22 }}>
-              <div><div className="section-title">Gestione</div><h1 style={{ fontSize:30, fontWeight:300, fontFamily:"'Cormorant Garamond',serif" }}>Prenotazioni</h1></div>
+              <div className="page-header"><div><h1>Prenotazioni</h1><div className="page-subtitle">Archivio prenotazioni · ricerca, modifica e nuove inserzioni</div></div>
               <button className="btn-primary" onClick={openNewReservation}>+ Nuova</button>
             </div>
             <AiBar pg="Prenotazioni" />
@@ -2209,11 +2426,11 @@ Rispondi in italiano, in modo conciso e professionale.`;
           </div>
         )}
 
-        {/* ════════════════ ANAGRAFICA ════════════════ */}
+        {/*   ANAGRAFICA   */}
         {page==="Anagrafica" && (
           <div>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:22 }}>
-              <div><div className="section-title">Registro Ospiti</div><h1 style={{ fontSize:30, fontWeight:300, fontFamily:"'Cormorant Garamond',serif" }}>Anagrafica</h1></div>
+              <div className="page-header"><div><h1>Anagrafica Ospiti</h1><div className="page-subtitle">Gestione anagrafiche, documenti e storico soggiorni</div></div>
               <button className="btn-primary" onClick={() => openNewGuest()}>+ Nuovo Ospite</button>
             </div>
             <div style={{ display:"flex", gap:10, marginBottom:18, alignItems:"center" }}>
@@ -2261,7 +2478,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
           </div>
         )}
 
-        {/* ════════════════ CHECK-IN/OUT ════════════════ */}
+        {/*   CHECK-IN/OUT   */}
         {page==="Check-In/Out" && (() => {
           const todayStr = new Date().toISOString().slice(0,10);
           const arrivi   = reservations.filter(r => r.status==="reserved");
@@ -2274,7 +2491,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
 
           return (
             <div>
-              <div style={{ marginBottom:16 }}><div className="section-title">Front Desk</div><h1 style={{ fontSize:30, fontWeight:300, fontFamily:"'Cormorant Garamond',serif" }}>Check-In / Check-Out</h1></div>
+              <div className="page-header"><div><h1>Check-In / Check-Out</h1><div className="page-subtitle">Gestione arrivi, partenze e ospiti in casa</div></div>
               <AiBar pg="Check-In/Out" />
 
               {/* KPI strip */}
@@ -2287,7 +2504,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                 ].map(s => (
                   <div key={s.l} style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:8, padding:"14px 18px", borderLeft:`3px solid ${s.c}` }}>
                     <div style={{ fontSize:10, fontWeight:700, color:C.text3, letterSpacing:1, textTransform:"uppercase", marginBottom:6 }}>{s.icon} {s.l}</div>
-                    <div style={{ fontSize:32, fontWeight:300, color:s.c, fontFamily:"'Cormorant Garamond',serif" }}>{s.v}</div>
+                    <div style={{ fontSize:32, fontWeight:700, color:s.c, fontFamily:"IBM Plex Sans,sans-serif" }}>{s.v}</div>
                   </div>
                 ))}
               </div>
@@ -2295,7 +2512,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
               {/* Griglia 3 colonne */}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 2fr 1fr", gap:16 }}>
 
-                {/* ── COLONNA 1: Arrivi ── */}
+                {/*   COLONNA 1: Arrivi   */}
                 <div className="card" style={{ padding:0, overflow:"hidden" }}>
                   <div style={{ padding:"12px 16px", background:C.greenL, borderBottom:`2px solid ${C.greenLb}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                     <div style={{ fontSize:11, fontWeight:700, color:C.green, letterSpacing:1, textTransform:"uppercase" }}>▲ Arrivi in Attesa</div>
@@ -2334,7 +2551,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                   </div>
                 </div>
 
-                {/* ── COLONNA 2: Ospiti in Casa ── */}
+                {/*   COLONNA 2: Ospiti in Casa   */}
                 <div className="card" style={{ padding:0, overflow:"hidden" }}>
                   <div style={{ padding:"12px 16px", background:C.navyL, borderBottom:`2px solid ${C.navyLb}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                     <div style={{ fontSize:11, fontWeight:700, color:C.navy, letterSpacing:1, textTransform:"uppercase" }}>🏨 Ospiti in Casa</div>
@@ -2445,7 +2662,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                   )}
                 </div>
 
-                {/* ── COLONNA 3: Riepilogo rapido ── */}
+                {/*   COLONNA 3: Riepilogo rapido   */}
                 <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
                   {/* Ripartizione piani */}
                   <div className="card">
@@ -2505,7 +2722,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
           );
         })()}
 
-        {/* ════════════════ DISPONIBILITÀ ════════════════ */}
+        {/*   DISPONIBILITÀ   */}
         {page==="Disponibilità" && (() => {
           const COL = 42;
           const daysCount = 35;
@@ -2601,8 +2818,8 @@ Rispondi in italiano, in modo conciso e professionale.`;
               {/* Toolbar */}
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:20 }}>
                 <div>
-                  <div className="section-title">Pianificazione</div>
-                  <h1 style={{ fontSize:30, fontWeight:300, fontFamily:"'Cormorant Garamond',serif" }}>Disponibilità Camere</h1>
+                  
+                  <h1>Disponibilità Camere</h1>
                 </div>
                 <div style={{ display:"flex", gap:8, alignItems:"center" }}>
                   <button className="btn-secondary" onClick={() => { setDispMode(m=>m==="grid"?"timeline":"grid"); setDispSelStart(null); setDispSelEnd(null); setDispSelType(null); }}>
@@ -2639,7 +2856,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
 
                   <DayHeader />
 
-                  {/* ── GRIGLIA (per tipo) ── */}
+                  {/*   GRIGLIA (per tipo)   */}
                   {dispMode==="grid" && roomTypes.map(type => {
                     const t=tc(type), rooms=ROOMS.filter(r=>r.type===type);
                     return (
@@ -2674,7 +2891,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                     );
                   })}
 
-                  {/* ── TIMELINE (per camera) ── */}
+                  {/*   TIMELINE (per camera)   */}
                   {dispMode==="timeline" && (() => {
                     const tlSelMin = tlA && tlB ? (tlA<=tlB?tlA:tlB) : null;
                     const tlSelMax = tlA && tlB ? (tlA<=tlB?tlB:tlA) : null;
@@ -2804,10 +3021,10 @@ Rispondi in italiano, in modo conciso e professionale.`;
           );
         })()}
 
-        {/* ════════════════ CAMERE ════════════════ */}
+        {/*   CAMERE   */}
         {page==="Camere" && (
           <div>
-            <div style={{ marginBottom:26 }}><div className="section-title">Struttura</div><h1 style={{ fontSize:30, fontWeight:300, fontFamily:"'Cormorant Garamond',serif" }}>Camere</h1></div>
+            <div className="page-header"><div><h1>Gestione Camere</h1><div className="page-subtitle">Configurazione camere, tipologie e stato occupazione</div></div>
             <div className="room-grid">
               {ROOMS.map(room => {
                 const ar=reservations.find(r=>r.roomId===room.id&&["checked-in","reserved"].includes(r.status));
@@ -2815,7 +3032,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                 const c=isOcc?C.green:isRes?C.navy:C.text3;
                 return (
                   <div key={room.id} className="room-card" style={{ borderColor:isOcc?C.greenLb:isRes?C.navyLb:C.border }}>
-                    <div style={{ fontSize:22, fontWeight:300, color:c, marginBottom:6, fontFamily:"'Cormorant Garamond',serif" }}>Camera {room.id}</div>
+                    <div style={{ fontSize:22, fontWeight:600, color:c, marginBottom:6, fontFamily:"IBM Plex Sans,sans-serif" }}>Camera {room.id}</div>
                     <div style={{ fontSize:12, color:C.text2, fontWeight:500 }}>{room.type} · Piano {room.floor}</div>
                     <div style={{ fontSize:11, color:C.text3, marginTop:3 }}>{room.capacity} ospiti · <b style={{ color:C.gold }}>€{room.price}</b>/notte</div>
                     <div style={{ marginTop:10, fontSize:11, textTransform:"uppercase", fontWeight:600, color:c }}>
@@ -2831,7 +3048,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
 
 
 
-        {/* ════════════════ PREZZI & REVENUE ════════════════ */}
+        {/*   PREZZI & REVENUE   */}
         {page==="Prezzi & Revenue" && (() => {
           const roomTypes = [...new Set(ROOMS.map(r => r.type))];
 
@@ -2988,7 +3205,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:24 }}>
                 <div>
                   <div className="section-title">Revenue Management</div>
-                  <h1 style={{ fontSize:30, fontWeight:300, fontFamily:"'Cormorant Garamond',serif" }}>Prezzi & Revenue</h1>
+                  <h1>Prezzi & Revenue Management</h1>
                 </div>
                 <div style={{ display:"flex", gap:8 }}>
                   <button className={`btn-secondary${priceViewMode==="tipologia"?" active-tab":""}`}
@@ -3013,16 +3230,16 @@ Rispondi in italiano, in modo conciso e professionale.`;
                       <span style={{ fontSize:10, fontWeight:700, color:C.text3, letterSpacing:1, textTransform:"uppercase" }}>{s.l}</span>
                       <span style={{ fontSize:18 }}>{s.icon}</span>
                     </div>
-                    <div style={{ fontSize:36, fontWeight:300, color:s.c, fontFamily:"'Cormorant Garamond',serif" }}>{s.v}</div>
+                    <div style={{ fontSize:36, fontWeight:700, color:s.c, fontFamily:"IBM Plex Sans,sans-serif" }}>{s.v}</div>
                   </div>
                 ))}
               </div>
 
               <div style={{ display:"grid", gridTemplateColumns:"1fr 420px", gap:20, alignItems:"start" }}>
 
-                {/* ── Colonna sinistra: tabella prezzi ── */}
+                {/*   Colonna sinistra: tabella prezzi   */}
                 <div>
-                  {/* ── Vista per TIPOLOGIA ── */}
+                  {/*   Vista per TIPOLOGIA   */}
                   {priceViewMode === "tipologia" && (
                     <div className="card" style={{ padding:0, overflow:"hidden" }}>
                       <div style={{ padding:"14px 20px", borderBottom:`1px solid ${C.border}`, display:"grid", gridTemplateColumns:"1fr 80px 80px 80px 80px 80px 120px 90px", gap:8, fontSize:10, fontWeight:700, color:C.text3, letterSpacing:1, textTransform:"uppercase" }}>
@@ -3078,7 +3295,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                     </div>
                   )}
 
-                  {/* ── Vista per CAMERA ── */}
+                  {/*   Vista per CAMERA   */}
                   {priceViewMode === "camera" && (
                     <div className="card" style={{ padding:0, overflow:"hidden" }}>
                       <div style={{ padding:"14px 20px", borderBottom:`1px solid ${C.border}`, display:"grid", gridTemplateColumns:"70px 1fr 70px 70px 90px 100px 90px", gap:8, fontSize:10, fontWeight:700, color:C.text3, letterSpacing:1, textTransform:"uppercase" }}>
@@ -3130,7 +3347,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                   )}
                 </div>
 
-                {/* ── Colonna destra: regole dinamiche ── */}
+                {/*   Colonna destra: regole dinamiche   */}
                 <div>
                   {/* Form nuova regola */}
                   <div className="card" style={{ marginBottom:16, border:`2px solid ${editRuleId ? C.goldLb : C.border}` }}>
@@ -3167,7 +3384,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                         <input type="range" min={0} max={ruleForm.type==="occupancy"?100:50} value={ruleForm.threshold}
                           onChange={e => setRuleForm(f=>({...f, threshold:parseInt(e.target.value)}))}
                           style={{ flex:1, accentColor:C.gold }} />
-                        <div style={{ minWidth:50, textAlign:"center", fontWeight:700, color:C.gold, fontSize:18, fontFamily:"'Cormorant Garamond',serif" }}>
+                        <div style={{ minWidth:50, textAlign:"center", fontWeight:700, color:C.gold, fontSize:18, fontFamily:"IBM Plex Sans,sans-serif" }}>
                           {ruleForm.threshold}{ruleForm.type==="occupancy"?"%":""}
                         </div>
                       </div>
@@ -3209,7 +3426,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                         <input type="range" min={1} max={ruleForm.adjustType==="pct"?100:500} value={ruleForm.adjustment}
                           onChange={e => setRuleForm(f=>({...f, adjustment:parseInt(e.target.value)}))}
                           style={{ flex:1, accentColor: ruleForm.direction==="increase" ? C.green : C.red }} />
-                        <div style={{ minWidth:60, textAlign:"center", fontWeight:700, color: ruleForm.direction==="increase" ? C.green : C.red, fontSize:18, fontFamily:"'Cormorant Garamond',serif" }}>
+                        <div style={{ minWidth:60, textAlign:"center", fontWeight:700, color: ruleForm.direction==="increase" ? C.green : C.red, fontSize:18, fontFamily:"IBM Plex Sans,sans-serif" }}>
                           {ruleForm.direction==="increase" ? "+" : "−"}{ruleForm.adjustType === "pct" ? `${ruleForm.adjustment}%` : `€${ruleForm.adjustment}`}
                         </div>
                       </div>
@@ -3304,10 +3521,10 @@ Rispondi in italiano, in modo conciso e professionale.`;
           );
         })()}
 
-        {/* ════════════════ CASSA ════════════════ */}
+        {/*   CASSA   */}
         {page==="Cassa" && (
           <div>
-            <div style={{ marginBottom:16 }}><div className="section-title">Amministrazione</div><h1 style={{ fontSize:30, fontWeight:300, fontFamily:"'Cormorant Garamond',serif" }}>Cassa</h1></div>
+            <div className="page-header"><div><h1>Cassa</h1><div className="page-subtitle">Pagamenti ricevuti, estratto conto e report fiscali</div></div>
             <AiBar pg="Cassa" />
             <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14, marginBottom:22 }}>
               {[
@@ -3318,7 +3535,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
               ].map(s => (
                 <div key={s.l} className="stat-card">
                   <div style={{ fontSize:10, fontWeight:700, color:C.text3, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>{s.l}</div>
-                  <div style={{ fontSize:30, fontWeight:300, color:s.c, fontFamily:"'Cormorant Garamond',serif" }}>€{s.v.toLocaleString("it-IT",{minimumFractionDigits:2})}</div>
+                  <div style={{ fontSize:30, fontWeight:300, color:s.c, fontFamily:"IBM Plex Sans,sans-serif" }}>€{s.v.toLocaleString("it-IT",{minimumFractionDigits:2})}</div>
                 </div>
               ))}
             </div>
@@ -3351,12 +3568,12 @@ Rispondi in italiano, in modo conciso e professionale.`;
           </div>
         )}
 
-        {/* ════════════════ PUBBLICA SICUREZZA ════════════════ */}
+        {/*   PUBBLICA SICUREZZA   */}
         {page==="Pubblica Sicurezza" && (
           <div>
             <div style={{ marginBottom:22 }}>
               <div className="section-title">Comunicazione Autorità</div>
-              <h1 style={{ fontSize:30, fontWeight:300, fontFamily:"'Cormorant Garamond',serif" }}>Pubblica Sicurezza</h1>
+              <h1>Pubblica Sicurezza</h1>
               <div style={{ fontSize:12, color:C.text3, marginTop:5 }}>Schedine alloggiati · Art. 109 T.U.L.P.S. · Modello 349 · Portale Alloggiati Web</div>
             </div>
             <div style={{ display:"flex", gap:12, marginBottom:20, alignItems:"flex-end" }}>
@@ -3435,7 +3652,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
           </div>
         )}
 
-        {/* ════════════════ ISTAT VENETO ════════════════ */}
+        {/*   ISTAT VENETO   */}
         {page==="ISTAT Veneto" && (() => {
           const mRes=istatRes;
           const italRes=mRes.filter(r=>{const g=getGuest(r.guestId); return !g||g.nazionalita==="IT";});
@@ -3451,7 +3668,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
             <div>
               <div style={{ marginBottom:22 }}>
                 <div className="section-title">Statistica Regionale</div>
-                <h1 style={{ fontSize:30, fontWeight:300, fontFamily:"'Cormorant Garamond',serif" }}>ISTAT Veneto</h1>
+                <h1>ISTAT Veneto</h1>
                 <div style={{ fontSize:12, color:C.text3, marginTop:5 }}>Rilevazione movimento clienti esercizi ricettivi · Modello C/59 · Regione Veneto</div>
               </div>
               <div style={{ display:"flex", gap:12, marginBottom:20, alignItems:"flex-end" }}>
@@ -3460,7 +3677,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
               </div>
               <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:20 }}>
                 {[["Arrivi Totali",totArr,C.gold],["Presenze Totali",totPres,C.navy],["Arr. Italiani",itArr,C.green],["Arr. Stranieri",stArr,C.purple]].map(([l,v,c]) => (
-                  <div key={l} className="stat-card"><div style={{ fontSize:10, fontWeight:700, color:C.text3, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>{l}</div><div style={{ fontSize:30, fontWeight:300, color:c, fontFamily:"'Cormorant Garamond',serif" }}>{v}</div></div>
+                  <div key={l} className="stat-card"><div style={{ fontSize:10, fontWeight:700, color:C.text3, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>{l}</div><div style={{ fontSize:30, fontWeight:300, color:c, fontFamily:"IBM Plex Sans,sans-serif" }}>{v}</div></div>
                 ))}
               </div>
               <div className="istat-doc">
@@ -3509,7 +3726,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
 
       </div>{/* fine main content */}
 
-      {/* ════════════════ MODAL: FORM OSPITE ════════════════ */}
+      {/*   MODAL: FORM OSPITE   */}
       {modal && modal.startsWith("guest-form") && (
         <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setModal(null)}>
           <div className="modal-box" style={{ maxWidth:820 }}>
@@ -3576,7 +3793,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
         </div>
       )}
 
-      {/* ════════════════ MODAL: PRENOTAZIONE ════════════════ */}
+      {/*   MODAL: PRENOTAZIONE   */}
       {(modal==="new-res"||modal==="edit-res") && (
         <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setModal(null)}>
           <div className="modal-box">
@@ -3656,7 +3873,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
         </div>
       )}
 
-      {/* ════════════════ MODAL: CHECKOUT ════════════════ */}
+      {/*   MODAL: CHECKOUT   */}
       {modal==="checkout" && form && (() => {
         const tot     = calcTotal(form);
         const tax     = tot * TAX_RATE;
@@ -3698,7 +3915,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
               <div className="modal-body">
                 <div style={{ display:"grid", gridTemplateColumns: splitMode ? "1fr 1fr" : "1fr", gap:18 }}>
 
-                  {/* ── Colonna sinistra: riepilogo conto ── */}
+                  {/*   Colonna sinistra: riepilogo conto   */}
                   <div>
                     {/* Riepilogo importo */}
                     <div style={{ background:C.surface2, border:`1px solid ${C.border}`, borderRadius:8, padding:14, marginBottom:14 }}>
@@ -3785,7 +4002,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                     )}
                   </div>
 
-                  {/* ── Colonna destra: persone split ── */}
+                  {/*   Colonna destra: persone split   */}
                   {splitMode && splitPersone.length > 0 && (
                     <div>
                       {/* Tab persone */}
@@ -3961,7 +4178,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
         );
       })()}
 
-      {/* ════════════════ MODAL: FATTURA ════════════════ */}
+      {/*   MODAL: FATTURA   */}
       {modal==="invoice" && invoiceRes && (() => {
         const r={...invoiceRes,...reservations.find(x=>x.id===invoiceRes.id)};
         const room=ROOMS.find(x=>x.id===r.roomId);
@@ -3993,7 +4210,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                 <div className="invoice-paper">
                   <div style={{ display:"flex", justifyContent:"space-between", marginBottom:22, borderBottom:"2px solid #1a1a1a", paddingBottom:16 }}>
                     <div>
-                      <div style={{ fontSize:26, fontWeight:300, letterSpacing:4, fontFamily:"'Cormorant Garamond',serif" }}>HOTEL GASPARINI</div>
+                      <div style={{ fontSize:26, fontWeight:700, letterSpacing:4, fontFamily:"IBM Plex Sans,sans-serif" }}>HOTEL GASPARINI</div>
                       <div style={{ fontSize:10, color:"#666", letterSpacing:2 }}>Via della Repubblica, 1 · Venezia (VE)</div>
                       <div style={{ fontSize:11, color:"#444", marginTop:5 }}>P.IVA: IT01234567890 · Tel: +39 041 1234567</div>
                     </div>
@@ -4039,7 +4256,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
         );
       })()}
 
-        {/* ════════════════ API & INTEGRAZIONI ════════════════ */}
+        {/*   API & INTEGRAZIONI   */}
         {page==="API & Integrazioni" && (() => {
           const REST_ENDPOINTS = [
             // Prenotazioni
@@ -4105,7 +4322,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:20 }}>
                 <div>
                   <div className="section-title">Connettività</div>
-                  <h1 style={{ fontSize:30, fontWeight:300, fontFamily:"'Cormorant Garamond',serif" }}>API & Integrazioni</h1>
+                  <h1 style={{ fontSize:22, fontWeight:600 }}>API & Integrazioni</h1>
                 </div>
               </div>
               <AiBar pg="API & Integrazioni" />
@@ -4117,7 +4334,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                 ))}
               </div>
 
-              {/* ── TAB: Panoramica ── */}
+              {/*   TAB: Panoramica   */}
               {apiTab === "overview" && (
                 <div>
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14, marginBottom:24 }}>
@@ -4132,7 +4349,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                           <span style={{ fontSize:10, fontWeight:700, color:C.text3, letterSpacing:1, textTransform:"uppercase" }}>{s.l}</span>
                           <span style={{ fontSize:20 }}>{s.icon}</span>
                         </div>
-                        <div style={{ fontSize:34, fontWeight:300, color:s.c, fontFamily:"'Cormorant Garamond',serif" }}>{s.v}</div>
+                        <div style={{ fontSize:34, fontWeight:700, color:s.c, fontFamily:"IBM Plex Sans,sans-serif" }}>{s.v}</div>
                       </div>
                     ))}
                   </div>
@@ -4182,7 +4399,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
                 </div>
               )}
 
-              {/* ── TAB: Chiavi API ── */}
+              {/*   TAB: Chiavi API   */}
               {apiTab === "keys" && (
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:18 }}>
                   {[
@@ -4214,7 +4431,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
                 </div>
               )}
 
-              {/* ── TAB: REST API ── */}
+              {/*   TAB: REST API   */}
               {apiTab === "rest" && (
                 <div>
                   <div style={{ display:"flex", gap:8, marginBottom:16, flexWrap:"wrap", alignItems:"center" }}>
@@ -4249,7 +4466,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
                 </div>
               )}
 
-              {/* ── TAB: Booking.com ── */}
+              {/*   TAB: Booking.com   */}
               {apiTab === "booking" && (
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:18 }}>
                   <div className="card">
@@ -4293,7 +4510,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
                 </div>
               )}
 
-              {/* ── TAB: Pagamenti Stripe ── */}
+              {/*   TAB: Pagamenti Stripe   */}
               {apiTab === "payments" && (
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:18 }}>
                   <div className="card">
@@ -4339,7 +4556,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
                 </div>
               )}
 
-              {/* ── TAB: Webhooks ── */}
+              {/*   TAB: Webhooks   */}
               {apiTab === "webhooks" && (
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:18 }}>
                   <div className="card">
@@ -4394,7 +4611,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
                 </div>
               )}
 
-              {/* ── TAB: Logs ── */}
+              {/*   TAB: Logs   */}
               {apiTab === "logs" && (
                 <div>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
@@ -4423,7 +4640,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
           );
         })()}
 
-        {/* ── PANNELLO CHAT AI FLOTTANTE ── */}
+        {/*   PANNELLO CHAT AI FLOTTANTE   */}
         {aiVisible && (
           <div className="ai-panel no-print">
             <div style={{ padding:"12px 16px", background:`linear-gradient(135deg,${C.goldL},${C.surface})`, borderBottom:`1px solid ${C.border}`, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
@@ -4478,7 +4695,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
           </div>
         )}
 
-        {/* ════════════════ RISTORANTE POS ════════════════ */}
+        {/*   RISTORANTE POS   */}
         {page==="Ristorante POS" && (() => {
           const sale = [...new Set(TAVOLI_LAYOUT.map(t=>t.sala))];
           const tavoliSala = TAVOLI_LAYOUT.filter(t => t.sala===posSala);
@@ -4498,7 +4715,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:20 }}>
                 <div>
                   <div className="section-title">Food & Beverage</div>
-                  <h1 style={{ fontSize:30, fontWeight:300, fontFamily:"'Cormorant Garamond',serif" }}>Ristorante POS</h1>
+                  <h1 style={{ fontSize:22, fontWeight:600 }}>Ristorante POS</h1>
                 </div>
                 {tavoloAttivo && (
                   <div style={{ padding:"7px 14px", background:C.goldL, border:`1px solid ${C.goldLb}`, borderRadius:8, fontSize:12, fontWeight:700, color:C.gold }}>
@@ -4517,7 +4734,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
                 ].map(s => (
                   <div key={s.l} className="pos-stat">
                     <div style={{ fontSize:10, fontWeight:700, color:C.text3, letterSpacing:1, textTransform:"uppercase", marginBottom:6 }}>{s.l}</div>
-                    <div style={{ fontSize:26, fontWeight:300, color:s.c, fontFamily:"'Cormorant Garamond',serif" }}>{s.v}</div>
+                    <div style={{ fontSize:26, fontWeight:700, color:s.c, fontFamily:"IBM Plex Sans,sans-serif" }}>{s.v}</div>
                   </div>
                 ))}
               </div>
@@ -4532,7 +4749,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
                 ))}
               </div>
 
-              {/* ══ MAPPA TAVOLI ══ */}
+              {/*   MAPPA TAVOLI   */}
               {posTab==="mappa" && (
                 <div style={{ display:"grid", gridTemplateColumns:"150px 1fr", gap:20 }}>
                   <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
@@ -4596,7 +4813,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
                 </div>
               )}
 
-              {/* ══ ORDINE ══ */}
+              {/*   ORDINE   */}
               {posTab==="ordine" && (
                 <div>
                   {!tavoloAttivo ? (
@@ -4681,7 +4898,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
                         <div style={{ padding:"12px 16px", borderTop:`2px solid ${C.border}` }}>
                           <div style={{ display:"flex", justifyContent:"space-between", marginBottom:10 }}>
                             <span style={{ fontWeight:700, fontSize:15 }}>Totale</span>
-                            <span style={{ fontWeight:700, fontSize:22, color:C.gold, fontFamily:"'Cormorant Garamond',serif" }}>€{totaleAttivo.toFixed(2)}</span>
+                            <span style={{ fontWeight:700, fontSize:22, color:C.gold, fontFamily:"IBM Plex Sans,sans-serif" }}>€{totaleAttivo.toFixed(2)}</span>
                           </div>
                           <div style={{ display:"flex", gap:7 }}>
                             <button className="btn-blue" style={{ flex:1, fontSize:12 }} onClick={()=>posInviaCucina(tavoloAttivo)}>👨‍🍳 Cucina</button>
@@ -4696,7 +4913,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
                 </div>
               )}
 
-              {/* ══ CUCINA ══ */}
+              {/*   CUCINA   */}
               {posTab==="cucina" && (
                 <div>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16 }}>
@@ -4762,7 +4979,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
                 </div>
               )}
 
-              {/* ══ PRE-COMANDA ══ */}
+              {/*   PRE-COMANDA   */}
               {posTab==="precomanda" && (() => {
                 const risorseServizio = precomandaForm.servizio==="colazione"
                   ? pcRighe.filter(r=>r.cat==="Colazione")
@@ -4878,7 +5095,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
                 );
               })()}
 
-              {/* ══ CASSA POS ══ */}
+              {/*   CASSA POS   */}
               {posTab==="cassa-pos" && (
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
                   {/* Lista tavoli aperti */}
@@ -4904,7 +5121,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
                               {lr && <div style={{ fontSize:11, color:C.navy, marginTop:2 }}>🔗 {lr.guestName} · Cam {lr.roomId}</div>}
                             </div>
                             <div style={{ textAlign:"right" }}>
-                              <div style={{ fontSize:22, fontWeight:300, color:C.gold, fontFamily:"'Cormorant Garamond',serif" }}>€{tot.toFixed(2)}</div>
+                              <div style={{ fontSize:22, fontWeight:600, color:C.gold, fontFamily:"IBM Plex Sans,sans-serif" }}>€{tot.toFixed(2)}</div>
                               <div style={{ fontSize:10, color:C.text3 }}>{(ts.ordini||[]).reduce((s,o)=>s+o.qty,0)} articoli</div>
                             </div>
                           </div>
