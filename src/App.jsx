@@ -2391,7 +2391,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
         {page==="Prenotazioni" && (
           <div>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:22 }}>
-              <div className="page-header"><div><h1>Prenotazioni</h1><div className="page-subtitle">Archivio prenotazioni · ricerca, modifica e nuove inserzioni</div></div>
+              <div className="page-header"><div><h1>Prenotazioni</h1><div className="page-subtitle">Archivio prenotazioni · ricerca, modifica e nuove inserzioni</div></div></div>
               <button className="btn-primary" onClick={openNewReservation}>+ Nuova</button>
             </div>
             <AiBar pg="Prenotazioni" />
@@ -2432,7 +2432,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
         {page==="Anagrafica" && (
           <div>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:22 }}>
-              <div className="page-header"><div><h1>Anagrafica Ospiti</h1><div className="page-subtitle">Gestione anagrafiche, documenti e storico soggiorni</div></div>
+              <div className="page-header"><div><h1>Anagrafica Ospiti</h1><div className="page-subtitle">Gestione anagrafiche, documenti e storico soggiorni</div></div></div>
               <button className="btn-primary" onClick={() => openNewGuest()}>+ Nuovo Ospite</button>
             </div>
             <div style={{ display:"flex", gap:10, marginBottom:18, alignItems:"center" }}>
@@ -2493,7 +2493,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
 
           return (
             <div>
-              <div className="page-header"><div><h1>Check-In / Check-Out</h1><div className="page-subtitle">Gestione arrivi, partenze e ospiti in casa</div></div>
+              <div className="page-header"><div><h1>Check-In / Check-Out</h1><div className="page-subtitle">Gestione arrivi, partenze e ospiti in casa</div></div></div>
               <AiBar pg="Check-In/Out" />
 
               {/* KPI strip */}
@@ -3026,7 +3026,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
         {/*   CAMERE   */}
         {page==="Camere" && (
           <div>
-            <div className="page-header"><div><h1>Gestione Camere</h1><div className="page-subtitle">Configurazione camere, tipologie e stato occupazione</div></div>
+            <div className="page-header"><div><h1>Gestione Camere</h1><div className="page-subtitle">Configurazione camere, tipologie e stato occupazione</div></div></div>
             <div className="room-grid">
               {ROOMS.map(room => {
                 const ar=reservations.find(r=>r.roomId===room.id&&["checked-in","reserved"].includes(r.status));
@@ -3526,7 +3526,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
         {/*   CASSA   */}
         {page==="Cassa" && (
           <div>
-            <div className="page-header"><div><h1>Cassa</h1><div className="page-subtitle">Pagamenti ricevuti, estratto conto e report fiscali</div></div>
+            <div className="page-header"><div><h1>Cassa</h1><div className="page-subtitle">Pagamenti ricevuti, estratto conto e report fiscali</div></div></div>
             <AiBar pg="Cassa" />
             <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14, marginBottom:22 }}>
               {[
