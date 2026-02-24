@@ -975,123 +975,6 @@ const PAGE_GROUPS = [
 
 
 // - Componente suggerimento AI contestuale -
-const AiBar = ({ pg }) => (
-  <div style={{ marginBottom:20 }}>
-    {(!aiSuggestion || aiSuggestion.page !== pg) && !aiLoading && (
-      <button onClick={() => requestAiSuggestion(pg)} style={{ background:"none", border:`1px dashed ${C.goldLb}`, borderRadius:8, padding:"7px 14px", fontSize:11, color:C.gold, cursor:"pointer", fontWeight:600, display:"flex", alignItems:"center", gap:6, transition:"all .2s" }}
-        onMouseEnter={e=>{e.currentTarget.style.background=C.goldL}} onMouseLeave={e=>{e.currentTarget.style.background="none"}}>
-        ✦ Chiedi suggerimento AI per questa pagina
-      </button>
-    )}
-    {aiLoading && (
-      <div style={{ background:C.goldL, border:`1px solid ${C.goldLb}`, borderRadius:8, padding:"10px 16px", fontSize:12, color:C.gold, display:"flex", alignItems:"center", gap:8 }}>
-        <span className="ai-loading-dot">●</span><span className="ai-loading-dot">●</span><span className="ai-loading-dot">●</span>
-        <span style={{ marginLeft:4 }}>L'assistente AI sta analizzando i dati...</span>
-      </div>
-    )}
-    {aiSuggestion && aiSuggestion.page === pg && !aiLoading && (
-      <div className="ai-suggestion-box">
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
-          <div style={{ fontSize:11, fontWeight:700, color:C.gold, letterSpacing:1, textTransform:"uppercase", display:"flex", alignItems:"center", gap:6 }}>
-            ✦ Assistente AI — Suggerimenti per {pg}
-          </div>
-          <div style={{ display:"flex", gap:6, alignItems:"center" }}>
-            <span style={{ fontSize:10, color:C.text3 }}>{aiSuggestion.ts}</span>
-            <button onClick={() => requestAiSuggestion(pg)} title="Aggiorna" style={{ background:"none", border:`1px solid ${C.goldLb}`, borderRadius:4, padding:"2px 6px", fontSize:10, color:C.gold, cursor:"pointer" }}>↺</button>
-            <button onClick={() => setAiSuggestion(null)} style={{ background:"none", border:"none", color:C.text3, cursor:"pointer", fontSize:14 }}>×</button>
-          </div>
-        </div>
-        <div style={{ fontSize:13, color:C.text, lineHeight:1.7, whiteSpace:"pre-wrap" }}>{aiSuggestion.text}</div>
-        <button onClick={() => { setAiMessages([{role:"user",content:`Approfondisci i suggerimenti per la pagina ${pg}: ${aiSuggestion.text}`}]); setAiVisible(true); callAI(`Approfondisci: ${aiSuggestion.text}`, `Pagina: ${pg}`).then(r=>r&&setAiMessages(p=>[...p,{role:"assistant",content:r.text}])); }} style={{ marginTop:8, background:"none", border:`1px solid ${C.goldLb}`, borderRadius:6, padding:"4px 12px", fontSize:11, color:C.gold, cursor:"pointer" }}>
-          Approfondisci in chat ›
-        </button>
-      </div>
-    )}
-  </div>
-);
-
-const ComuneInput = ({ label, value, onChange, placeholder="Cerca comune..." }) => {
-  const [query, setQuery]   = useState(value || "");
-  const [open, setOpen]     = useState(false);
-  const [hiIdx, setHiIdx]   = useState(0);
-  const inputRef            = useRef(null);
-  const listRef             = useRef(null);
-
-  // Sincronizza query con value esterno (es. reset form)
-  useEffect(() => { setQuery(value || ""); }, [value]);
-
-  const results = useMemo(() => {
-    if (!query || query.length < 2) return [];
-    const q = query.toLowerCase();
-    return COMUNI_IT.filter(x => x.c.toLowerCase().startsWith(q)).slice(0, 8)
-      .concat(COMUNI_IT.filter(x => !x.c.toLowerCase().startsWith(q) && x.c.toLowerCase().includes(q)).slice(0, 4));
-  }, [query]);
-
-  const select = (item) => {
-    setQuery(item.c);
-    setOpen(false);
-    onChange(item);
-  };
-
-  const handleKey = (e) => {
-    if (!open || !results.length) return;
-    if (e.key === "ArrowDown") { e.preventDefault(); setHiIdx(i => Math.min(i+1, results.length-1)); }
-    if (e.key === "ArrowUp")   { e.preventDefault(); setHiIdx(i => Math.max(i-1, 0)); }
-    if (e.key === "Enter")     { e.preventDefault(); if (results[hiIdx]) select(results[hiIdx]); }
-    if (e.key === "Escape")    { setOpen(false); }
-  };
-
-  // Scrolla il risultato evidenziato in vista
-  useEffect(() => {
-    if (listRef.current) {
-      const el = listRef.current.querySelector(`[data-idx="${hiIdx}"]`);
-      if (el) el.scrollIntoView({ block:"nearest" });
-    }
-  }, [hiIdx]);
-
-  return (
-    <div style={{ position:"relative" }}>
-      {label && <label className="label">{label}</label>}
-      <input
-        ref={inputRef}
-        className="input-field"
-        value={query}
-        placeholder={placeholder}
-        autoComplete="off"
-        onChange={e => { setQuery(e.target.value); setOpen(true); setHiIdx(0); if (!e.target.value) onChange({c:"",p:"",z:""}); }}
-        onFocus={() => { if (query.length >= 2) setOpen(true); }}
-        onBlur={() => setTimeout(() => setOpen(false), 150)}
-        onKeyDown={handleKey}
-      />
-      {open && results.length > 0 && (
-        <div ref={listRef} style={{
-          position:"absolute", zIndex:9999, top:"100%", left:0, right:0,
-          background:"white", border:"1.5px solid #d4b896", borderRadius:"0 0 8px 8px",
-          boxShadow:"0 6px 20px rgba(0,0,0,.12)", maxHeight:220, overflowY:"auto"
-        }}>
-          {results.map((item, i) => (
-            <div key={item.c} data-idx={i}
-              onMouseDown={() => select(item)}
-              style={{
-                padding:"8px 12px", cursor:"pointer", fontSize:13,
-                background: i===hiIdx ? "#f5ead0" : "white",
-                borderBottom:"1px solid #f0ece6",
-                display:"flex", justifyContent:"space-between", alignItems:"center",
-              }}>
-              <span style={{ fontWeight: i===hiIdx ? 700 : 400 }}>{item.c}</span>
-              <span style={{ fontSize:11, color:"#9c8f82", display:"flex", gap:8 }}>
-                <span style={{ background:"#f5ead0", padding:"1px 6px", borderRadius:8, fontWeight:700, color:"#a0720a" }}>{item.p}</span>
-                <span style={{ color:"#c0b8b0" }}>{item.z}</span>
-                <span style={{ color:"#c0b8b0" }}>{item.r}</span>
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
 export default function HotelPMS() {
   const [page, setPage]               = useState("Dashboard");
   const [guests, setGuests]           = useState(DEMO_GUESTS);
@@ -1688,6 +1571,124 @@ Rispondi in italiano, in modo conciso e professionale.`;
   // - COMPONENTE AUTOCOMPLETE COMUNE (definito dentro il componente) -
 
 
+
+
+  const AiBar = ({ pg }) => (
+    <div style={{ marginBottom:20 }}>
+      {(!aiSuggestion || aiSuggestion.page !== pg) && !aiLoading && (
+        <button onClick={() => requestAiSuggestion(pg)} style={{ background:"none", border:`1px dashed ${C.goldLb}`, borderRadius:8, padding:"7px 14px", fontSize:11, color:C.gold, cursor:"pointer", fontWeight:600, display:"flex", alignItems:"center", gap:6, transition:"all .2s" }}
+          onMouseEnter={e=>{e.currentTarget.style.background=C.goldL}} onMouseLeave={e=>{e.currentTarget.style.background="none"}}>
+          ✦ Chiedi suggerimento AI per questa pagina
+        </button>
+      )}
+      {aiLoading && (
+        <div style={{ background:C.goldL, border:`1px solid ${C.goldLb}`, borderRadius:8, padding:"10px 16px", fontSize:12, color:C.gold, display:"flex", alignItems:"center", gap:8 }}>
+          <span className="ai-loading-dot">●</span><span className="ai-loading-dot">●</span><span className="ai-loading-dot">●</span>
+          <span style={{ marginLeft:4 }}>L'assistente AI sta analizzando i dati...</span>
+        </div>
+      )}
+      {aiSuggestion && aiSuggestion.page === pg && !aiLoading && (
+        <div className="ai-suggestion-box">
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+            <div style={{ fontSize:11, fontWeight:700, color:C.gold, letterSpacing:1, textTransform:"uppercase", display:"flex", alignItems:"center", gap:6 }}>
+              ✦ Assistente AI — Suggerimenti per {pg}
+            </div>
+            <div style={{ display:"flex", gap:6, alignItems:"center" }}>
+              <span style={{ fontSize:10, color:C.text3 }}>{aiSuggestion.ts}</span>
+              <button onClick={() => requestAiSuggestion(pg)} title="Aggiorna" style={{ background:"none", border:`1px solid ${C.goldLb}`, borderRadius:4, padding:"2px 6px", fontSize:10, color:C.gold, cursor:"pointer" }}>↺</button>
+              <button onClick={() => setAiSuggestion(null)} style={{ background:"none", border:"none", color:C.text3, cursor:"pointer", fontSize:14 }}>×</button>
+            </div>
+          </div>
+          <div style={{ fontSize:13, color:C.text, lineHeight:1.7, whiteSpace:"pre-wrap" }}>{aiSuggestion.text}</div>
+          <button onClick={() => { setAiMessages([{role:"user",content:`Approfondisci i suggerimenti per la pagina ${pg}: ${aiSuggestion.text}`}]); setAiVisible(true); callAI(`Approfondisci: ${aiSuggestion.text}`, `Pagina: ${pg}`).then(r=>r&&setAiMessages(p=>[...p,{role:"assistant",content:r.text}])); }} style={{ marginTop:8, background:"none", border:`1px solid ${C.goldLb}`, borderRadius:6, padding:"4px 12px", fontSize:11, color:C.gold, cursor:"pointer" }}>
+            Approfondisci in chat ›
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  const ComuneInput = ({ label, value, onChange, placeholder="Cerca comune..." }) => {
+    const [query, setQuery]   = useState(value || "");
+    const [open, setOpen]     = useState(false);
+    const [hiIdx, setHiIdx]   = useState(0);
+    const inputRef            = useRef(null);
+    const listRef             = useRef(null);
+
+    // Sincronizza query con value esterno (es. reset form)
+    useEffect(() => { setQuery(value || ""); }, [value]);
+
+    const results = useMemo(() => {
+      if (!query || query.length < 2) return [];
+      const q = query.toLowerCase();
+      return COMUNI_IT.filter(x => x.c.toLowerCase().startsWith(q)).slice(0, 8)
+        .concat(COMUNI_IT.filter(x => !x.c.toLowerCase().startsWith(q) && x.c.toLowerCase().includes(q)).slice(0, 4));
+    }, [query]);
+
+    const select = (item) => {
+      setQuery(item.c);
+      setOpen(false);
+      onChange(item);
+    };
+
+    const handleKey = (e) => {
+      if (!open || !results.length) return;
+      if (e.key === "ArrowDown") { e.preventDefault(); setHiIdx(i => Math.min(i+1, results.length-1)); }
+      if (e.key === "ArrowUp")   { e.preventDefault(); setHiIdx(i => Math.max(i-1, 0)); }
+      if (e.key === "Enter")     { e.preventDefault(); if (results[hiIdx]) select(results[hiIdx]); }
+      if (e.key === "Escape")    { setOpen(false); }
+    };
+
+    // Scrolla il risultato evidenziato in vista
+    useEffect(() => {
+      if (listRef.current) {
+        const el = listRef.current.querySelector(`[data-idx="${hiIdx}"]`);
+        if (el) el.scrollIntoView({ block:"nearest" });
+      }
+    }, [hiIdx]);
+
+    return (
+      <div style={{ position:"relative" }}>
+        {label && <label className="label">{label}</label>}
+        <input
+          ref={inputRef}
+          className="input-field"
+          value={query}
+          placeholder={placeholder}
+          autoComplete="off"
+          onChange={e => { setQuery(e.target.value); setOpen(true); setHiIdx(0); if (!e.target.value) onChange({c:"",p:"",z:""}); }}
+          onFocus={() => { if (query.length >= 2) setOpen(true); }}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          onKeyDown={handleKey}
+        />
+        {open && results.length > 0 && (
+          <div ref={listRef} style={{
+            position:"absolute", zIndex:9999, top:"100%", left:0, right:0,
+            background:"white", border:"1.5px solid #d4b896", borderRadius:"0 0 8px 8px",
+            boxShadow:"0 6px 20px rgba(0,0,0,.12)", maxHeight:220, overflowY:"auto"
+          }}>
+            {results.map((item, i) => (
+              <div key={item.c} data-idx={i}
+                onMouseDown={() => select(item)}
+                style={{
+                  padding:"8px 12px", cursor:"pointer", fontSize:13,
+                  background: i===hiIdx ? "#f5ead0" : "white",
+                  borderBottom:"1px solid #f0ece6",
+                  display:"flex", justifyContent:"space-between", alignItems:"center",
+                }}>
+                <span style={{ fontWeight: i===hiIdx ? 700 : 400 }}>{item.c}</span>
+                <span style={{ fontSize:11, color:"#9c8f82", display:"flex", gap:8 }}>
+                  <span style={{ background:"#f5ead0", padding:"1px 6px", borderRadius:8, fontWeight:700, color:"#a0720a" }}>{item.p}</span>
+                  <span style={{ color:"#c0b8b0" }}>{item.z}</span>
+                  <span style={{ color:"#c0b8b0" }}>{item.r}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div style={{ fontFamily:"IBM Plex Sans,system-ui,sans-serif", background:C.bg, minHeight:"100vh", color:C.text }}>
