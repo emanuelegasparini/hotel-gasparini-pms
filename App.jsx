@@ -211,6 +211,379 @@ function roomAvail(room, ci, co, ress, excl=null) {
   });
 }
 
+const COMUNI_IT = [
+  {c:"Abano Terme",p:"PD",z:"35031",r:"Veneto"},
+  {c:"Abbiategrasso",p:"MI",z:"20081",r:"Lombardia"},
+  {c:"Acireale",p:"CT",z:"95024",r:"Sicilia"},
+  {c:"Acri",p:"CS",z:"87041",r:"Calabria"},
+  {c:"Adrano",p:"CT",z:"95031",r:"Sicilia"},
+  {c:"Afragola",p:"NA",z:"80021",r:"Campania"},
+  {c:"Agrate Brianza",p:"MB",z:"20864",r:"Lombardia"},
+  {c:"Agrigento",p:"AG",z:"92100",r:"Sicilia"},
+  {c:"Alba",p:"CN",z:"12051",r:"Piemonte"},
+  {c:"Albenga",p:"SV",z:"17031",r:"Liguria"},
+  {c:"Albignasego",p:"PD",z:"35020",r:"Veneto"},
+  {c:"Alcamo",p:"TP",z:"91011",r:"Sicilia"},
+  {c:"Alessandria",p:"AL",z:"15100",r:"Piemonte"},
+  {c:"Alghero",p:"SS",z:"07041",r:"Sardegna"},
+  {c:"Altamura",p:"BA",z:"70022",r:"Puglia"},
+  {c:"Amalfi",p:"SA",z:"84011",r:"Campania"},
+  {c:"Ancona",p:"AN",z:"60100",r:"Marche"},
+  {c:"Andria",p:"BT",z:"76123",r:"Puglia"},
+  {c:"Aosta",p:"AO",z:"11100",r:"Valle d Aosta"},
+  {c:"Aprilia",p:"LT",z:"04011",r:"Lazio"},
+  {c:"Arcore",p:"MB",z:"20862",r:"Lombardia"},
+  {c:"Arezzo",p:"AR",z:"52100",r:"Toscana"},
+  {c:"Ariccia",p:"RM",z:"00040",r:"Lazio"},
+  {c:"Arona",p:"NO",z:"28041",r:"Piemonte"},
+  {c:"Arzano",p:"NA",z:"80022",r:"Campania"},
+  {c:"Ascoli Piceno",p:"AP",z:"63100",r:"Marche"},
+  {c:"Assisi",p:"PG",z:"06081",r:"Umbria"},
+  {c:"Asti",p:"AT",z:"14100",r:"Piemonte"},
+  {c:"Avellino",p:"AV",z:"83100",r:"Campania"},
+  {c:"Avezzano",p:"AQ",z:"67051",r:"Abruzzo"},
+  {c:"Avola",p:"SR",z:"96012",r:"Sicilia"},
+  {c:"Bagheria",p:"PA",z:"90011",r:"Sicilia"},
+  {c:"Bareggio",p:"MI",z:"20010",r:"Lombardia"},
+  {c:"Bari",p:"BA",z:"70100",r:"Puglia"},
+  {c:"Barletta",p:"BT",z:"76121",r:"Puglia"},
+  {c:"Bassano del Grappa",p:"VI",z:"36061",r:"Veneto"},
+  {c:"Battipaglia",p:"SA",z:"84091",r:"Campania"},
+  {c:"Belluno",p:"BL",z:"32100",r:"Veneto"},
+  {c:"Benevento",p:"BN",z:"82100",r:"Campania"},
+  {c:"Bergamo",p:"BG",z:"24100",r:"Lombardia"},
+  {c:"Biancavilla",p:"CT",z:"95033",r:"Sicilia"},
+  {c:"Biella",p:"BI",z:"13900",r:"Piemonte"},
+  {c:"Bisceglie",p:"BT",z:"76011",r:"Puglia"},
+  {c:"Bitonto",p:"BA",z:"70032",r:"Puglia"},
+  {c:"Bollate",p:"MI",z:"20021",r:"Lombardia"},
+  {c:"Bologna",p:"BO",z:"40100",r:"Emilia-Romagna"},
+  {c:"Bolzano",p:"BZ",z:"39100",r:"Trentino-Alto Adige"},
+  {c:"Borgomanero",p:"NO",z:"28021",r:"Piemonte"},
+  {c:"Borgosesia",p:"VC",z:"13011",r:"Piemonte"},
+  {c:"Bracciano",p:"RM",z:"00062",r:"Lazio"},
+  {c:"Brescia",p:"BS",z:"25100",r:"Lombardia"},
+  {c:"Brindisi",p:"BR",z:"72100",r:"Puglia"},
+  {c:"Brugherio",p:"MB",z:"20861",r:"Lombardia"},
+  {c:"Brunico",p:"BZ",z:"39031",r:"Trentino-Alto Adige"},
+  {c:"Busto Arsizio",p:"VA",z:"21052",r:"Lombardia"},
+  {c:"Cagliari",p:"CA",z:"09100",r:"Sardegna"},
+  {c:"Caivano",p:"NA",z:"80023",r:"Campania"},
+  {c:"Caltagirone",p:"CT",z:"95041",r:"Sicilia"},
+  {c:"Caltanissetta",p:"CL",z:"93100",r:"Sicilia"},
+  {c:"Camogli",p:"GE",z:"16032",r:"Liguria"},
+  {c:"Campobasso",p:"CB",z:"86100",r:"Molise"},
+  {c:"Canosa di Puglia",p:"BT",z:"76012",r:"Puglia"},
+  {c:"Cantu",p:"CO",z:"22063",r:"Lombardia"},
+  {c:"Carate Brianza",p:"MB",z:"20841",r:"Lombardia"},
+  {c:"Carbonia",p:"CI",z:"09013",r:"Sardegna"},
+  {c:"Cardito",p:"NA",z:"80024",r:"Campania"},
+  {c:"Carpi",p:"MO",z:"41012",r:"Emilia-Romagna"},
+  {c:"Carrara",p:"MS",z:"54033",r:"Toscana"},
+  {c:"Casale Monferrato",p:"AL",z:"15033",r:"Piemonte"},
+  {c:"Casalecchio di Reno",p:"BO",z:"40033",r:"Emilia-Romagna"},
+  {c:"Casalnuovo di Napoli",p:"NA",z:"80013",r:"Campania"},
+  {c:"Casarano",p:"LE",z:"73042",r:"Puglia"},
+  {c:"Caserta",p:"CE",z:"81100",r:"Campania"},
+  {c:"Casoria",p:"NA",z:"80026",r:"Campania"},
+  {c:"Cassino",p:"FR",z:"03043",r:"Lazio"},
+  {c:"Castellammare di Stabia",p:"NA",z:"80053",r:"Campania"},
+  {c:"Castrovillari",p:"CS",z:"87012",r:"Calabria"},
+  {c:"Catania",p:"CT",z:"95100",r:"Sicilia"},
+  {c:"Catanzaro",p:"CZ",z:"88100",r:"Calabria"},
+  {c:"Cava de Tirreni",p:"SA",z:"84013",r:"Campania"},
+  {c:"Cento",p:"FE",z:"44042",r:"Emilia-Romagna"},
+  {c:"Cerignola",p:"FG",z:"71042",r:"Puglia"},
+  {c:"Cesano Maderno",p:"MB",z:"20811",r:"Lombardia"},
+  {c:"Cesena",p:"FC",z:"47521",r:"Emilia-Romagna"},
+  {c:"Chieti",p:"CH",z:"66100",r:"Abruzzo"},
+  {c:"Chioggia",p:"VE",z:"30015",r:"Veneto"},
+  {c:"Chivasso",p:"TO",z:"10034",r:"Piemonte"},
+  {c:"Ciampino",p:"RM",z:"00043",r:"Lazio"},
+  {c:"Cinisello Balsamo",p:"MI",z:"20092",r:"Lombardia"},
+  {c:"Civitanova Marche",p:"MC",z:"62012",r:"Marche"},
+  {c:"Civitavecchia",p:"RM",z:"00053",r:"Lazio"},
+  {c:"Colleferro",p:"RM",z:"00034",r:"Lazio"},
+  {c:"Collegno",p:"TO",z:"10093",r:"Piemonte"},
+  {c:"Comiso",p:"RG",z:"97013",r:"Sicilia"},
+  {c:"Como",p:"CO",z:"22100",r:"Lombardia"},
+  {c:"Conegliano",p:"TV",z:"31015",r:"Veneto"},
+  {c:"Corigliano Calabro",p:"CS",z:"87064",r:"Calabria"},
+  {c:"Corsico",p:"MI",z:"20094",r:"Lombardia"},
+  {c:"Cosenza",p:"CS",z:"87100",r:"Calabria"},
+  {c:"Cremona",p:"CR",z:"26100",r:"Lombardia"},
+  {c:"Crotone",p:"KR",z:"88900",r:"Calabria"},
+  {c:"Cuneo",p:"CN",z:"12100",r:"Piemonte"},
+  {c:"Dalmine",p:"BG",z:"24044",r:"Lombardia"},
+  {c:"Desio",p:"MB",z:"20832",r:"Lombardia"},
+  {c:"Empoli",p:"FI",z:"50053",r:"Toscana"},
+  {c:"Enna",p:"EN",z:"94100",r:"Sicilia"},
+  {c:"Ercolano",p:"NA",z:"80056",r:"Campania"},
+  {c:"Fabriano",p:"AN",z:"60044",r:"Marche"},
+  {c:"Faenza",p:"RA",z:"48018",r:"Emilia-Romagna"},
+  {c:"Fano",p:"PU",z:"61032",r:"Marche"},
+  {c:"Fasano",p:"BR",z:"72015",r:"Puglia"},
+  {c:"Favara",p:"AG",z:"92026",r:"Sicilia"},
+  {c:"Ferrara",p:"FE",z:"44100",r:"Emilia-Romagna"},
+  {c:"Fidenza",p:"PR",z:"43036",r:"Emilia-Romagna"},
+  {c:"Firenze",p:"FI",z:"50100",r:"Toscana"},
+  {c:"Fiumicino",p:"RM",z:"00054",r:"Lazio"},
+  {c:"Foggia",p:"FG",z:"71100",r:"Puglia"},
+  {c:"Foligno",p:"PG",z:"06034",r:"Umbria"},
+  {c:"Forli",p:"FC",z:"47100",r:"Emilia-Romagna"},
+  {c:"Formia",p:"LT",z:"04023",r:"Lazio"},
+  {c:"Fossano",p:"CN",z:"12045",r:"Piemonte"},
+  {c:"Frattamaggiore",p:"NA",z:"80027",r:"Campania"},
+  {c:"Frosinone",p:"FR",z:"03100",r:"Lazio"},
+  {c:"Gallarate",p:"VA",z:"21013",r:"Lombardia"},
+  {c:"Gela",p:"CL",z:"93012",r:"Sicilia"},
+  {c:"Genova",p:"GE",z:"16100",r:"Liguria"},
+  {c:"Giarre",p:"CT",z:"95014",r:"Sicilia"},
+  {c:"Gioia Tauro",p:"RC",z:"89013",r:"Calabria"},
+  {c:"Giugliano in Campania",p:"NA",z:"80014",r:"Campania"},
+  {c:"Giulianova",p:"TE",z:"64021",r:"Abruzzo"},
+  {c:"Gorizia",p:"GO",z:"34170",r:"Friuli-Venezia Giulia"},
+  {c:"Gravina in Puglia",p:"BA",z:"70024",r:"Puglia"},
+  {c:"Grosseto",p:"GR",z:"58100",r:"Toscana"},
+  {c:"Grugliasco",p:"TO",z:"10095",r:"Piemonte"},
+  {c:"Guidonia",p:"RM",z:"00012",r:"Lazio"},
+  {c:"Imola",p:"BO",z:"40026",r:"Emilia-Romagna"},
+  {c:"Imperia",p:"IM",z:"18100",r:"Liguria"},
+  {c:"Ivrea",p:"TO",z:"10015",r:"Piemonte"},
+  {c:"Jesolo",p:"VE",z:"30016",r:"Veneto"},
+  {c:"L Aquila",p:"AQ",z:"67100",r:"Abruzzo"},
+  {c:"La Spezia",p:"SP",z:"19100",r:"Liguria"},
+  {c:"Lamezia Terme",p:"CZ",z:"88046",r:"Calabria"},
+  {c:"Lanciano",p:"CH",z:"66034",r:"Abruzzo"},
+  {c:"Latina",p:"LT",z:"04100",r:"Lazio"},
+  {c:"Lecce",p:"LE",z:"73100",r:"Puglia"},
+  {c:"Lecco",p:"LC",z:"23900",r:"Lombardia"},
+  {c:"Legnago",p:"VR",z:"37045",r:"Veneto"},
+  {c:"Legnano",p:"MI",z:"20025",r:"Lombardia"},
+  {c:"Lentini",p:"SR",z:"96016",r:"Sicilia"},
+  {c:"Lissone",p:"MB",z:"20851",r:"Lombardia"},
+  {c:"Livorno",p:"LI",z:"57100",r:"Toscana"},
+  {c:"Lodi",p:"LO",z:"26900",r:"Lombardia"},
+  {c:"Lucca",p:"LU",z:"55100",r:"Toscana"},
+  {c:"Lucera",p:"FG",z:"71036",r:"Puglia"},
+  {c:"Lugo",p:"RA",z:"48022",r:"Emilia-Romagna"},
+  {c:"Macerata",p:"MC",z:"62100",r:"Marche"},
+  {c:"Maddaloni",p:"CE",z:"81024",r:"Campania"},
+  {c:"Manfredonia",p:"FG",z:"71043",r:"Puglia"},
+  {c:"Mantova",p:"MN",z:"46100",r:"Lombardia"},
+  {c:"Marano di Napoli",p:"NA",z:"80016",r:"Campania"},
+  {c:"Marsala",p:"TP",z:"91025",r:"Sicilia"},
+  {c:"Martina Franca",p:"TA",z:"74015",r:"Puglia"},
+  {c:"Massa",p:"MS",z:"54100",r:"Toscana"},
+  {c:"Matera",p:"MT",z:"75100",r:"Basilicata"},
+  {c:"Meda",p:"MB",z:"20821",r:"Lombardia"},
+  {c:"Melegnano",p:"MI",z:"20077",r:"Lombardia"},
+  {c:"Melito di Napoli",p:"NA",z:"80017",r:"Campania"},
+  {c:"Merano",p:"BZ",z:"39012",r:"Trentino-Alto Adige"},
+  {c:"Messina",p:"ME",z:"98100",r:"Sicilia"},
+  {c:"Mestre",p:"VE",z:"30170",r:"Veneto"},
+  {c:"Milano",p:"MI",z:"20100",r:"Lombardia"},
+  {c:"Misterbianco",p:"CT",z:"95045",r:"Sicilia"},
+  {c:"Modena",p:"MO",z:"41100",r:"Emilia-Romagna"},
+  {c:"Modica",p:"RG",z:"97015",r:"Sicilia"},
+  {c:"Molfetta",p:"BA",z:"70056",r:"Puglia"},
+  {c:"Monopoli",p:"BA",z:"70043",r:"Puglia"},
+  {c:"Monreale",p:"PA",z:"90046",r:"Sicilia"},
+  {c:"Monselice",p:"PD",z:"35043",r:"Veneto"},
+  {c:"Montesilvano",p:"PE",z:"65015",r:"Abruzzo"},
+  {c:"Monza",p:"MB",z:"20900",r:"Lombardia"},
+  {c:"Napoli",p:"NA",z:"80100",r:"Campania"},
+  {c:"Nichelino",p:"TO",z:"10042",r:"Piemonte"},
+  {c:"Nola",p:"NA",z:"80035",r:"Campania"},
+  {c:"Noto",p:"SR",z:"96017",r:"Sicilia"},
+  {c:"Novara",p:"NO",z:"28100",r:"Piemonte"},
+  {c:"Novate Milanese",p:"MI",z:"20026",r:"Lombardia"},
+  {c:"Nuoro",p:"NU",z:"08100",r:"Sardegna"},
+  {c:"Orbassano",p:"TO",z:"10043",r:"Piemonte"},
+  {c:"Oristano",p:"OR",z:"09170",r:"Sardegna"},
+  {c:"Ortona",p:"CH",z:"66026",r:"Abruzzo"},
+  {c:"Ostia",p:"RM",z:"00121",r:"Lazio"},
+  {c:"Pachino",p:"SR",z:"96018",r:"Sicilia"},
+  {c:"Padova",p:"PD",z:"35100",r:"Veneto"},
+  {c:"Palagonia",p:"CT",z:"95046",r:"Sicilia"},
+  {c:"Palermo",p:"PA",z:"90100",r:"Sicilia"},
+  {c:"Palmi",p:"RC",z:"89015",r:"Calabria"},
+  {c:"Parabiago",p:"MI",z:"20015",r:"Lombardia"},
+  {c:"Parma",p:"PR",z:"43100",r:"Emilia-Romagna"},
+  {c:"Partinico",p:"PA",z:"90047",r:"Sicilia"},
+  {c:"Pavia",p:"PV",z:"27100",r:"Lombardia"},
+  {c:"Perugia",p:"PG",z:"06100",r:"Umbria"},
+  {c:"Pesaro",p:"PU",z:"61121",r:"Marche"},
+  {c:"Pescara",p:"PE",z:"65100",r:"Abruzzo"},
+  {c:"Piacenza",p:"PC",z:"29121",r:"Emilia-Romagna"},
+  {c:"Pioltello",p:"MI",z:"20096",r:"Lombardia"},
+  {c:"Piombino",p:"LI",z:"57025",r:"Toscana"},
+  {c:"Pisa",p:"PI",z:"56100",r:"Toscana"},
+  {c:"Pistoia",p:"PT",z:"51100",r:"Toscana"},
+  {c:"Pomigliano d Arco",p:"NA",z:"80038",r:"Campania"},
+  {c:"Pompei",p:"NA",z:"80045",r:"Campania"},
+  {c:"Pordenone",p:"PN",z:"33170",r:"Friuli-Venezia Giulia"},
+  {c:"Portici",p:"NA",z:"80055",r:"Campania"},
+  {c:"Portogruaro",p:"VE",z:"30026",r:"Veneto"},
+  {c:"Potenza",p:"PZ",z:"85100",r:"Basilicata"},
+  {c:"Pozzuoli",p:"NA",z:"80078",r:"Campania"},
+  {c:"Prato",p:"PO",z:"59100",r:"Toscana"},
+  {c:"Ragusa",p:"RG",z:"97100",r:"Sicilia"},
+  {c:"Rapallo",p:"GE",z:"16035",r:"Liguria"},
+  {c:"Ravenna",p:"RA",z:"48121",r:"Emilia-Romagna"},
+  {c:"Reggio Calabria",p:"RC",z:"89100",r:"Calabria"},
+  {c:"Reggio Emilia",p:"RE",z:"42100",r:"Emilia-Romagna"},
+  {c:"Rho",p:"MI",z:"20017",r:"Lombardia"},
+  {c:"Riccione",p:"RN",z:"47838",r:"Emilia-Romagna"},
+  {c:"Rieti",p:"RI",z:"02100",r:"Lazio"},
+  {c:"Rimini",p:"RN",z:"47921",r:"Emilia-Romagna"},
+  {c:"Rivoli",p:"TO",z:"10098",r:"Piemonte"},
+  {c:"Roma",p:"RM",z:"00100",r:"Lazio"},
+  {c:"Rosolini",p:"SR",z:"96019",r:"Sicilia"},
+  {c:"Rovereto",p:"TN",z:"38068",r:"Trentino-Alto Adige"},
+  {c:"Rovigo",p:"RO",z:"45100",r:"Veneto"},
+  {c:"Salerno",p:"SA",z:"84121",r:"Campania"},
+  {c:"Saluzzo",p:"CN",z:"12037",r:"Piemonte"},
+  {c:"San Benedetto del Tronto",p:"AP",z:"63074",r:"Marche"},
+  {c:"San Cataldo",p:"CL",z:"93017",r:"Sicilia"},
+  {c:"San Dona di Piave",p:"VE",z:"30027",r:"Veneto"},
+  {c:"San Giorgio a Cremano",p:"NA",z:"80046",r:"Campania"},
+  {c:"San Giovanni Rotondo",p:"FG",z:"71013",r:"Puglia"},
+  {c:"San Giovanni in Persiceto",p:"BO",z:"40017",r:"Emilia-Romagna"},
+  {c:"San Giuliano Milanese",p:"MI",z:"20098",r:"Lombardia"},
+  {c:"San Lazzaro di Savena",p:"BO",z:"40068",r:"Emilia-Romagna"},
+  {c:"San Remo",p:"IM",z:"18038",r:"Liguria"},
+  {c:"San Severo",p:"FG",z:"71016",r:"Puglia"},
+  {c:"Sarzana",p:"SP",z:"19038",r:"Liguria"},
+  {c:"Sassari",p:"SS",z:"07100",r:"Sardegna"},
+  {c:"Schio",p:"VI",z:"36015",r:"Veneto"},
+  {c:"Sciacca",p:"AG",z:"92019",r:"Sicilia"},
+  {c:"Segrate",p:"MI",z:"20054",r:"Lombardia"},
+  {c:"Seriate",p:"BG",z:"24068",r:"Lombardia"},
+  {c:"Sesto Fiorentino",p:"FI",z:"50019",r:"Toscana"},
+  {c:"Sesto San Giovanni",p:"MI",z:"20099",r:"Lombardia"},
+  {c:"Settimo Torinese",p:"TO",z:"10036",r:"Piemonte"},
+  {c:"Siena",p:"SI",z:"53100",r:"Toscana"},
+  {c:"Siracusa",p:"SR",z:"96100",r:"Sicilia"},
+  {c:"Sondrio",p:"SO",z:"23100",r:"Lombardia"},
+  {c:"Sorrento",p:"NA",z:"80067",r:"Campania"},
+  {c:"Spoleto",p:"PG",z:"06049",r:"Umbria"},
+  {c:"Taranto",p:"TA",z:"74121",r:"Puglia"},
+  {c:"Termini Imerese",p:"PA",z:"90018",r:"Sicilia"},
+  {c:"Terni",p:"TR",z:"05100",r:"Umbria"},
+  {c:"Thiene",p:"VI",z:"36016",r:"Veneto"},
+  {c:"Tivoli",p:"RM",z:"00019",r:"Lazio"},
+  {c:"Torino",p:"TO",z:"10100",r:"Piemonte"},
+  {c:"Torre Annunziata",p:"NA",z:"80058",r:"Campania"},
+  {c:"Torre del Greco",p:"NA",z:"80059",r:"Campania"},
+  {c:"Tortona",p:"AL",z:"15057",r:"Piemonte"},
+  {c:"Trani",p:"BT",z:"76125",r:"Puglia"},
+  {c:"Trapani",p:"TP",z:"91100",r:"Sicilia"},
+  {c:"Trento",p:"TN",z:"38121",r:"Trentino-Alto Adige"},
+  {c:"Treviglio",p:"BG",z:"24047",r:"Lombardia"},
+  {c:"Treviso",p:"TV",z:"31100",r:"Veneto"},
+  {c:"Tricase",p:"LE",z:"73039",r:"Puglia"},
+  {c:"Trieste",p:"TS",z:"34100",r:"Friuli-Venezia Giulia"},
+  {c:"Udine",p:"UD",z:"33100",r:"Friuli-Venezia Giulia"},
+  {c:"Valdagno",p:"VI",z:"36078",r:"Veneto"},
+  {c:"Varese",p:"VA",z:"21100",r:"Lombardia"},
+  {c:"Venezia",p:"VE",z:"30121",r:"Veneto"},
+  {c:"Ventimiglia",p:"IM",z:"18039",r:"Liguria"},
+  {c:"Verbania",p:"VB",z:"28921",r:"Piemonte"},
+  {c:"Vercelli",p:"VC",z:"13100",r:"Piemonte"},
+  {c:"Verona",p:"VR",z:"37121",r:"Veneto"},
+  {c:"Viareggio",p:"LU",z:"55049",r:"Toscana"},
+  {c:"Vicenza",p:"VI",z:"36100",r:"Veneto"},
+  {c:"Vigevano",p:"PV",z:"27029",r:"Lombardia"},
+  {c:"Vignola",p:"MO",z:"41058",r:"Emilia-Romagna"},
+  {c:"Viterbo",p:"VT",z:"01100",r:"Lazio"},
+  {c:"Vittoria",p:"RG",z:"97019",r:"Sicilia"},
+  {c:"Voghera",p:"PV",z:"27058",r:"Lombardia"},
+];
+
+// ─── AUTOCOMPLETE COMUNE ITALIANO ────────────────────────────────────────────
+const ComuneInput = ({ label, value, onChange, placeholder="Cerca comune..." }) => {
+  const [query, setQuery]   = React.useState(value || "");
+  const [open, setOpen]     = React.useState(false);
+  const [hiIdx, setHiIdx]   = React.useState(0);
+  const inputRef            = React.useRef(null);
+  const listRef             = React.useRef(null);
+
+  // Sincronizza query con value esterno (es. reset form)
+  React.useEffect(() => { setQuery(value || ""); }, [value]);
+
+  const results = React.useMemo(() => {
+    if (!query || query.length < 2) return [];
+    const q = query.toLowerCase();
+    return COMUNI_IT.filter(x => x.c.toLowerCase().startsWith(q)).slice(0, 8)
+      .concat(COMUNI_IT.filter(x => !x.c.toLowerCase().startsWith(q) && x.c.toLowerCase().includes(q)).slice(0, 4));
+  }, [query]);
+
+  const select = (item) => {
+    setQuery(item.c);
+    setOpen(false);
+    onChange(item);
+  };
+
+  const handleKey = (e) => {
+    if (!open || !results.length) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); setHiIdx(i => Math.min(i+1, results.length-1)); }
+    if (e.key === "ArrowUp")   { e.preventDefault(); setHiIdx(i => Math.max(i-1, 0)); }
+    if (e.key === "Enter")     { e.preventDefault(); if (results[hiIdx]) select(results[hiIdx]); }
+    if (e.key === "Escape")    { setOpen(false); }
+  };
+
+  // Scrolla il risultato evidenziato in vista
+  React.useEffect(() => {
+    if (listRef.current) {
+      const el = listRef.current.querySelector(`[data-idx="${hiIdx}"]`);
+      if (el) el.scrollIntoView({ block:"nearest" });
+    }
+  }, [hiIdx]);
+
+  return (
+    <div style={{ position:"relative" }}>
+      {label && <label className="label">{label}</label>}
+      <input
+        ref={inputRef}
+        className="input-field"
+        value={query}
+        placeholder={placeholder}
+        autoComplete="off"
+        onChange={e => { setQuery(e.target.value); setOpen(true); setHiIdx(0); if (!e.target.value) onChange({c:"",p:"",z:""}); }}
+        onFocus={() => { if (query.length >= 2) setOpen(true); }}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onKeyDown={handleKey}
+      />
+      {open && results.length > 0 && (
+        <div ref={listRef} style={{
+          position:"absolute", zIndex:9999, top:"100%", left:0, right:0,
+          background:"white", border:"1.5px solid #d4b896", borderRadius:"0 0 8px 8px",
+          boxShadow:"0 6px 20px rgba(0,0,0,.12)", maxHeight:220, overflowY:"auto"
+        }}>
+          {results.map((item, i) => (
+            <div key={item.c} data-idx={i}
+              onMouseDown={() => select(item)}
+              style={{
+                padding:"8px 12px", cursor:"pointer", fontSize:13,
+                background: i===hiIdx ? "#f5ead0" : "white",
+                borderBottom:"1px solid #f0ece6",
+                display:"flex", justifyContent:"space-between", alignItems:"center",
+              }}>
+              <span style={{ fontWeight: i===hiIdx ? 700 : 400 }}>{item.c}</span>
+              <span style={{ fontSize:11, color:"#9c8f82", display:"flex", gap:8 }}>
+                <span style={{ background:"#f5ead0", padding:"1px 6px", borderRadius:8, fontWeight:700, color:"#a0720a" }}>{item.p}</span>
+                <span style={{ color:"#c0b8b0" }}>{item.z}</span>
+                <span style={{ color:"#c0b8b0" }}>{item.r}</span>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const emptyGuest = () => ({
   id:genGuestId(), cognome:"", nome:"", sesso:"M", dataNascita:"",
   luogoNascita:"", provinciaNascita:"", nazionalita:"IT",
@@ -709,6 +1082,10 @@ export default function HotelPMS() {
   const [pcRighe, setPcRighe]           = useState(
     MENU_VOCI.filter(v => v.cat !== "Bevande").map(v => ({ id:v.id, nome:v.nome, cat:v.cat, pranzo:0, cena:0 }))
   );
+  // Dashboard chart state (deve stare a livello componente — regole React Hooks)
+  const [chartHovIdx, setChartHovIdx]   = useState(null);
+  const [chartRange, setChartRange]     = useState(30);
+  const [prevModal, setPrevModal]       = useState(null); // modal da ripristinare dopo guest-form
   // API & Integrazioni state
   const [apiKeys, setApiKeys] = useState({
     anthropic: "", booking: "", stripe: "", channelManager: ""
@@ -980,14 +1357,33 @@ Rispondi in italiano, in modo conciso e professionale.`;
     const isNew = !guests.find(x => x.id===g.id);
     if (isNew) {
       setGuests(p => [...p, g]);
+      // Se siamo arrivati da una prenotazione, torna alla prenotazione con l'ospite già selezionato
       if (modal.startsWith("guest-form-for-")) {
         const rid = modal.replace("guest-form-for-","");
-        setReservations(p => p.map(r => r.id===rid ? {...r, companions:[...(r.companions||[]),g.id]} : r));
+        // Aggiorna form con il nuovo ospite come principale
+        setForm(prev => ({
+          ...prev,
+          guestId:   g.id,
+          guestName: `${g.cognome} ${g.nome}`,
+        }));
+        showToast(`Ospite ${g.cognome} ${g.nome} aggiunto e selezionato`);
+        dbSaveGuest(g).catch(()=>{});
+        // Torna alla modal prenotazione (new-res o edit-res)
+        setModal(prevModal || (reservations.find(r=>r.id===rid) ? "edit-res" : "new-res"));
+        setPrevModal(null);
+        return;
       }
       showToast(`Ospite ${g.cognome} ${g.nome} aggiunto`);
     } else {
       setGuests(p => p.map(x => x.id===g.id ? g : x));
       showToast("Ospite aggiornato");
+      // Se modifica ospite da dentro prenotazione, torna alla prenotazione
+      if (prevModal) {
+        dbSaveGuest(g).catch(()=>{});
+        setModal(prevModal);
+        setPrevModal(null);
+        return;
+      }
     }
     dbSaveGuest(g).catch(()=>{});
     setModal(null);
@@ -1469,6 +1865,252 @@ Rispondi in italiano, in modo conciso e professionale.`;
                   </div>
                 </div>
               </div>
+
+              {/* ── Riga 2b: Grafico Occupazione 30 giorni ── */}
+              {(() => {
+                const hovIdx    = chartHovIdx;
+                const setHovIdx = setChartHovIdx;
+
+                const oggi = new Date(); oggi.setHours(0,0,0,0);
+                const totalRooms = rooms.length || 59;
+
+                const giorniN = Array.from({length:chartRange}, (_,i) => {
+                  const d = new Date(oggi); d.setDate(d.getDate()+i); return d;
+                });
+                const ds = d => d.toISOString().slice(0,10);
+
+                const dati = giorniN.map(d => {
+                  const dss = ds(d);
+                  const occ = reservations.filter(r => r.status==="checked-in" && r.checkIn<=dss && r.checkOut>dss).length;
+                  const res = reservations.filter(r => r.status==="reserved"   && r.checkIn<=dss && r.checkOut>dss).length;
+                  const tot = occ + res;
+                  const rev = reservations
+                    .filter(r => ["checked-in","reserved"].includes(r.status) && r.checkIn<=dss && r.checkOut>dss)
+                    .reduce((s,r) => { const rm = ROOMS.find(x=>x.id===r.roomId); return s+(rm?.price||0); }, 0);
+                  return { d, dss, occ, res, tot, pct: Math.round((tot/totalRooms)*100), rev };
+                });
+
+                const mediaPct   = Math.round(dati.reduce((s,d)=>s+d.pct,0)/chartRange);
+                const mediaRev   = Math.round(dati.reduce((s,d)=>s+d.rev,0)/chartRange);
+                const piccoIdx   = dati.reduce((mi,d,i)=>d.pct>dati[mi].pct?i:mi,0);
+                const minimoIdx  = dati.reduce((mi,d,i)=>d.pct<dati[mi].pct?i:mi,0);
+                const giorniSopra80 = dati.filter(d=>d.pct>=80).length;
+                const giorniSotto20 = dati.filter(d=>d.pct<20).length;
+
+                // Linea di tendenza (regressione lineare semplice)
+                const n = dati.length;
+                const sumX = dati.reduce((s,_,i)=>s+i,0);
+                const sumY = dati.reduce((s,d)=>s+d.pct,0);
+                const sumXY = dati.reduce((s,d,i)=>s+i*d.pct,0);
+                const sumX2 = dati.reduce((s,_,i)=>s+i*i,0);
+                const slope = (n*sumXY - sumX*sumY) / (n*sumX2 - sumX*sumX);
+                const intercept = (sumY - slope*sumX) / n;
+                const trendY = i => intercept + slope*i;
+
+                const W=860, H=200, PL=44, PR=14, PT=20, PB=40;
+                const cW=W-PL-PR, cH=H-PT-PB;
+                const bW = Math.max(4, Math.floor(cW/chartRange)-2);
+
+                const xOf = i => PL + i*(cW/chartRange) + 1;
+                const yOf = pct => PT + cH - (Math.min(pct,100)/100)*cH;
+
+                const hov = hovIdx !== null ? dati[hovIdx] : null;
+                const hovX = hovIdx !== null ? xOf(hovIdx) + bW/2 : 0;
+
+                return (
+                  <div className="card" style={{ marginBottom:18 }}>
+                    {/* Header */}
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:14 }}>
+                      <div>
+                        <div className="section-title">Occupazione Prevista</div>
+                        <div style={{ fontSize:11, color:C.text3 }}>Camere occupate + prenotate · {chartRange} giorni</div>
+                      </div>
+                      <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                        {/* Toggle range */}
+                        <div style={{ display:"flex", border:`1px solid ${C.border}`, borderRadius:8, overflow:"hidden" }}>
+                          {[7,14,30].map(r => (
+                            <button key={r} onClick={()=>setChartRange(r)}
+                              style={{ padding:"4px 12px", background:chartRange===r?C.gold:C.surface, color:chartRange===r?"#fff":C.text2, border:"none", fontWeight:700, fontSize:11, cursor:"pointer" }}>
+                              {r}gg
+                            </button>
+                          ))}
+                        </div>
+                        {/* Legenda */}
+                        {[["Checked-in",C.green],["Prenotate",C.navy],["Trend",C.amber]].map(([l,c])=>(
+                          <div key={l} style={{ display:"flex", alignItems:"center", gap:4, fontSize:10, color:C.text3 }}>
+                            <div style={{ width:10, height:10, borderRadius:l==="Trend"?0:2, background:l==="Trend"?"none":"transparent", border:l==="Trend"?`2px dashed ${c}`:`2px solid ${c}` }}/>
+                            {l}
+                          </div>
+                        ))}
+                        <div style={{ padding:"4px 12px", background:C.goldL, border:`1px solid ${C.goldLb}`, borderRadius:20, fontSize:11, fontWeight:700, color:C.gold }}>
+                          Media {mediaPct}%
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* SVG chart */}
+                    <div style={{ overflowX:"auto", position:"relative" }}>
+                      <svg width={W} height={H} style={{ display:"block", maxWidth:"100%", cursor:"crosshair" }}
+                        onMouseLeave={()=>setHovIdx(null)}>
+
+                        {/* Sfondo chart */}
+                        <rect x={PL} y={PT} width={cW} height={cH} fill={C.surface2} rx="4"/>
+
+                        {/* Grid lines */}
+                        {[0,25,50,75,100].map(pct => {
+                          const y = yOf(pct);
+                          return (
+                            <g key={pct}>
+                              <line x1={PL} y1={y} x2={PL+cW} y2={y}
+                                stroke={pct===0?C.border2:C.border}
+                                strokeWidth={pct===0?1.5:0.7}
+                                strokeDasharray={pct===0?"0":"3,5"}/>
+                              <text x={PL-4} y={y+4} textAnchor="end" fontSize="9" fill={C.text3}>{pct}%</text>
+                            </g>
+                          );
+                        })}
+
+                        {/* Linea media */}
+                        {(() => {
+                          const ym = yOf(mediaPct);
+                          return (
+                            <g>
+                              <line x1={PL} y1={ym} x2={PL+cW} y2={ym}
+                                stroke={C.gold} strokeWidth={1.2} strokeDasharray="4,4" opacity={0.6}/>
+                              <rect x={PL+4} y={ym-8} width={34} height={13} rx="3" fill={C.goldL}/>
+                              <text x={PL+21} y={ym+1} textAnchor="middle" fontSize="8" fontWeight="700" fill={C.gold}>med {mediaPct}%</text>
+                            </g>
+                          );
+                        })()}
+
+                        {/* Linea di tendenza */}
+                        {(() => {
+                          const x0 = xOf(0)+bW/2, y0 = yOf(Math.max(0,Math.min(100,trendY(0))));
+                          const x1 = xOf(n-1)+bW/2, y1 = yOf(Math.max(0,Math.min(100,trendY(n-1))));
+                          const goingUp = slope > 0.3;
+                          const goingDown = slope < -0.3;
+                          return (
+                            <g>
+                              <line x1={x0} y1={y0} x2={x1} y2={y1}
+                                stroke={goingUp?C.green:goingDown?C.red:C.amber}
+                                strokeWidth={1.8} strokeDasharray="6,3" opacity={0.8}/>
+                              <circle cx={x1} cy={y1} r="3" fill={goingUp?C.green:goingDown?C.red:C.amber}/>
+                              <text x={x1+5} y={y1+4} fontSize="8" fontWeight="700"
+                                fill={goingUp?C.green:goingDown?C.red:C.amber}>
+                                {goingUp?"↗":goingDown?"↘":"→"}
+                              </text>
+                            </g>
+                          );
+                        })()}
+
+                        {/* Barre */}
+                        {dati.map((g, i) => {
+                          const x    = xOf(i);
+                          const hOcc = (g.occ/totalRooms)*cH;
+                          const hRes = (g.res/totalRooms)*cH;
+                          const yOcc = PT + cH - hOcc;
+                          const yRes = yOcc - hRes;
+                          const isOggi   = g.dss === todayStr;
+                          const isPicco  = i === piccoIdx && g.pct>0;
+                          const isMinimo = i === minimoIdx && g.pct < mediaPct - 10;
+                          const isHov    = hovIdx === i;
+                          const isWeekend= g.d.getDay()===0||g.d.getDay()===6;
+                          return (
+                            <g key={i}
+                              onMouseEnter={()=>setHovIdx(i)}
+                              style={{ cursor:"pointer" }}>
+                              {/* sfondo weekend */}
+                              {isWeekend && <rect x={x} y={PT} width={bW} height={cH} fill={C.navyL} opacity={0.25}/>}
+                              {/* hover highlight */}
+                              {isHov && <rect x={x-1} y={PT} width={bW+2} height={cH} fill={C.goldL} opacity={0.4} rx="2"/>}
+                              {/* barra prenotate */}
+                              {hRes > 0 && <rect x={x} y={yRes} width={bW} height={hRes} fill={C.navy} opacity={isHov?1:0.7} rx="1"/>}
+                              {/* barra occ */}
+                              {hOcc > 0 && <rect x={x} y={yOcc} width={bW} height={hOcc} fill={C.green} opacity={isHov?1:0.8} rx="1"/>}
+                              {/* outline oggi */}
+                              {isOggi && <rect x={x-1} y={PT-2} width={bW+2} height={cH+4} fill="none" stroke={C.gold} strokeWidth="1.5" rx="2"/>}
+                              {/* badge picco */}
+                              {isPicco && (
+                                <g>
+                                  <rect x={x-3} y={yRes-16} width={bW+6} height={13} rx="3" fill={C.redL} stroke={C.redLb} strokeWidth="0.5"/>
+                                  <text x={x+bW/2} y={yRes-6} textAnchor="middle" fontSize="8" fontWeight="700" fill={C.red}>▲{g.pct}%</text>
+                                </g>
+                              )}
+                              {/* badge minimo */}
+                              {isMinimo && (
+                                <g>
+                                  <rect x={x-3} y={PT+cH+6} width={bW+6} height={12} rx="3" fill={C.navyL} stroke={C.navyLb} strokeWidth="0.5"/>
+                                  <text x={x+bW/2} y={PT+cH+14} textAnchor="middle" fontSize="7" fontWeight="700" fill={C.navy}>▼{g.pct}%</text>
+                                </g>
+                              )}
+                              {/* label pct ogni 5gg o oggi */}
+                              {(i%5===0||isOggi) && g.pct>0 && !isPicco && (
+                                <text x={x+bW/2} y={Math.min(yRes,yOcc)-4} textAnchor="middle" fontSize="8"
+                                  fill={isOggi?C.gold:C.text3} fontWeight={isOggi?"700":"400"}>{g.pct}%</text>
+                              )}
+                              {/* Asse X */}
+                              {(i===0||i%Math.ceil(chartRange/6)===0||i===chartRange-1||isOggi||g.d.getDate()===1) && (
+                                <g>
+                                  <line x1={x+bW/2} y1={PT+cH} x2={x+bW/2} y2={PT+cH+4} stroke={C.border2} strokeWidth="1"/>
+                                  <text x={x+bW/2} y={H-6} textAnchor="middle" fontSize="9"
+                                    fontWeight={isOggi?"700":"400"} fill={isOggi?C.gold:isWeekend?C.navy:C.text3}>
+                                    {isOggi ? "Oggi" : `${g.d.getDate()}/${g.d.getMonth()+1}`}
+                                  </text>
+                                </g>
+                              )}
+                            </g>
+                          );
+                        })}
+
+                        {/* Tooltip hover */}
+                        {hov && (() => {
+                          const tx = Math.min(Math.max(hovX - 55, PL), PL+cW-114);
+                          const ty = PT + 4;
+                          return (
+                            <g style={{ pointerEvents:"none" }}>
+                              {/* Linea verticale */}
+                              <line x1={hovX} y1={PT} x2={hovX} y2={PT+cH} stroke={C.gold} strokeWidth={1} strokeDasharray="3,3" opacity={0.8}/>
+                              {/* Box tooltip */}
+                              <rect x={tx} y={ty} width={114} height={72} rx="6" fill="white" stroke={C.border} strokeWidth="1"
+                                style={{ filter:"drop-shadow(0 2px 6px rgba(0,0,0,.1))" }}/>
+                              <text x={tx+8} y={ty+14} fontSize="10" fontWeight="700" fill={C.text}>
+                                {hov.d.toLocaleDateString("it-IT",{weekday:"short",day:"2-digit",month:"2-digit"})}
+                              </text>
+                              <rect x={tx+8} y={ty+20} width={7} height={7} rx="1" fill={C.green}/>
+                              <text x={tx+18} y={ty+27} fontSize="9" fill={C.text2}>Occ: <tspan fontWeight="700" fill={C.green}>{hov.occ} cam</tspan></text>
+                              <rect x={tx+8} y={ty+33} width={7} height={7} rx="1" fill={C.navy}/>
+                              <text x={tx+18} y={ty+40} fontSize="9" fill={C.text2}>Res: <tspan fontWeight="700" fill={C.navy}>{hov.res} cam</tspan></text>
+                              <line x1={tx+8} y1={ty+47} x2={tx+106} y2={ty+47} stroke={C.border} strokeWidth="0.5"/>
+                              <text x={tx+8} y={ty+58} fontSize="9" fill={C.text2}>Occu: <tspan fontWeight="700" fill={hov.pct>=80?C.green:hov.pct>=50?C.amber:C.navy}>{hov.pct}%</tspan></text>
+                              <text x={tx+62} y={ty+58} fontSize="9" fill={C.text2}>Rev: <tspan fontWeight="700" fill={C.gold}>€{hov.rev.toFixed(0)}</tspan></text>
+                              <text x={tx+8} y={ty+68} fontSize="8" fill={C.text3}>
+                                {hov.d.getDay()===0||hov.d.getDay()===6?"🏖 Weekend":"Giorno feriale"}
+                              </text>
+                            </g>
+                          );
+                        })()}
+                      </svg>
+                    </div>
+
+                    {/* Mini KPI strip */}
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:8, marginTop:14 }}>
+                      {[
+                        { l:"Oggi",       v:`${dati[0]?.pct||0}%`,    c:dati[0]?.pct>=80?C.green:dati[0]?.pct>=50?C.amber:C.navy },
+                        { l:`Media ${chartRange}gg`, v:`${mediaPct}%`, c:C.gold },
+                        { l:"Picco",      v:`${dati[piccoIdx]?.pct||0}% · ${dati[piccoIdx]?.d.toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit"})}`, c:C.red },
+                        { l:"Rev/giorno", v:`€${mediaRev.toFixed(0)}`, c:C.gold },
+                        { l:"Giorni >80%",v:giorniSopra80,             c:C.green },
+                        { l:"Giorni <20%",v:giorniSotto20,             c:giorniSotto20>3?C.red:C.text3 },
+                      ].map(s=>(
+                        <div key={s.l} style={{ textAlign:"center", padding:"8px 4px", background:C.surface2, borderRadius:6 }}>
+                          <div style={{ fontSize:9, color:C.text3, fontWeight:700, letterSpacing:1, textTransform:"uppercase", marginBottom:4 }}>{s.l}</div>
+                          <div style={{ fontSize:13, fontWeight:700, color:s.c }}>{s.v}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* ── Riga 3: Movimenti oggi + Mappa camere ── */}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:18 }}>
@@ -2884,6 +3526,13 @@ Rispondi in italiano, in modo conciso e professionale.`;
                 <div><label className="label">Sesso</label><select className="input-field" value={guestForm.sesso} onChange={e=>setGuestForm(f=>({...f,sesso:e.target.value}))}><option value="M">Maschile</option><option value="F">Femminile</option></select></div>
                 <div><label className="label">Data di Nascita *</label><input type="date" className="input-field" value={guestForm.dataNascita} onChange={e=>setGuestForm(f=>({...f,dataNascita:e.target.value}))} /></div>
                 <div><label className="label">Luogo di Nascita</label><input className="input-field" value={guestForm.luogoNascita} onChange={e=>setGuestForm(f=>({...f,luogoNascita:e.target.value}))} /></div>
+                <div style={{ gridColumn:"1/-1" }}>
+                  <ComuneInput
+                    label="Comune di Nascita *"
+                    value={guestForm.luogoNascita}
+                    onChange={item => setGuestForm(f=>({...f, luogoNascita:item.c, provinciaNascita:item.p||f.provinciaNascita}))}
+                  />
+                </div>
                 <div><label className="label">Provincia Nascita</label><input className="input-field" maxLength={2} placeholder="MI" value={guestForm.provinciaNascita} onChange={e=>setGuestForm(f=>({...f,provinciaNascita:e.target.value.toUpperCase()}))} /></div>
                 <div><label className="label">Nazionalità</label><select className="input-field" value={guestForm.nazionalita} onChange={e=>setGuestForm(f=>({...f,nazionalita:e.target.value}))}>{NAZIONALITA.map(n=><option key={n.code} value={n.code}>{n.name}</option>)}</select></div>
               </div>
@@ -2900,7 +3549,13 @@ Rispondi in italiano, in modo conciso e professionale.`;
               <div className="section-title">Residenza</div>
               <div className="form-grid" style={{ marginBottom:12 }}>
                 <div style={{ gridColumn:"1/-1" }}><label className="label">Indirizzo</label><input className="input-field" value={guestForm.indirizzo} onChange={e=>setGuestForm(f=>({...f,indirizzo:e.target.value}))} /></div>
-                <div><label className="label">Città</label><input className="input-field" value={guestForm.citta} onChange={e=>setGuestForm(f=>({...f,citta:e.target.value}))} /></div>
+                <div style={{ gridColumn:"span 2" }}>
+                  <ComuneInput
+                    label="Città di Residenza"
+                    value={guestForm.citta}
+                    onChange={item => setGuestForm(f=>({...f, citta:item.c, cap:item.z||f.cap, provincia:item.p||f.provincia}))}
+                  />
+                </div>
                 <div><label className="label">CAP</label><input className="input-field" maxLength={5} value={guestForm.cap} onChange={e=>setGuestForm(f=>({...f,cap:e.target.value}))} /></div>
                 <div><label className="label">Provincia</label><input className="input-field" maxLength={2} placeholder="VE" value={guestForm.provincia} onChange={e=>setGuestForm(f=>({...f,provincia:e.target.value.toUpperCase()}))} /></div>
                 <div><label className="label">Paese</label><input className="input-field" value={guestForm.paese} onChange={e=>setGuestForm(f=>({...f,paese:e.target.value}))} /></div>
@@ -2914,7 +3569,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
               <div><label className="label">Note interne</label><textarea className="input-field" rows={2} value={guestForm.note} onChange={e=>setGuestForm(f=>({...f,note:e.target.value}))} style={{ resize:"none" }} /></div>
             </div>
             <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setModal(null)}>Annulla</button>
+              <button className="btn-secondary" onClick={() => { if(prevModal){ setModal(prevModal); setPrevModal(null); } else setModal(null); }}>Annulla</button>
               <button className="btn-primary" onClick={saveGuest}>Salva Ospite</button>
             </div>
           </div>
@@ -2937,7 +3592,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                   <option value="">— Seleziona dall'anagrafica —</option>
                   {guests.map(g=><option key={g.id} value={g.id}>{g.cognome} {g.nome} · {g.numDoc}</option>)}
                 </select>
-                <button className="btn-blue" onClick={() => setModal(`guest-form-for-${form.id}`)}>+ Nuovo</button>
+                <button className="btn-blue" onClick={() => { setPrevModal(modal); setGuestForm(emptyGuest()); setModal(`guest-form-for-${form.id}`); }}>+ Nuovo</button>
               </div>
               {!form.guestId && <div style={{ marginBottom:10 }}><label className="label">Nome manuale</label><input className="input-field" placeholder="Cognome e Nome" value={form.guestName||""} onChange={e=>setForm(f=>({...f,guestName:e.target.value}))} /></div>}
               {form.guestId && <div style={{ marginBottom:10, padding:"8px 12px", background:C.greenL, border:`1px solid ${C.greenLb}`, borderRadius:6, fontSize:12, color:C.green, fontWeight:600 }}>✓ {guests.find(g=>g.id===form.guestId)?.tipoDoc} {guests.find(g=>g.id===form.guestId)?.numDoc}</div>}
