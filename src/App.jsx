@@ -977,6 +977,7 @@ const PAGE_GROUPS = [
 // - Componente suggerimento AI contestuale -
 export default function HotelPMS() {
   const [page, setPage]               = useState("Dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [guests, setGuests]           = useState(DEMO_GUESTS);
   const [reservations, setReservations] = useState(DEMO_RESERVATIONS);
   const [modal, setModal]             = useState(null);
@@ -1695,44 +1696,45 @@ Rispondi in italiano, in modo conciso e professionale.`;
       <style>{CSS}</style>
 
       {/*   SIDEBAR   */}
-      <aside className="sidebar" style={{ position:"fixed", left:0, top:0, bottom:0, width:230, background:"#0a1929", zIndex:100, overflowY:"auto", display:"flex", flexDirection:"column", boxShadow:"2px 0 12px rgba(0,0,0,.25)" }}>
+      <aside className="sidebar" style={{ position:"fixed", left:0, top:0, bottom:0, width:sidebarOpen?230:64, background:"#0a1929", zIndex:100, overflowY:"auto", display:"flex", flexDirection:"column", boxShadow:"2px 0 12px rgba(0,0,0,.25)", transition:"width .22s ease", overflow:"hidden" }}>
         {/* Logo */}
-        <div className="sidebar-logo" style={{ padding:"20px 20px 16px", borderBottom:"1px solid rgba(255,255,255,.08)" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:4 }}>
+        <div className="sidebar-logo" style={{ padding:sidebarOpen?"20px 20px 16px":"16px 0", borderBottom:"1px solid rgba(255,255,255,.08)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10, overflow:"hidden" }}>
             <div style={{ width:32, height:32, borderRadius:6, background:"linear-gradient(135deg,#1565c0,#0f62fe)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, fontWeight:700, color:"#fff", flexShrink:0 }}>G</div>
-            <div>
+            {sidebarOpen && <div style={{ whiteSpace:"nowrap" }}>
               <div style={{ fontSize:15, fontWeight:700, color:"#fff", letterSpacing:.5 }}>Hotel Gasparini</div>
               <div style={{ fontSize:9, letterSpacing:2.5, color:"#90b4d4", textTransform:"uppercase", marginTop:2 }}>PMS</div>
-            </div>
+            </div>}
           </div>
         </div>
 
         {/* Nav Groups */}
         {PAGE_GROUPS.map(group => (
           <div key={group.label}>
-            <div className="sidebar-section" style={{ fontSize:9, letterSpacing:2, color:"rgba(144,180,212,.45)", textTransform:"uppercase", padding:"18px 20px 6px", fontWeight:600 }}>{group.label}</div>
+            {sidebarOpen && <div className="sidebar-section" style={{ fontSize:9, letterSpacing:2, color:"rgba(144,180,212,.45)", textTransform:"uppercase", padding:"18px 20px 6px", fontWeight:600 }}>{group.label}</div>}
             {group.pages.map(p => (
               <button key={p}
                 className={`nav-btn${page===p?" active":""}`}
                 onClick={() => setPage(p)}
+                title={!sidebarOpen ? p : ""}
                 style={{
-                  display:"flex", alignItems:"center", gap:10,
-                  width:"100%", padding:"9px 20px", border:"none",
+                  display:"flex", alignItems:"center", gap:10, justifyContent:sidebarOpen?"flex-start":"center",
+                  width:"100%", padding:sidebarOpen?"9px 20px":"10px 0", border:"none",
                   background: page===p ? "#1565c0" : "none",
                   cursor:"pointer", fontSize:13, fontWeight: page===p ? 600 : 400,
                   color: page===p ? "#fff" : "#90b4d4",
                   textAlign:"left", borderLeft: page===p ? "3px solid #5b9dff" : "3px solid transparent",
                   transition:"all .15s", whiteSpace:"nowrap",
                 }}>
-                <span style={{ fontSize:15, width:18, flexShrink:0 }}>{PAGE_ICONS[p]}</span>
-                <span>{p}</span>
+                <span style={{ fontSize:15, width:18, flexShrink:0, textAlign:"center" }}>{PAGE_ICONS[p]}</span>
+                {sidebarOpen && <span>{p}</span>}
               </button>
             ))}
           </div>
         ))}
 
         {/* Bottom: DB status */}
-        <div className="sidebar-bottom">
+        {sidebarOpen && <div className="sidebar-bottom">
           <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:8 }}>
             <span style={{ fontSize:8, color: dbStatus==="ok"?"#6fcf97":dbStatus==="connecting"||dbStatus==="seeding"?"#90caf9":"#ef9a9a" }}>●</span>
             <span style={{ fontSize:11 }}>{dbStatus==="ok"?"Database online":dbStatus==="seeding"?"Inizializzazione…":dbStatus==="connecting"?"Connessione…":"Database offline"}</span>
@@ -1740,12 +1742,13 @@ Rispondi in italiano, in modo conciso e professionale.`;
           <div style={{ fontSize:11, color:"rgba(144,180,212,.4)" }}>
             {new Date().toLocaleDateString("it-IT",{day:"2-digit",month:"short",year:"numeric"})}
           </div>
-        </div>
+        </div>}
       </aside>
 
       {/*   TOPBAR CONTESTUALE   */}
-      <div className="topbar" style={{ position:"fixed", top:0, left:230, right:0, height:52, background:"#fff", borderBottom:"1px solid #dde3ec", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 24px", zIndex:90, boxShadow:"0 1px 4px rgba(0,0,0,.06)" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:13, color:C.text2 }}>
+      <div className="topbar" style={{ position:"fixed", top:0, left:sidebarOpen?230:64, right:0, height:52, background:"#fff", borderBottom:"1px solid #dde3ec", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 24px 0 16px", zIndex:90, boxShadow:"0 1px 4px rgba(0,0,0,.06)", transition:"left .22s ease" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10, fontSize:13, color:C.text2 }}>
+          <button onClick={() => setSidebarOpen(v=>!v)} style={{ background:"none", border:"none", cursor:"pointer", color:C.text3, fontSize:20, lineHeight:1, padding:"2px 4px", borderRadius:4, flexShrink:0 }} title={sidebarOpen?"Chiudi barra":"Apri barra"}>☰</button>
           <span style={{ color:"#8896a8", fontSize:12 }}>Hotel Gasparini</span>
           <span style={{ color:"#c4cdd9" }}>›</span>
           <span style={{ fontWeight:600, color:"#1a2535" }}>{page}</span>
@@ -1759,7 +1762,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
       </div>
 
       {/*   CONTENUTO PRINCIPALE   */}
-      <div className="main-content" style={{ marginLeft:230, paddingTop:72, paddingLeft:28, paddingRight:28, paddingBottom:32, minHeight:"100vh" }}>
+      <div className="main-content" style={{ marginLeft:sidebarOpen?230:64, paddingTop:72, paddingLeft:28, paddingRight:28, paddingBottom:32, minHeight:"100vh", transition:"margin-left .22s ease" }}>
 
         {/*   DASHBOARD   */}
         {page==="Dashboard" && (() => {
@@ -3727,7 +3730,6 @@ Rispondi in italiano, in modo conciso e professionale.`;
           );
         })()}
 
-      </div>{/* fine main content */}
 
       {/*   MODAL: FORM OSPITE   */}
       {modal && modal.startsWith("guest-form") && (
@@ -4331,9 +4333,9 @@ Rispondi in italiano, in modo conciso e professionale.`;
               <AiBar pg="API & Integrazioni" />
 
               {/* Tab nav */}
-              <div style={{ borderBottom:`2px solid ${C.border}`, display:"flex", gap:2, marginBottom:22 }}>
-                {[["overview","⊞ Panoramica"],["keys","🔑 Chiavi API"],["rest","</> REST API"],["booking","🌐 Booking"],["payments","💳 Pagamenti"],["webhooks","⚡ Webhooks"],["logs","📋 Logs"]].map(([t,l]) => (
-                  <button key={t} className={`api-tab${apiTab===t?" active":""}`} onClick={() => setApiTab(t)}>{l}</button>
+              <div style={{ borderBottom:`2px solid ${C.border}`, display:"flex", gap:2, marginBottom:22, overflowX:"auto", overflowY:"hidden", WebkitOverflowScrolling:"touch", scrollbarWidth:"none" }}>
+                {[["overview","⊞ Panoramica"],["keys","🔑 Chiavi API"],["rest","</> REST API"],["booking","🌐 Booking.com"],["payments","💳 Stripe"],["webhooks","⚡ Webhooks"],["logs","📋 Logs"]].map(([t,l]) => (
+                  <button key={t} className={`api-tab${apiTab===t?" active":""}`} onClick={() => setApiTab(t)} style={{ flexShrink:0 }}>{l}</button>
                 ))}
               </div>
 
@@ -5208,6 +5210,8 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
             </div>
           );
         })()}
+
+      </div>{/* fine main content */}
 
     </div>
   );
