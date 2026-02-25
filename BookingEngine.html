@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Prenota — Hotel Gasparini ★★★ · Chioggia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+/* ══════ CSS VARIABLES & RESET ══════ */
+:root {
+  --navy:   #0a1929;
+  --navy2:  #0d2137;
+  --blue:   #1565c0;
+  --blue2:  #1976d2;
+  --gold:   #c9a84c;
+  --gold2:  #e8c97a;
+  --sand:   #f5efe6;
+  --sand2:  #ede3d5;
+  --white:  #ffffff;
+  --text1:  #0f1f35;
+  --text2:  #3a4f66;
+  --text3:  #7b93aa;
+  --border: #dde5ef;
+  --green:  #1a7a4a;
+  --greenL: #e6f7ef;
+  --red:    #c0392b;
+  --redL:   #fdecea;
+  --shadow: 0 8px 40px rgba(10,25,41,.12);
+  --shadow2:0 2px 12px rgba(10,25,41,.08);
+  --r:      10px;
+  --r2:     16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--sand);
+  color:var(--text1);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ══════ DECORATIVE BACKGROUND ══════ */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 10% -10%, rgba(21,101,192,.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 90% 110%, rgba(201,168,76,.10) 0%, transparent 60%);
+  pointer-events:none;z-index:0;
+}
+
+/* ══════ HEADER ══════ */
+header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(10,25,41,.97);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  padding:0 24px;
+}
+.header-inner{
+  max-width:1100px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;
+  height:64px;
+}
+.logo{display:flex;align-items:center;gap:14px;text-decoration:none}
+.logo-badge{
+  width:40px;height:40px;border-radius:9px;
+  background:linear-gradient(135deg,var(--blue),var(--gold));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Playfair Display',serif;
+  font-size:20px;font-weight:700;color:#fff;
+}
+.logo-text h1{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:#fff;letter-spacing:.3px}
+.logo-text p{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--gold2);margin-top:1px}
+.header-contact{display:flex;gap:20px;align-items:center}
+.header-contact a{color:rgba(255,255,255,.6);text-decoration:none;font-size:12px;font-weight:500;transition:color .2s}
+.header-contact a:hover{color:#fff}
+.header-tel{color:var(--gold2)!important;font-weight:600!important;font-size:13px!important}
+
+/* ══════ HERO ══════ */
+.hero{
+  background:linear-gradient(160deg, var(--navy) 0%, var(--navy2) 40%, #0d2a4a 100%);
+  padding:60px 24px 80px;
+  text-align:center;
+  position:relative;overflow:hidden;
+}
+.hero::after{
+  content:'';
+  position:absolute;bottom:-2px;left:0;right:0;height:60px;
+  background:var(--sand);
+  clip-path:ellipse(60% 100% at 50% 100%);
+}
+.hero h2{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(28px,5vw,46px);
+  font-weight:700;color:#fff;
+  margin-bottom:10px;letter-spacing:-.5px;
+}
+.hero h2 em{color:var(--gold2);font-style:italic}
+.hero p{color:rgba(255,255,255,.65);font-size:15px;font-weight:300;letter-spacing:.3px}
+.stars{color:var(--gold2);font-size:18px;margin-bottom:16px;display:block;letter-spacing:4px}
+
+/* ══════ MAIN CONTAINER ══════ */
+.container{max-width:1000px;margin:0 auto;padding:0 20px 80px;position:relative;z-index:1}
+
+/* ══════ PROGRESS BAR ══════ */
+.progress-wrap{
+  background:#fff;border-radius:var(--r2);
+  box-shadow:var(--shadow2);
+  padding:24px 28px;
+  margin:-30px auto 32px;
+  border:1px solid var(--border);
+  position:relative;z-index:10;
+}
+.steps{display:flex;align-items:center;gap:0}
+.step{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;
+  position:relative;cursor:default;
+}
+.step:not(:last-child)::after{
+  content:'';
+  position:absolute;top:17px;left:calc(50% + 18px);
+  right:calc(-50% + 18px);
+  height:2px;
+  background:var(--border);
+  transition:background .4s;
+  z-index:-1;
+}
+.step.done:not(:last-child)::after{background:var(--blue)}
+.step-num{
+  width:34px;height:34px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;
+  background:var(--border);color:var(--text3);
+  border:2px solid var(--border);
+  transition:all .3s;position:relative;z-index:1;
+}
+.step.active .step-num{background:var(--navy);color:#fff;border-color:var(--navy);box-shadow:0 0 0 4px rgba(10,25,41,.12)}
+.step.done .step-num{background:var(--blue);color:#fff;border-color:var(--blue)}
+.step.done .step-num::after{content:'✓';position:absolute}
+.step.done .step-num span{display:none}
+.step-label{font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--text3);text-align:center;white-space:nowrap}
+.step.active .step-label{color:var(--navy)}
+.step.done .step-label{color:var(--blue)}
+
+/* ══════ CARD PANEL ══════ */
+.panel{
+  background:#fff;border-radius:var(--r2);
+  box-shadow:var(--shadow);
+  border:1px solid var(--border);
+  overflow:hidden;
+  animation:fadeUp .35s ease both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.panel-header{
+  background:linear-gradient(135deg,var(--navy),var(--navy2));
+  padding:22px 28px;
+  display:flex;align-items:center;gap:14px;
+}
+.panel-icon{font-size:26px}
+.panel-title{font-family:'Playfair Display',serif;font-size:20px;color:#fff;font-weight:600}
+.panel-sub{font-size:12px;color:rgba(255,255,255,.5);margin-top:2px;font-weight:300}
+.panel-body{padding:28px}
+
+/* ══════ STEP 1: DATES ══════ */
+.date-row{
+  display:grid;grid-template-columns:1fr 1fr auto;gap:14px;align-items:end;
+}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group label{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text3)}
+.form-input{
+  border:1.5px solid var(--border);border-radius:var(--r);
+  padding:11px 14px;font-size:14px;font-family:'DM Sans',sans-serif;
+  color:var(--text1);background:#fff;outline:none;
+  transition:border-color .2s,box-shadow .2s;width:100%;
+}
+.form-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(21,101,192,.08)}
+.guests-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+.counter-group{
+  border:1.5px solid var(--border);border-radius:var(--r);
+  padding:12px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.counter-label{font-size:13px;font-weight:500;color:var(--text2)}
+.counter-sub{font-size:10px;color:var(--text3)}
+.counter-ctrl{display:flex;align-items:center;gap:12px}
+.counter-btn{
+  width:30px;height:30px;border-radius:50%;border:1.5px solid var(--border);
+  background:#fff;cursor:pointer;font-size:16px;font-weight:600;
+  color:var(--navy);display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.counter-btn:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
+.counter-val{font-size:17px;font-weight:700;color:var(--navy);min-width:20px;text-align:center}
+.promo-row{margin-top:16px;display:flex;gap:10px}
+.promo-input{flex:1}
+.btn-promo{
+  padding:11px 18px;border-radius:var(--r);border:1.5px solid var(--border);
+  background:#fff;font-size:13px;font-weight:600;cursor:pointer;
+  color:var(--text2);transition:all .15s;white-space:nowrap;
+}
+.btn-promo:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ══════ STEP 2: ROOMS ══════ */
+.rooms-filter{
+  display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;
+}
+.filter-btn{
+  padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);
+  background:#fff;font-size:12px;font-weight:600;cursor:pointer;
+  color:var(--text3);transition:all .15s;
+}
+.filter-btn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.room-card{
+  border:2px solid var(--border);border-radius:var(--r2);
+  overflow:hidden;margin-bottom:16px;transition:all .2s;cursor:pointer;
+  display:flex;background:#fff;
+}
+.room-card:hover{border-color:var(--blue);box-shadow:0 4px 20px rgba(21,101,192,.12)}
+.room-card.selected{border-color:var(--navy);box-shadow:0 0 0 3px rgba(10,25,41,.08)}
+.room-card.unavailable{opacity:.5;pointer-events:none}
+.room-img{
+  width:220px;flex-shrink:0;
+  background:linear-gradient(160deg, #1e3a5f, #2d5f8a);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  color:#fff;position:relative;overflow:hidden;
+}
+.room-img::before{
+  content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.room-img-icon{font-size:42px;position:relative;z-index:1}
+.room-img-type{font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-top:8px;opacity:.7;position:relative;z-index:1}
+.room-floor-badge{
+  position:absolute;top:10px;left:10px;
+  background:rgba(0,0,0,.4);backdrop-filter:blur(4px);
+  border-radius:20px;padding:3px 10px;
+  font-size:10px;color:rgba(255,255,255,.9);font-weight:600;
+  letter-spacing:.5px;
+}
+.avail-badge{
+  position:absolute;top:10px;right:10px;
+  border-radius:20px;padding:3px 10px;
+  font-size:10px;font-weight:700;letter-spacing:.3px;
+}
+.avail-badge.ok{background:rgba(26,122,74,.85);color:#fff}
+.avail-badge.low{background:rgba(201,168,76,.9);color:#0a1929}
+.avail-badge.no{background:rgba(192,57,43,.85);color:#fff}
+.room-info{flex:1;padding:20px 22px}
+.room-name{font-family:'Playfair Display',serif;font-size:19px;font-weight:600;color:var(--navy)}
+.room-num{font-size:12px;color:var(--text3);margin-top:1px}
+.room-features{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.feature-chip{
+  padding:3px 10px;border-radius:20px;
+  background:var(--sand);border:1px solid var(--sand2);
+  font-size:11px;color:var(--text2);font-weight:500;
+}
+.room-desc{font-size:13px;color:var(--text3);line-height:1.6;margin-bottom:12px}
+.room-price-row{display:flex;align-items:center;justify-content:space-between}
+.room-price{
+  font-size:26px;font-weight:700;color:var(--navy);
+  font-family:'Playfair Display',serif;
+}
+.room-price span{font-size:13px;color:var(--text3);font-family:'DM Sans',sans-serif;font-weight:400}
+.room-total{font-size:11px;color:var(--text3);margin-top:2px}
+.select-room-btn{
+  padding:10px 20px;border-radius:var(--r);
+  background:var(--navy);color:#fff;border:none;cursor:pointer;
+  font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;
+  transition:all .2s;display:flex;align-items:center;gap:6px;
+}
+.select-room-btn:hover{background:var(--blue);transform:translateY(-1px)}
+.select-room-btn.selected-btn{background:var(--green)}
+
+/* ══════ STEP 3: EXTRAS ══════ */
+.extras-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.extra-card{
+  border:2px solid var(--border);border-radius:var(--r2);
+  padding:20px;cursor:pointer;transition:all .2s;position:relative;
+  text-align:center;background:#fff;
+}
+.extra-card:hover{border-color:var(--blue);box-shadow:0 4px 16px rgba(21,101,192,.1)}
+.extra-card.selected{border-color:var(--navy);background:linear-gradient(135deg,#f0f4ff,#fff)}
+.extra-card .check{
+  position:absolute;top:10px;right:10px;
+  width:22px;height:22px;border-radius:50%;
+  background:var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:transparent;transition:all .2s;
+}
+.extra-card.selected .check{background:var(--navy);color:#fff}
+.extra-icon{font-size:32px;margin-bottom:10px;display:block}
+.extra-name{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:4px}
+.extra-desc{font-size:11px;color:var(--text3);margin-bottom:10px}
+.extra-price{
+  font-size:15px;font-weight:700;color:var(--blue);
+  font-family:'Playfair Display',serif;
+}
+.extra-freq{font-size:10px;color:var(--text3)}
+
+/* ══════ STEP 4: GUEST DATA ══════ */
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.span2{grid-column:span 2}
+.section-sep{
+  font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--text3);border-bottom:1px solid var(--border);
+  padding-bottom:8px;margin:22px 0 16px;
+}
+.form-note{
+  background:linear-gradient(135deg,#fffde7,#fff8e1);
+  border:1px solid #f6c90e;border-radius:var(--r);
+  padding:12px 16px;font-size:12px;color:#7d5a00;margin-top:4px;
+}
+select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237b93aa' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+.privacy-check{display:flex;gap:10px;align-items:flex-start;margin-top:16px;cursor:pointer}
+.privacy-check input{margin-top:3px;flex-shrink:0;width:16px;height:16px;accent-color:var(--navy)}
+.privacy-check span{font-size:12px;color:var(--text3);line-height:1.5}
+.privacy-check a{color:var(--blue)}
+
+/* ══════ STEP 5: PAYMENT ══════ */
+.booking-summary{
+  background:linear-gradient(135deg,var(--navy),var(--navy2));
+  border-radius:var(--r2);padding:22px 24px;margin-bottom:24px;color:#fff;
+}
+.summary-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0}
+.summary-row:not(:last-child){border-bottom:1px solid rgba(255,255,255,.08)}
+.summary-label{font-size:13px;color:rgba(255,255,255,.65)}
+.summary-val{font-size:14px;font-weight:600}
+.summary-total .summary-label{font-size:15px;color:#fff;font-weight:600}
+.summary-total .summary-val{font-size:20px;font-weight:800;font-family:'Playfair Display',serif;color:var(--gold2)}
+.payment-methods{display:flex;gap:10px;margin-bottom:20px}
+.pay-method{
+  flex:1;border:2px solid var(--border);border-radius:var(--r);
+  padding:12px;text-align:center;cursor:pointer;transition:all .15s;background:#fff;
+}
+.pay-method:hover{border-color:var(--blue)}
+.pay-method.active{border-color:var(--navy);background:var(--sand)}
+.pay-method-icon{font-size:22px;margin-bottom:4px;display:block}
+.pay-method-label{font-size:11px;font-weight:600;color:var(--text2)}
+.stripe-form{border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden}
+.stripe-row{padding:14px 16px;background:#fff;border-bottom:1px solid var(--border)}
+.stripe-row:last-child{border-bottom:none}
+.stripe-row label{font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);display:block;margin-bottom:8px}
+.stripe-row-split{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.stripe-row-split .stripe-row{border-right:1px solid var(--border)}
+.stripe-row-split .stripe-row:last-child{border-right:none;border-bottom:none}
+#card-number,#card-expiry,#card-cvc,#card-name{
+  width:100%;border:none;outline:none;
+  font-size:15px;font-family:'DM Sans',sans-serif;color:var(--text1);
+  background:transparent;padding:0;
+}
+.secure-badge{
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;color:var(--text3);
+  background:var(--sand);border-radius:var(--r);padding:10px 14px;margin-top:14px;
+}
+.secure-badge::before{content:'🔒';font-size:14px}
+.card-icons{display:flex;gap:8px;align-items:center}
+.card-icon{
+  width:38px;height:24px;border-radius:4px;border:1px solid var(--border);
+  background:#f8fafc;display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:var(--text3);
+}
+
+/* ══════ STEP 6: CONFIRM ══════ */
+.confirm-box{text-align:center;padding:10px 0 20px}
+.confirm-anim{font-size:72px;margin-bottom:16px;display:block;animation:bounce .6s ease}
+@keyframes bounce{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+.confirm-id{
+  display:inline-block;
+  background:linear-gradient(135deg,var(--navy),var(--blue));
+  color:#fff;border-radius:var(--r);
+  padding:10px 24px;font-size:22px;font-weight:800;
+  font-family:'Playfair Display',serif;letter-spacing:2px;
+  margin-bottom:16px;box-shadow:var(--shadow);
+}
+.confirm-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--navy);margin-bottom:8px}
+.confirm-sub{font-size:14px;color:var(--text3);line-height:1.6;max-width:480px;margin:0 auto 28px}
+.confirm-detail-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+  border:1.5px solid var(--border);border-radius:var(--r2);
+  overflow:hidden;text-align:center;margin-bottom:24px;
+}
+.cd-cell{padding:16px 12px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.cd-cell:nth-child(4n){border-right:none}
+.cd-cell:nth-child(n+5){border-bottom:none}
+.cd-label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
+.cd-val{font-size:14px;font-weight:700;color:var(--navy)}
+.confirm-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+/* ══════ BUTTONS ══════ */
+.btn{
+  padding:13px 28px;border-radius:var(--r);
+  font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;
+  cursor:pointer;border:none;transition:all .2s;
+  display:inline-flex;align-items:center;gap:8px;
+}
+.btn-primary{background:var(--navy);color:#fff;box-shadow:0 4px 16px rgba(10,25,41,.25)}
+.btn-primary:hover{background:var(--blue);transform:translateY(-1px)}
+.btn-secondary{background:#fff;color:var(--text2);border:1.5px solid var(--border)}
+.btn-secondary:hover{border-color:var(--navy);color:var(--navy)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);box-shadow:0 4px 16px rgba(201,168,76,.35)}
+.btn-gold:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(201,168,76,.45)}
+.btn-lg{padding:16px 36px;font-size:16px;border-radius:12px}
+.btn-full{width:100%;justify-content:center}
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
+
+/* ══════ SIDEBAR SUMMARY ══════ */
+.layout{display:grid;grid-template-columns:1fr 300px;gap:24px;align-items:start}
+.sidebar{
+  background:#fff;border-radius:var(--r2);
+  box-shadow:var(--shadow2);border:1px solid var(--border);
+  padding:22px;position:sticky;top:84px;
+}
+.sidebar-title{
+  font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--text3);margin-bottom:16px;
+}
+.sb-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13px}
+.sb-row:not(:last-child){border-bottom:1px solid var(--border)}
+.sb-label{color:var(--text3)}
+.sb-val{font-weight:600;color:var(--text1)}
+.sb-total{font-size:15px!important}
+.sb-total .sb-label{color:var(--navy);font-weight:700}
+.sb-total .sb-val{color:var(--navy);font-size:18px;font-family:'Playfair Display',serif}
+.sidebar-sep{height:1px;background:var(--border);margin:12px 0}
+.sb-nights-box{
+  background:linear-gradient(135deg,var(--navy),var(--blue));
+  border-radius:var(--r);padding:12px 16px;text-align:center;margin-bottom:14px;color:#fff;
+}
+.sb-nights-num{font-size:26px;font-weight:800;font-family:'Playfair Display',serif}
+.sb-nights-label{font-size:10px;opacity:.7;text-transform:uppercase;letter-spacing:1px}
+
+/* ══════ TRUST BADGES ══════ */
+.trust-row{
+  display:flex;gap:14px;justify-content:center;flex-wrap:wrap;
+  padding:20px;background:var(--sand);border-top:1px solid var(--sand2);
+  margin-top:8px;
+}
+.trust-badge{
+  display:flex;align-items:center;gap:6px;
+  font-size:11px;color:var(--text3);font-weight:500;
+}
+.trust-badge span{font-size:16px}
+
+/* ══════ RESPONSIVE ══════ */
+@media(max-width:768px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .date-row{grid-template-columns:1fr 1fr}
+  .date-row .btn{grid-column:1/-1}
+  .room-card{flex-direction:column}
+  .room-img{width:100%;height:130px}
+  .confirm-detail-grid{grid-template-columns:1fr 1fr}
+  .cd-cell:nth-child(2n){border-right:none}
+  .header-contact{display:none}
+  .form-grid-2,.form-grid-3{grid-template-columns:1fr}
+  .span2{grid-column:span 1}
+  .extras-grid{grid-template-columns:1fr 1fr}
+}
+
+/* ══════ TOAST ══════ */
+.toast{
+  position:fixed;bottom:24px;right:24px;z-index:999;
+  background:var(--navy);color:#fff;border-radius:var(--r);
+  padding:12px 20px;font-size:13px;font-weight:500;
+  box-shadow:var(--shadow);
+  transform:translateY(80px);opacity:0;
+  transition:all .3s;pointer-events:none;
+}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.error{background:var(--red)}
+.toast.success{background:var(--green)}
+
+/* ══════ LOADING SHIMMER ══════ */
+.shimmer{
+  border-radius:var(--r);background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);
+  background-size:200% 100%;animation:shimmer 1.5s infinite;
+}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <a href="https://www.hotelgasparini.it" class="logo">
+      <div class="logo-badge">G</div>
+      <div class="logo-text">
+        <h1>Hotel Gasparini</h1>
+        <p>Chioggia · Venezia</p>
+      </div>
+    </a>
+    <div class="header-contact">
+      <a href="mailto:info@hotelgasparini.it">info@hotelgasparini.it</a>
+      <a href="tel:+390414000000" class="header-tel">📞 +39 041 400 000</a>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <span class="stars">★★★</span>
+  <h2>Prenota il tuo soggiorno<br/><em>a Chioggia</em></h2>
+  <p>Miglior tariffa garantita · Cancellazione gratuita · Conferma immediata</p>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- PROGRESS -->
+  <div class="progress-wrap">
+    <div class="steps" id="steps-bar">
+      <div class="step active" id="step-ind-1"><div class="step-num"><span>1</span></div><div class="step-label">Date</div></div>
+      <div class="step" id="step-ind-2"><div class="step-num"><span>2</span></div><div class="step-label">Camera</div></div>
+      <div class="step" id="step-ind-3"><div class="step-num"><span>3</span></div><div class="step-label">Extra</div></div>
+      <div class="step" id="step-ind-4"><div class="step-num"><span>4</span></div><div class="step-label">Ospite</div></div>
+      <div class="step" id="step-ind-5"><div class="step-num"><span>5</span></div><div class="step-label">Pagamento</div></div>
+      <div class="step" id="step-ind-6"><div class="step-num"><span>6</span></div><div class="step-label">Conferma</div></div>
+    </div>
+  </div>
+
+  <!-- LAYOUT (panel + sidebar) -->
+  <div class="layout">
+    <div id="main-panel"></div>
+
+    <!-- SIDEBAR SUMMARY -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-title">Riepilogo Soggiorno</div>
+      <div id="sb-nights-box" style="display:none" class="sb-nights-box">
+        <div class="sb-nights-num" id="sb-nights">—</div>
+        <div class="sb-nights-label">notti</div>
+      </div>
+      <div class="sb-row"><span class="sb-label">Check-in</span><span class="sb-val" id="sb-checkin">—</span></div>
+      <div class="sb-row"><span class="sb-label">Check-out</span><span class="sb-val" id="sb-checkout">—</span></div>
+      <div class="sb-row"><span class="sb-label">Ospiti</span><span class="sb-val" id="sb-guests">—</span></div>
+      <div class="sidebar-sep"></div>
+      <div class="sb-row"><span class="sb-label">Camera</span><span class="sb-val" id="sb-room">—</span></div>
+      <div class="sb-row" id="sb-extras-row" style="display:none"><span class="sb-label">Servizi extra</span><span class="sb-val" id="sb-extras">—</span></div>
+      <div class="sidebar-sep"></div>
+      <div class="sb-row"><span class="sb-label">Subtotale</span><span class="sb-val" id="sb-sub">—</span></div>
+      <div class="sb-row"><span class="sb-label">IVA (10%)</span><span class="sb-val" id="sb-tax">—</span></div>
+      <div class="sidebar-sep"></div>
+      <div class="sb-row sb-total"><span class="sb-label">Totale</span><span class="sb-val" id="sb-total">—</span></div>
+      <div class="trust-row" style="margin-top:12px;border-top:1px solid var(--sand2);padding:14px 0 0">
+        <div class="trust-badge"><span>🔒</span> Pagamento sicuro</div>
+        <div class="trust-badge"><span>✓</span> Tariffa garantita</div>
+        <div class="trust-badge"><span>✉</span> Conferma immediata</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════
+   HOTEL GASPARINI — BOOKING ENGINE
+   Connesso a Supabase PMS in sola lettura
+══════════════════════════════════════════════ */
+
+// ─── Supabase config (sola lettura) ───
+const SUPABASE_URL  = "https://ecxpqxtqdakfmjokudwn.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVjeHBxeHRxZGFrZm1qb2t1ZHduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MjMzNjIsImV4cCI6MjA4NzQ5OTM2Mn0.q27mvz52Zr6Kcp-_Z16a5a7mLQ3YutZ3ruTq8W4Q9_4";
+
+const sbFetch = async (table, query="") => {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, {
+    headers:{ "apikey": SUPABASE_ANON, "Authorization": `Bearer ${SUPABASE_ANON}` }
+  });
+  if (!r.ok) return [];
+  return r.json();
+};
+
+// ─── Dati statici camere (speculari al PMS) ───
+const ROOMS = [
+  // Piano 1 — Standard
+  { id:101, type:"Standard",            capacity:2, price:90,  floor:1 },
+  { id:102, type:"Standard",            capacity:2, price:90,  floor:1 },
+  { id:103, type:"Standard",            capacity:2, price:90,  floor:1 },
+  { id:104, type:"Standard",            capacity:2, price:90,  floor:1 },
+  { id:105, type:"Standard",            capacity:2, price:90,  floor:1 },
+  { id:106, type:"Standard",            capacity:2, price:90,  floor:1 },
+  { id:107, type:"Standard",            capacity:3, price:110, floor:1 },
+  { id:108, type:"Standard",            capacity:3, price:110, floor:1 },
+  { id:109, type:"Standard Accessibile",capacity:2, price:95,  floor:1 },
+  { id:110, type:"Standard Accessibile",capacity:2, price:95,  floor:1 },
+  // Piano 2 — Standard / Superior
+  { id:201, type:"Standard",  capacity:2, price:95,  floor:2 },
+  { id:202, type:"Standard",  capacity:2, price:95,  floor:2 },
+  { id:203, type:"Standard",  capacity:2, price:95,  floor:2 },
+  { id:204, type:"Standard",  capacity:2, price:95,  floor:2 },
+  { id:205, type:"Superior",  capacity:2, price:130, floor:2 },
+  { id:206, type:"Superior",  capacity:2, price:130, floor:2 },
+  { id:207, type:"Superior",  capacity:3, price:150, floor:2 },
+  { id:208, type:"Superior",  capacity:3, price:150, floor:2 },
+  { id:209, type:"Superior",  capacity:2, price:135, floor:2 },
+  { id:210, type:"Superior",  capacity:2, price:135, floor:2 },
+  // Piano 3 — Superior / Deluxe
+  { id:301, type:"Superior",  capacity:2, price:140, floor:3 },
+  { id:302, type:"Superior",  capacity:2, price:140, floor:3 },
+  { id:303, type:"Superior",  capacity:3, price:155, floor:3 },
+  { id:304, type:"Superior",  capacity:3, price:155, floor:3 },
+  { id:305, type:"Deluxe",    capacity:2, price:180, floor:3 },
+  { id:306, type:"Deluxe",    capacity:2, price:180, floor:3 },
+  { id:307, type:"Deluxe",    capacity:2, price:185, floor:3 },
+  { id:308, type:"Deluxe",    capacity:3, price:200, floor:3 },
+  { id:309, type:"Deluxe",    capacity:2, price:180, floor:3 },
+  { id:310, type:"Deluxe",    capacity:2, price:185, floor:3 },
+  // Piano 4 — Deluxe / Junior Suite
+  { id:401, type:"Deluxe",       capacity:2, price:190, floor:4 },
+  { id:402, type:"Deluxe",       capacity:2, price:190, floor:4 },
+  { id:403, type:"Deluxe",       capacity:3, price:210, floor:4 },
+  { id:404, type:"Deluxe",       capacity:3, price:210, floor:4 },
+  { id:405, type:"Junior Suite", capacity:2, price:240, floor:4 },
+  { id:406, type:"Junior Suite", capacity:2, price:240, floor:4 },
+  { id:407, type:"Junior Suite", capacity:3, price:260, floor:4 },
+  { id:408, type:"Junior Suite", capacity:3, price:260, floor:4 },
+  { id:409, type:"Junior Suite", capacity:2, price:245, floor:4 },
+  { id:410, type:"Junior Suite", capacity:2, price:245, floor:4 },
+  // Piano 5 — Suite
+  { id:501, type:"Suite",             capacity:4, price:280, floor:5 },
+  { id:502, type:"Suite",             capacity:4, price:280, floor:5 },
+  { id:503, type:"Suite",             capacity:4, price:290, floor:5 },
+  { id:504, type:"Suite",             capacity:4, price:290, floor:5 },
+  { id:505, type:"Suite",             capacity:4, price:295, floor:5 },
+  { id:506, type:"Suite",             capacity:4, price:295, floor:5 },
+  { id:507, type:"Suite Vista Laguna",capacity:4, price:340, floor:5 },
+  { id:508, type:"Suite Vista Laguna",capacity:4, price:340, floor:5 },
+  { id:509, type:"Suite Vista Laguna",capacity:4, price:350, floor:5 },
+  { id:510, type:"Suite Vista Laguna",capacity:5, price:360, floor:5 },
+];
+
+const SERVICES = [
+  { id:"colazione",  label:"Colazione",          price:18, icon:"☕", desc:"Colazione buffet con prodotti locali",  freq:"/notte/persona" },
+  { id:"parcheggio", label:"Parcheggio",          price:20, icon:"🅿", desc:"Posto auto garantito nel parcheggio",  freq:"/notte" },
+  { id:"spa",        label:"Accesso SPA",         price:45, icon:"♨️", desc:"SPA, sauna, bagno turco e piscina",    freq:"/notte" },
+  { id:"transfer",   label:"Transfer Aeroporto",  price:60, icon:"✈️", desc:"Navetta privata da/per VCE o TSF",     freq:"/percorso" },
+  { id:"minibar",    label:"Minibar Deluxe",      price:35, icon:"🍾", desc:"Minibar rifornito ogni giorno",        freq:"/soggiorno" },
+  { id:"laundry",    label:"Lavanderia",          price:25, icon:"👕", desc:"Servizio lavanderia giornaliero",      freq:"/giorno" },
+];
+
+const TAX_RATE = 0.10;
+const ROOM_DESCRIPTIONS = {
+  "Standard":             "Camera confortevole con tutti i comfort essenziali. Ideale per soggiorni brevi o business.",
+  "Standard Accessibile": "Camera accessibile per ospiti con mobilità ridotta. Spaziosa, dotata di ausili dedicati.",
+  "Superior":             "Ampia e luminosa, con vista sul centro storico. Arredi raffinati e bagno premium.",
+  "Deluxe":               "Camera elegante con balcone privato. Vista panoramica e dotazioni di alto livello.",
+  "Junior Suite":         "Ampio salotto separato dalla zona notte. Vasca idromassaggio e vista laguna.",
+  "Suite":                "Il massimo del comfort: suite con vista spettacolare, jacuzzi e servizi esclusivi.",
+  "Suite Vista Laguna":   "La nostra suite di eccellenza. Vista laguna mozzafiato, vasca panoramica e butler service.",
+};
+const ROOM_FEATURES = {
+  "Standard":             ["WiFi","Aria condizionata","TV 40\"","Minibar","Bagno con doccia"],
+  "Standard Accessibile": ["WiFi","Aria condizionata","TV 40\"","Accesso disabili","Bagno attrezzato"],
+  "Superior":             ["WiFi","Aria condizionata","TV 50\"","Minibar","Balcone","Bagno con doccia"],
+  "Deluxe":               ["WiFi","Aria condizionata","TV 55\"","Minibar Deluxe","Balcone panoramico","Vasca + doccia"],
+  "Junior Suite":         ["WiFi","Aria condizionata","TV 55\"","Salotto separato","Vasca idromassaggio","Vista laguna"],
+  "Suite":                ["WiFi","Aria condizionata","TV 65\"","Sala pranzo","Jacuzzi","Vista panoramica","Butler service"],
+  "Suite Vista Laguna":   ["WiFi","Aria condizionata","TV 65\"","Sala pranzo","Vasca panoramica","Vista laguna esclusiva","Butler service","Champagne di benvenuto"],
+};
+const ROOM_ICONS = {
+  "Standard":"🛏️","Standard Accessibile":"♿","Superior":"🌟",
+  "Deluxe":"✨","Junior Suite":"🛋️","Suite":"👑","Suite Vista Laguna":"🌊",
+};
+const NAZIONALITA = [
+  {code:"IT",name:"Italiana"},{code:"DE",name:"Tedesca"},{code:"FR",name:"Francese"},
+  {code:"GB",name:"Britannica"},{code:"US",name:"Statunitense"},{code:"ES",name:"Spagnola"},
+  {code:"NL",name:"Olandese"},{code:"CH",name:"Svizzera"},{code:"AT",name:"Austriaca"},
+  {code:"BE",name:"Belga"},{code:"PT",name:"Portoghese"},{code:"RU",name:"Russa"},
+  {code:"CN",name:"Cinese"},{code:"JP",name:"Giapponese"},{code:"BR",name:"Brasiliana"},
+  {code:"AR",name:"Argentina"},{code:"AU",name:"Australiana"},{code:"CA",name:"Canadese"},
+];
+const TIPO_DOC = ["Carta d'identità","Passaporto","Patente di guida","Permesso di soggiorno"];
+
+// ─── STATO GLOBALE ───
+const state = {
+  step: 1,
+  checkIn: "", checkOut: "", adulti: 2, bambini: 0,
+  selectedRoom: null, extras: new Set(),
+  guest: { nome:"", cognome:"", email:"", telefono:"", nazionalita:"IT",
+           tipoDoc:"Carta d'identità", numDoc:"", note:"", privacy: false },
+  payMethod: "card",
+  confirmedId: null,
+  occupiedRooms: [],   // letti da Supabase
+};
+
+// ─── UTILITY ───
+const nights = (ci, co) => {
+  const d = (new Date(co) - new Date(ci)) / 86400000;
+  return isNaN(d) || d < 0 ? 0 : d;
+};
+const fmtDate = d => d ? new Date(d + "T12:00:00").toLocaleDateString("it-IT",{day:"2-digit",month:"short",year:"numeric"}) : "—";
+const fmtDateShort = d => d ? new Date(d + "T12:00:00").toLocaleDateString("it-IT",{day:"2-digit",month:"short"}) : "—";
+const fmtEur = n => isNaN(n) ? "—" : `€${n.toFixed(2)}`;
+const genId = () => "BK" + Date.now().toString(36).toUpperCase().slice(-6);
+
+function toast(msg, type="") {
+  const el = document.getElementById("toast");
+  el.textContent = msg; el.className = `toast ${type} show`;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove("show"), 3400);
+}
+
+// ─── SUPABASE: carica prenotazioni occupate ───
+async function loadOccupied() {
+  try {
+    const data = await sbFetch("reservations", "?select=check_in,check_out,room_id,status&status=neq.cancelled");
+    state.occupiedRooms = data.map(r => ({ checkIn: r.check_in, checkOut: r.check_out, roomId: r.room_id }));
+  } catch(e) {
+    // Offline: nessun filtro disponibilità, mostra tutto
+    state.occupiedRooms = [];
+  }
+}
+
+function isRoomAvailable(room) {
+  if (!state.checkIn || !state.checkOut) return true;
+  const ci = state.checkIn, co = state.checkOut;
+  return !state.occupiedRooms.some(r =>
+    r.roomId == room.id && ci < r.checkOut && co > r.checkIn
+  );
+}
+
+// ─── CALCOLI ───
+function calcExtrasPerNight() {
+  const n = nights(state.checkIn, state.checkOut) || 1;
+  return [...state.extras].reduce((sum, id) => {
+    const svc = SERVICES.find(s => s.id === id);
+    if (!svc) return sum;
+    if (svc.freq.includes("notte") && !svc.freq.includes("persona")) return sum + svc.price * n;
+    if (svc.freq.includes("persona")) return sum + svc.price * n * state.adulti;
+    return sum + svc.price;
+  }, 0);
+}
+function calcTotal() {
+  if (!state.selectedRoom) return 0;
+  const n = nights(state.checkIn, state.checkOut);
+  const roomTotal = state.selectedRoom.price * n;
+  return roomTotal + calcExtrasPerNight();
+}
+
+// ─── AGGIORNA SIDEBAR ───
+function updateSidebar() {
+  const n = nights(state.checkIn, state.checkOut);
+  const sub = calcTotal();
+  const tax = sub * TAX_RATE;
+  const grand = sub + tax;
+
+  document.getElementById("sb-checkin").textContent  = fmtDateShort(state.checkIn)  || "—";
+  document.getElementById("sb-checkout").textContent = fmtDateShort(state.checkOut) || "—";
+  document.getElementById("sb-guests").textContent   = `${state.adulti} adult${state.adulti===1?"o":"i"}${state.bambini?" + "+state.bambini+" bamb.":""}`;
+  document.getElementById("sb-room").textContent     = state.selectedRoom ? `Cam. ${state.selectedRoom.id}` : "—";
+
+  const nightsBox = document.getElementById("sb-nights-box");
+  if (n > 0) {
+    nightsBox.style.display = "block";
+    document.getElementById("sb-nights").textContent = n + " nott" + (n===1?"e":"i");
+  } else {
+    nightsBox.style.display = "none";
+  }
+  const extrasRow = document.getElementById("sb-extras-row");
+  if (state.extras.size > 0) {
+    extrasRow.style.display = "flex";
+    document.getElementById("sb-extras").textContent = fmtEur(calcExtrasPerNight());
+  } else {
+    extrasRow.style.display = "none";
+  }
+  document.getElementById("sb-sub").textContent   = sub ? fmtEur(sub) : "—";
+  document.getElementById("sb-tax").textContent   = sub ? fmtEur(tax) : "—";
+  document.getElementById("sb-total").textContent = sub ? fmtEur(grand) : "—";
+}
+
+// ─── AGGIORNA PROGRESS BAR ───
+function updateProgress(current) {
+  for (let i = 1; i <= 6; i++) {
+    const el = document.getElementById(`step-ind-${i}`);
+    el.className = `step ${i < current ? "done" : i === current ? "active" : ""}`;
+  }
+}
+
+// ─── RENDER STEP ───
+function render() {
+  updateProgress(state.step);
+  updateSidebar();
+  const panel = document.getElementById("main-panel");
+  panel.innerHTML = "";
+  panel.style.animation = "none";
+  requestAnimationFrame(() => { panel.style.animation = ""; });
+
+  switch(state.step) {
+    case 1: renderStep1(panel); break;
+    case 2: renderStep2(panel); break;
+    case 3: renderStep3(panel); break;
+    case 4: renderStep4(panel); break;
+    case 5: renderStep5(panel); break;
+    case 6: renderStep6(panel); break;
+  }
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ═══════════════════════════════════
+   STEP 1 — DATE E OSPITI
+═══════════════════════════════════ */
+function renderStep1(wrap) {
+  // Min dates
+  const today = new Date().toISOString().split("T")[0];
+  const minOut = state.checkIn ? (() => { const d = new Date(state.checkIn); d.setDate(d.getDate()+1); return d.toISOString().split("T")[0]; })() : today;
+
+  wrap.innerHTML = `
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon">📅</div>
+      <div><div class="panel-title">Selezione Date e Ospiti</div><div class="panel-sub">Inserisci le date del tuo soggiorno</div></div>
+    </div>
+    <div class="panel-body">
+      <div class="date-row">
+        <div class="form-group">
+          <label>Check-In</label>
+          <input type="date" class="form-input" id="inp-ci" value="${state.checkIn}" min="${today}"/>
+        </div>
+        <div class="form-group">
+          <label>Check-Out</label>
+          <input type="date" class="form-input" id="inp-co" value="${state.checkOut}" min="${minOut}"/>
+        </div>
+        <div style="display:flex;align-items:flex-end">
+          <button class="btn btn-primary" onclick="searchRooms()" style="white-space:nowrap">
+            Cerca camere →
+          </button>
+        </div>
+      </div>
+
+      <div class="guests-row">
+        <div class="counter-group">
+          <div>
+            <div class="counter-label">👤 Adulti</div>
+            <div class="counter-sub">da 16 anni</div>
+          </div>
+          <div class="counter-ctrl">
+            <button class="counter-btn" onclick="changeGuests('adulti',-1)">−</button>
+            <div class="counter-val" id="cnt-adulti">${state.adulti}</div>
+            <button class="counter-btn" onclick="changeGuests('adulti',1)">+</button>
+          </div>
+        </div>
+        <div class="counter-group">
+          <div>
+            <div class="counter-label">🧒 Bambini</div>
+            <div class="counter-sub">0–15 anni</div>
+          </div>
+          <div class="counter-ctrl">
+            <button class="counter-btn" onclick="changeGuests('bambini',-1)">−</button>
+            <div class="counter-val" id="cnt-bambini">${state.bambini}</div>
+            <button class="counter-btn" onclick="changeGuests('bambini',1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="promo-row">
+        <input type="text" class="form-input promo-input" id="promo-code" placeholder="Codice promozionale (opzionale)" style="max-width:280px"/>
+        <button class="btn-promo" onclick="applyPromo()">Applica</button>
+      </div>
+
+      <div style="margin-top:24px;display:flex;gap:16px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px;background:var(--sand);border-radius:var(--r);padding:14px 16px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Check-in / Check-out</div>
+          <div style="font-size:12px;color:var(--text2);">🕐 Check-in: <strong>dalle 14:00</strong> · Check-out: <strong>entro le 11:00</strong></div>
+        </div>
+        <div style="flex:1;min-width:200px;background:var(--sand);border-radius:var(--r);padding:14px 16px">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Cancellazione gratuita</div>
+          <div style="font-size:12px;color:var(--text2);">✓ Cancellazione gratuita fino a <strong>48h prima</strong> del check-in</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  // Event listeners
+  document.getElementById("inp-ci").addEventListener("change", e => {
+    state.checkIn = e.target.value;
+    // Aggiusta check-out se necessario
+    if (state.checkOut && state.checkOut <= state.checkIn) {
+      const d = new Date(state.checkIn); d.setDate(d.getDate()+1);
+      state.checkOut = d.toISOString().split("T")[0];
+    }
+    updateSidebar();
+  });
+  document.getElementById("inp-co").addEventListener("change", e => {
+    state.checkOut = e.target.value; updateSidebar();
+  });
+}
+
+function changeGuests(field, delta) {
+  if (field === "adulti") state.adulti = Math.max(1, Math.min(8, state.adulti + delta));
+  if (field === "bambini") state.bambini = Math.max(0, Math.min(6, state.bambini + delta));
+  const el = document.getElementById(`cnt-${field}`);
+  if (el) el.textContent = state[field];
+  updateSidebar();
+}
+
+function applyPromo() {
+  const code = document.getElementById("promo-code")?.value?.trim().toUpperCase();
+  if (code === "GASPARINI10") toast("✓ Sconto del 10% applicato!", "success");
+  else if (code === "CHIOGGIA") toast("✓ Sconto benvenuto attivato!", "success");
+  else toast("Codice promozionale non valido", "error");
+}
+
+async function searchRooms() {
+  // Leggo le date dal DOM (potrebbero non essere ancora nello state)
+  const ciEl = document.getElementById("inp-ci");
+  const coEl = document.getElementById("inp-co");
+  if (ciEl) state.checkIn = ciEl.value;
+  if (coEl) state.checkOut = coEl.value;
+
+  if (!state.checkIn || !state.checkOut) { toast("Seleziona le date di check-in e check-out","error"); return; }
+  if (state.checkOut <= state.checkIn)   { toast("Il check-out deve essere successivo al check-in","error"); return; }
+  const n = nights(state.checkIn, state.checkOut);
+  if (n < 1) { toast("Il soggiorno deve essere di almeno 1 notte","error"); return; }
+
+  // Carica disponibilità da Supabase
+  toast("⏳ Verifica disponibilità in corso…");
+  await loadOccupied();
+  state.step = 2;
+  render();
+}
+
+/* ═══════════════════════════════════
+   STEP 2 — SCELTA CAMERA
+═══════════════════════════════════ */
+function renderStep2(wrap) {
+  const n = nights(state.checkIn, state.checkOut);
+  // Aggrega per tipo
+  const types = [...new Set(ROOMS.map(r => r.type))];
+  const typeGroups = {};
+  types.forEach(t => {
+    const rooms = ROOMS.filter(r => r.type === t && r.capacity >= state.adulti + state.bambini);
+    const avail = rooms.filter(r => isRoomAvailable(r));
+    if (rooms.length > 0) typeGroups[t] = { rooms, avail, minPrice: Math.min(...rooms.map(r=>r.price)) };
+  });
+
+  const filterBtns = `<div class="rooms-filter">
+    <button class="filter-btn active" onclick="filterRooms('all',this)">Tutte (${Object.keys(typeGroups).length})</button>
+    ${Object.entries(typeGroups).map(([t,{avail}])=>`
+      <button class="filter-btn" onclick="filterRooms('${t}',this)">${t} (${avail.length})</button>
+    `).join("")}
+  </div>`;
+
+  const cards = Object.entries(typeGroups).map(([type, {rooms, avail, minPrice}]) => {
+    const isAvail = avail.length > 0;
+    const availBadge = avail.length === 0 ? `<span class="avail-badge no">Non disponibile</span>`
+      : avail.length <= 2 ? `<span class="avail-badge low">⚡ Ultime ${avail.length}</span>`
+      : `<span class="avail-badge ok">✓ Disponibile</span>`;
+    const features = (ROOM_FEATURES[type]||[]).slice(0,4).map(f=>`<span class="feature-chip">${f}</span>`).join("");
+    const isSelected = state.selectedRoom?.type === type;
+    const bestRoom = avail[0] || rooms[0];
+
+    return `<div class="room-card ${isSelected?"selected":""} ${!isAvail?"unavailable":""}" data-type="${type}" onclick="selectRoom(${bestRoom.id})">
+      <div class="room-img">
+        <div class="room-floor-badge">${ROOM_ICONS[type]||"🏨"} Piano ${bestRoom.floor}</div>
+        ${availBadge}
+        <div class="room-img-icon" style="font-size:50px">${ROOM_ICONS[type]||"🛏️"}</div>
+        <div class="room-img-type">${type}</div>
+      </div>
+      <div class="room-info">
+        <div class="room-name">${type}</div>
+        <div class="room-num">Camera ${bestRoom.id} · fino a ${bestRoom.capacity} ospiti</div>
+        <div class="room-features">${features}</div>
+        <div class="room-desc">${ROOM_DESCRIPTIONS[type]||""}</div>
+        <div class="room-price-row">
+          <div>
+            <div class="room-price">€${minPrice} <span>/ notte</span></div>
+            <div class="room-total">Totale ${n} notti: <strong>€${minPrice*n}</strong></div>
+          </div>
+          <button class="select-room-btn ${isSelected?"selected-btn":""}" onclick="event.stopPropagation();selectRoom(${bestRoom.id})">
+            ${isSelected ? "✓ Selezionata" : "Scegli →"}
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  wrap.innerHTML = `
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon">🛏️</div>
+      <div>
+        <div class="panel-title">Scegli la tua Camera</div>
+        <div class="panel-sub">${fmtDate(state.checkIn)} → ${fmtDate(state.checkOut)} · ${n} nott${n===1?"e":"i"} · ${state.adulti+state.bambini} ospiti</div>
+      </div>
+    </div>
+    <div class="panel-body">
+      ${filterBtns}
+      <div id="rooms-list">${cards}</div>
+      <div class="nav-row">
+        <button class="btn btn-secondary" onclick="goStep(1)">← Modifica date</button>
+        <button class="btn btn-primary" onclick="goStep(3)" id="btn-next-2" ${state.selectedRoom?"":"disabled style='opacity:.5;cursor:not-allowed'"}>Continua →</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function filterRooms(type, btn) {
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  document.querySelectorAll(".room-card").forEach(card => {
+    card.style.display = (type === "all" || card.dataset.type === type) ? "flex" : "none";
+  });
+}
+
+function selectRoom(roomId) {
+  const room = ROOMS.find(r => r.id === roomId);
+  if (!room) return;
+  state.selectedRoom = room;
+  // Aggiorna UI senza re-render completo
+  document.querySelectorAll(".room-card").forEach(c => c.classList.remove("selected"));
+  document.querySelectorAll(".select-room-btn").forEach(b => {
+    b.textContent = "Scegli →";
+    b.classList.remove("selected-btn");
+  });
+  const card = document.querySelector(`[data-type="${room.type}"]`);
+  if (card) {
+    card.classList.add("selected");
+    const btn = card.querySelector(".select-room-btn");
+    if (btn) { btn.textContent = "✓ Selezionata"; btn.classList.add("selected-btn"); }
+  }
+  const nextBtn = document.getElementById("btn-next-2");
+  if (nextBtn) { nextBtn.disabled = false; nextBtn.style.opacity = "1"; nextBtn.style.cursor = "pointer"; }
+  updateSidebar();
+  toast(`✓ Camera ${room.type} selezionata`,"success");
+}
+
+/* ═══════════════════════════════════
+   STEP 3 — SERVIZI EXTRA
+═══════════════════════════════════ */
+function renderStep3(wrap) {
+  const extras = SERVICES.map(s => `
+    <div class="extra-card ${state.extras.has(s.id)?"selected":""}" onclick="toggleExtra('${s.id}')">
+      <div class="check">✓</div>
+      <span class="extra-icon">${s.icon}</span>
+      <div class="extra-name">${s.label}</div>
+      <div class="extra-desc">${s.desc}</div>
+      <div class="extra-price">+€${s.price} <span class="extra-freq">${s.freq}</span></div>
+    </div>`).join("");
+
+  wrap.innerHTML = `
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon">✨</div>
+      <div><div class="panel-title">Servizi Aggiuntivi</div><div class="panel-sub">Personalizza il tuo soggiorno (tutti opzionali)</div></div>
+    </div>
+    <div class="panel-body">
+      <div class="extras-grid">${extras}</div>
+      <div class="nav-row">
+        <button class="btn btn-secondary" onclick="goStep(2)">← Camera</button>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:13px;color:var(--text3)">${state.extras.size} servizi selezionati</span>
+          <button class="btn btn-primary" onclick="goStep(4)">Continua →</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleExtra(id) {
+  if (state.extras.has(id)) state.extras.delete(id);
+  else state.extras.add(id);
+  renderStep3(document.getElementById("main-panel"));
+  updateSidebar();
+}
+
+/* ═══════════════════════════════════
+   STEP 4 — DATI OSPITE
+═══════════════════════════════════ */
+function renderStep4(wrap) {
+  const nazOptions = NAZIONALITA.map(n => `<option value="${n.code}" ${state.guest.nazionalita===n.code?"selected":""}>${n.name}</option>`).join("");
+  const docOptions = TIPO_DOC.map(t => `<option ${state.guest.tipoDoc===t?"selected":""}>${t}</option>`).join("");
+
+  wrap.innerHTML = `
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon">👤</div>
+      <div><div class="panel-title">Dati dell'Ospite Principale</div><div class="panel-sub">Necessari per la registrazione e la conferma</div></div>
+    </div>
+    <div class="panel-body">
+      <div class="section-sep">Dati Personali</div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Cognome *</label>
+          <input type="text" class="form-input" id="g-cognome" value="${state.guest.cognome}" placeholder="Rossi"/>
+        </div>
+        <div class="form-group">
+          <label>Nome *</label>
+          <input type="text" class="form-input" id="g-nome" value="${state.guest.nome}" placeholder="Mario"/>
+        </div>
+        <div class="form-group">
+          <label>Data di Nascita *</label>
+          <input type="date" class="form-input" id="g-nascita" value="${state.guest.nascita||""}"/>
+        </div>
+        <div class="form-group">
+          <label>Nazionalità</label>
+          <select class="form-input" id="g-naz">${nazOptions}</select>
+        </div>
+      </div>
+
+      <div class="section-sep">Contatti</div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" class="form-input" id="g-email" value="${state.guest.email}" placeholder="mario.rossi@email.it"/>
+        </div>
+        <div class="form-group">
+          <label>Telefono *</label>
+          <input type="tel" class="form-input" id="g-tel" value="${state.guest.telefono}" placeholder="+39 333 1234567"/>
+        </div>
+      </div>
+
+      <div class="section-sep">Documento d'Identità <span style="font-weight:400;text-transform:none;font-size:10px">(obbligatorio per legge — D.Lgs. 286/98)</span></div>
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Tipo Documento *</label>
+          <select class="form-input" id="g-tipdoc">${docOptions}</select>
+        </div>
+        <div class="form-group">
+          <label>Numero Documento *</label>
+          <input type="text" class="form-input" id="g-numdoc" value="${state.guest.numDoc}" placeholder="AX1234567" style="text-transform:uppercase"/>
+        </div>
+      </div>
+      <div class="form-note">
+        📋 I dati del documento verranno comunicati alla Pubblica Sicurezza entro 24h dall'arrivo, ai sensi del D.Lgs. 286/98 e del T.U.L.P.S. Non verranno usati per altri scopi.
+      </div>
+
+      <div class="section-sep">Note e Richieste Speciali</div>
+      <div class="form-group">
+        <label>Richieste particolari (opzionale)</label>
+        <textarea class="form-input" id="g-note" rows="3" style="resize:vertical" placeholder="Culla per neonato, piano alto, camera fumatori, allergie alimentari…">${state.guest.note}</textarea>
+      </div>
+
+      <label class="privacy-check">
+        <input type="checkbox" id="g-privacy" ${state.guest.privacy?"checked":""}/>
+        <span>Ho letto e accetto l'<a href="#">Informativa sulla Privacy</a> e le <a href="#">Condizioni di Prenotazione</a>. Acconsento al trattamento dei dati per finalità di prenotazione. *</span>
+      </label>
+
+      <div class="nav-row">
+        <button class="btn btn-secondary" onclick="goStep(3)">← Servizi extra</button>
+        <button class="btn btn-primary" onclick="saveGuest()">Continua al pagamento →</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function saveGuest() {
+  const g = {
+    cognome:  document.getElementById("g-cognome").value.trim(),
+    nome:     document.getElementById("g-nome").value.trim(),
+    nascita:  document.getElementById("g-nascita").value,
+    email:    document.getElementById("g-email").value.trim(),
+    telefono: document.getElementById("g-tel").value.trim(),
+    nazionalita: document.getElementById("g-naz").value,
+    tipoDoc:  document.getElementById("g-tipdoc").value,
+    numDoc:   document.getElementById("g-numdoc").value.trim().toUpperCase(),
+    note:     document.getElementById("g-note").value.trim(),
+    privacy:  document.getElementById("g-privacy").checked,
+  };
+
+  if (!g.cognome || !g.nome) { toast("Inserisci nome e cognome","error"); return; }
+  if (!g.email || !g.email.includes("@")) { toast("Email non valida","error"); return; }
+  if (!g.telefono) { toast("Inserisci un numero di telefono","error"); return; }
+  if (!g.numDoc) { toast("Inserisci il numero del documento","error"); return; }
+  if (!g.privacy) { toast("Devi accettare la Privacy Policy per procedere","error"); return; }
+
+  Object.assign(state.guest, g);
+  goStep(5);
+}
+
+/* ═══════════════════════════════════
+   STEP 5 — PAGAMENTO
+═══════════════════════════════════ */
+function renderStep5(wrap) {
+  const sub   = calcTotal();
+  const tax   = sub * TAX_RATE;
+  const grand = sub + tax;
+  const n     = nights(state.checkIn, state.checkOut);
+  const extrasStr = [...state.extras].map(id => SERVICES.find(s=>s.id===id)?.label).filter(Boolean).join(", ") || "Nessuno";
+
+  wrap.innerHTML = `
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon">💳</div>
+      <div><div class="panel-title">Pagamento Sicuro</div><div class="panel-sub">I dati della carta sono protetti da crittografia SSL/TLS</div></div>
+    </div>
+    <div class="panel-body">
+
+      <!-- Riepilogo -->
+      <div class="booking-summary">
+        <div class="summary-row">
+          <span class="summary-label">Camera</span>
+          <span class="summary-val">${state.selectedRoom.type} (N° ${state.selectedRoom.id})</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Periodo</span>
+          <span class="summary-val">${fmtDateShort(state.checkIn)} → ${fmtDateShort(state.checkOut)} · ${n} nott${n===1?"e":"i"}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Ospiti</span>
+          <span class="summary-val">${state.adulti} adult${state.adulti===1?"o":"i"}${state.bambini?" + "+state.bambini+" bambini":""}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Servizi extra</span>
+          <span class="summary-val">${extrasStr}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">Subtotale</span>
+          <span class="summary-val">${fmtEur(sub)}</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">IVA (10%)</span>
+          <span class="summary-val">${fmtEur(tax)}</span>
+        </div>
+        <div class="summary-row summary-total">
+          <span class="summary-label">TOTALE</span>
+          <span class="summary-val">${fmtEur(grand)}</span>
+        </div>
+      </div>
+
+      <!-- Metodi di pagamento -->
+      <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">Metodo di Pagamento</div>
+      <div class="payment-methods" id="pay-methods">
+        <div class="pay-method active" onclick="selectPayMethod('card',this)">
+          <span class="pay-method-icon">💳</span>
+          <div class="pay-method-label">Carta di credito</div>
+        </div>
+        <div class="pay-method" onclick="selectPayMethod('paypal',this)">
+          <span class="pay-method-icon">🅿</span>
+          <div class="pay-method-label">PayPal</div>
+        </div>
+        <div class="pay-method" onclick="selectPayMethod('transfer',this)">
+          <span class="pay-method-icon">🏦</span>
+          <div class="pay-method-label">Bonifico</div>
+        </div>
+        <div class="pay-method" onclick="selectPayMethod('hotel',this)">
+          <span class="pay-method-icon">🏨</span>
+          <div class="pay-method-label">Paga in hotel</div>
+        </div>
+      </div>
+
+      <!-- Form carta (Stripe-like) -->
+      <div id="pay-form-area">
+        ${renderCardForm()}
+      </div>
+
+      <div class="secure-badge">
+        Pagamento sicuro · Nessun dato carta viene salvato · Crittografia TLS 1.3
+        <div class="card-icons" style="margin-left:auto">
+          <div class="card-icon">VISA</div>
+          <div class="card-icon">MC</div>
+          <div class="card-icon">AMEX</div>
+        </div>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn btn-secondary" onclick="goStep(4)">← Dati ospite</button>
+        <button class="btn btn-gold btn-lg" onclick="processPayment()" id="btn-pay">
+          🔒 Prenota · ${fmtEur(grand)}
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderCardForm() {
+  return `<div class="stripe-form" id="card-form">
+    <div class="stripe-row">
+      <label>Numero carta</label>
+      <input type="text" id="card-number" maxlength="19" placeholder="1234 5678 9012 3456"
+        oninput="formatCard(this)" autocomplete="cc-number"/>
+    </div>
+    <div class="stripe-row">
+      <label>Intestatario</label>
+      <input type="text" id="card-name" placeholder="MARIO ROSSI" autocomplete="cc-name"
+        style="text-transform:uppercase"/>
+    </div>
+    <div class="stripe-row-split">
+      <div class="stripe-row">
+        <label>Scadenza</label>
+        <input type="text" id="card-expiry" maxlength="5" placeholder="MM/AA"
+          oninput="formatExpiry(this)" autocomplete="cc-exp"/>
+      </div>
+      <div class="stripe-row">
+        <label>CVV</label>
+        <input type="text" id="card-cvc" maxlength="4" placeholder="123" autocomplete="cc-csc"/>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderPayPalForm() {
+  return `<div style="background:var(--sand);border-radius:var(--r);padding:24px;text-align:center;border:1.5px solid var(--border)">
+    <div style="font-size:40px;margin-bottom:10px">🅿</div>
+    <div style="font-size:15px;font-weight:600;color:var(--navy);margin-bottom:6px">Pagamento tramite PayPal</div>
+    <div style="font-size:13px;color:var(--text3)">Sarai reindirizzato su PayPal per completare il pagamento in sicurezza.</div>
+  </div>`;
+}
+
+function renderTransferForm() {
+  return `<div style="background:var(--sand);border-radius:var(--r);padding:24px;border:1.5px solid var(--border)">
+    <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:14px">Coordinate Bancarie</div>
+    <div style="display:grid;gap:10px;font-size:13px;color:var(--text2)">
+      <div><strong>Beneficiario:</strong> Hotel Gasparini S.r.l.</div>
+      <div><strong>IBAN:</strong> IT60 X054 2811 1010 0000 0123 456</div>
+      <div><strong>BIC/SWIFT:</strong> BPPIITRRXXX</div>
+      <div><strong>Causale:</strong> Prenotazione [inserisci il tuo codice prenotazione]</div>
+    </div>
+    <div style="margin-top:14px;font-size:12px;color:var(--text3)">⚠ La prenotazione verrà confermata al ricevimento del bonifico entro 48h.</div>
+  </div>`;
+}
+
+function renderHotelForm() {
+  return `<div style="background:var(--greenL);border:1.5px solid #a8d5b5;border-radius:var(--r);padding:20px;text-align:center">
+    <div style="font-size:32px;margin-bottom:10px">🏨</div>
+    <div style="font-size:14px;font-weight:600;color:var(--navy);margin-bottom:6px">Pagamento all'arrivo in hotel</div>
+    <div style="font-size:13px;color:var(--text2)">Accettiamo contante, carta di credito/debito, bancomat.<br/>Verrà richiesta la carta di credito come garanzia al check-in.</div>
+  </div>`;
+}
+
+function selectPayMethod(method, btn) {
+  state.payMethod = method;
+  document.querySelectorAll(".pay-method").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  const area = document.getElementById("pay-form-area");
+  if (method === "card")     area.innerHTML = renderCardForm();
+  if (method === "paypal")   area.innerHTML = renderPayPalForm();
+  if (method === "transfer") area.innerHTML = renderTransferForm();
+  if (method === "hotel")    area.innerHTML = renderHotelForm();
+}
+
+function formatCard(el) {
+  let v = el.value.replace(/\D/g,"").slice(0,16);
+  el.value = v.replace(/(.{4})/g,"$1 ").trim();
+}
+function formatExpiry(el) {
+  let v = el.value.replace(/\D/g,"");
+  if (v.length >= 2) v = v.slice(0,2) + "/" + v.slice(2,4);
+  el.value = v;
+}
+
+async function processPayment() {
+  const btn = document.getElementById("btn-pay");
+  if (!btn) return;
+
+  // Valida carta (se metodo carta)
+  if (state.payMethod === "card") {
+    const num = document.getElementById("card-number")?.value.replace(/\s/g,"");
+    const exp = document.getElementById("card-expiry")?.value;
+    const cvc = document.getElementById("card-cvc")?.value;
+    const name = document.getElementById("card-name")?.value;
+    if (!num || num.length < 13) { toast("Numero carta non valido","error"); return; }
+    if (!exp || exp.length < 5)  { toast("Scadenza carta non valida","error"); return; }
+    if (!cvc || cvc.length < 3)  { toast("CVV non valido","error"); return; }
+    if (!name)                    { toast("Inserisci il nome sull'intestatario","error"); return; }
+  }
+
+  btn.disabled = true;
+  btn.textContent = "⏳ Elaborazione in corso…";
+
+  // Simula processo pagamento (1.5s)
+  await new Promise(r => setTimeout(r, 1500));
+
+  // Genera ID prenotazione e "salva" (in sola lettura il PMS, quindi solo conferma locale)
+  state.confirmedId = genId();
+
+  // Invia email di conferma (mailto)
+  sendConfirmEmail();
+
+  goStep(6);
+}
+
+/* ═══════════════════════════════════
+   STEP 6 — CONFERMA
+═══════════════════════════════════ */
+function renderStep6(wrap) {
+  const n = nights(state.checkIn, state.checkOut);
+  const sub = calcTotal(), tax = sub * TAX_RATE, grand = sub + tax;
+
+  // Confetti animation
+  setTimeout(() => {
+    const colors = ["#c9a84c","#1565c0","#0a1929","#e8c97a","#1976d2"];
+    for (let i = 0; i < 60; i++) {
+      const el = document.createElement("div");
+      el.style.cssText = `position:fixed;top:-10px;left:${Math.random()*100}%;
+        width:${6+Math.random()*8}px;height:${10+Math.random()*8}px;
+        background:${colors[Math.floor(Math.random()*colors.length)]};
+        border-radius:${Math.random()>0.5?50:2}%;
+        animation:fall ${1.5+Math.random()*2}s ease-in forwards;
+        transform:rotate(${Math.random()*360}deg);
+        opacity:${0.7+Math.random()*0.3};
+        z-index:9999;pointer-events:none`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 4000);
+    }
+  }, 200);
+
+  const subject = encodeURIComponent(`Conferma Prenotazione ${state.confirmedId} — Hotel Gasparini`);
+  const body = encodeURIComponent(
+    `Gentile ${state.guest.cognome} ${state.guest.nome},\n\nSiamo lieti di confermare la sua prenotazione.\n\nCodice: ${state.confirmedId}\nCamera: ${state.selectedRoom.type} (N° ${state.selectedRoom.id})\nCheck-In: ${state.checkIn}\nCheck-Out: ${state.checkOut}\nOspiti: ${state.adulti}${state.bambini?" + "+state.bambini+" bambini":""}\nTotale: €${grand.toFixed(2)} IVA inclusa\n\nPer informazioni: info@hotelgasparini.it · +39 041 400 000\n\nArrivederci a Chioggia!\nHotel Gasparini ★★★`
+  );
+  const mailtoUrl = `mailto:${state.guest.email}?subject=${subject}&body=${body}`;
+
+  wrap.innerHTML = `
+  <div class="panel">
+    <div class="panel-body" style="padding:40px 28px">
+      <div class="confirm-box">
+        <span class="confirm-anim">🎉</span>
+        <div class="confirm-id">${state.confirmedId}</div>
+        <div class="confirm-title">Prenotazione Confermata!</div>
+        <div class="confirm-sub">
+          Grazie, <strong>${state.guest.nome} ${state.guest.cognome}</strong>!<br/>
+          La conferma è stata inviata a <strong>${state.guest.email}</strong>.<br/>
+          Il team dell'Hotel Gasparini la aspetta a Chioggia.
+        </div>
+
+        <div class="confirm-detail-grid">
+          <div class="cd-cell"><div class="cd-label">Camera</div><div class="cd-val">${state.selectedRoom.type}</div></div>
+          <div class="cd-cell"><div class="cd-label">N° Camera</div><div class="cd-val">${state.selectedRoom.id}</div></div>
+          <div class="cd-cell"><div class="cd-label">Check-In</div><div class="cd-val">${fmtDateShort(state.checkIn)}</div></div>
+          <div class="cd-cell"><div class="cd-label">Check-Out</div><div class="cd-val">${fmtDateShort(state.checkOut)}</div></div>
+          <div class="cd-cell"><div class="cd-label">Notti</div><div class="cd-val">${n}</div></div>
+          <div class="cd-cell"><div class="cd-label">Ospiti</div><div class="cd-val">${state.adulti+state.bambini}</div></div>
+          <div class="cd-cell"><div class="cd-label">Totale</div><div class="cd-val">€${grand.toFixed(2)}</div></div>
+          <div class="cd-cell"><div class="cd-label">Pagamento</div><div class="cd-val">${{card:"Carta",paypal:"PayPal",transfer:"Bonifico",hotel:"In hotel"}[state.payMethod]}</div></div>
+        </div>
+
+        <div class="confirm-actions">
+          <a href="${mailtoUrl}" class="btn btn-primary">✉ Invia conferma email</a>
+          <button class="btn btn-secondary" onclick="window.print()">🖨 Stampa voucher</button>
+          <a href="/" class="btn btn-secondary">← Torna all'hotel</a>
+        </div>
+
+        <div style="margin-top:28px;background:var(--sand);border-radius:var(--r);padding:18px 22px;text-align:left">
+          <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px">Informazioni pratiche</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;color:var(--text2)">
+            <div>🕐 Check-in: <strong>dalle 14:00</strong></div>
+            <div>🕒 Check-out: <strong>entro le 11:00</strong></div>
+            <div>📍 Corso del Popolo 1059, Chioggia (VE)</div>
+            <div>📞 +39 041 400 000</div>
+            <div>🐾 Animali: <strong>previa richiesta</strong></div>
+            <div>🚬 Struttura: <strong>non fumatori</strong></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ─── SEND EMAIL (mailto fallback) ───
+function sendConfirmEmail() {
+  // L'email viene mostrata nello step 6 tramite link mailto
+}
+
+// ─── NAVIGATE ───
+function goStep(n) {
+  if (n > 1 && !state.checkIn) { toast("Prima seleziona le date","error"); render(); return; }
+  if (n > 2 && !state.selectedRoom) { toast("Prima seleziona una camera","error"); return; }
+  state.step = n;
+  render();
+}
+
+// ─── CONFETTI CSS ───
+const confettiStyle = document.createElement("style");
+confettiStyle.textContent = `@keyframes fall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}`;
+document.head.appendChild(confettiStyle);
+
+// ─── INIT ───
+render();
+</script>
+</body>
+</html>
