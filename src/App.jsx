@@ -512,10 +512,19 @@ const COMUNI_IT = [
 
 // - AUTOCOMPLETE COMUNE ITALIANO -
 const emptyGuest = () => ({
-  id:genGuestId(), cognome:"", nome:"", sesso:"M", dataNascita:"",
+  id:genGuestId(), tipo:"individuale",
+  cognome:"", nome:"", sesso:"M", dataNascita:"",
   luogoNascita:"", provinciaNascita:"", nazionalita:"IT",
   tipoDoc:"Carta d'identità", numDoc:"", rilasciatoDa:"",
   dataRilascio:"", scadenzaDoc:"",
+  indirizzo:"", citta:"", cap:"", provincia:"", paese:"Italia",
+  email:"", telefono:"", note:"",
+});
+
+const emptyAzienda = () => ({
+  id:genGuestId(), tipo:"azienda",
+  ragioneSociale:"", piva:"", codiceFiscale:"", sdi:"", pec:"",
+  settore:"", referente:"", ruoloReferente:"",
   indirizzo:"", citta:"", cap:"", provincia:"", paese:"Italia",
   email:"", telefono:"", note:"",
 });
@@ -987,7 +996,12 @@ export default function HotelPMS() {
   const [invoiceRes, setInvoiceRes]   = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchQ, setSearchQ]         = useState("");
-  const [guestSearch, setGuestSearch] = useState("");
+  const [guestSearch, setGuestSearch]     = useState("");
+  const [anagraficaTab, setAnagraficaTab] = useState("individuali"); // individuali | aziende
+  const [emailPreviewRes, setEmailPreviewRes] = useState(null);    // modal anteprima email conferma
+  const [emailTo, setEmailTo]               = useState("");         // campo A: modal email
+  const [emailCc, setEmailCc]               = useState("");         // campo CC
+  const [emailTab, setEmailTab]             = useState("preview");  // preview | html
   const [psMonth, setPsMonth]         = useState("2026-02");
   const [istatMonth, setIstatMonth]   = useState("2026-02");
   // Disponibilità state
@@ -1400,12 +1414,18 @@ Rispondi in italiano, in modo conciso e professionale.`;
 
   // - Ospiti -
 
-  const openNewGuest  = (forRes=null) => { setGuestForm(emptyGuest()); setModal(forRes ? "guest-form-for-"+forRes : "guest-form"); };
-  const openEditGuest = (g) => { setGuestForm({...g}); setModal("guest-form"); };
+  const openNewGuest    = (forRes=null) => { setGuestForm(emptyGuest());   setModal(forRes ? "guest-form-for-"+forRes : "guest-form"); };
+  const openNewAzienda  = ()           => { setGuestForm(emptyAzienda()); setModal("guest-form"); };
+  const openEditGuest   = (g)          => { setGuestForm({...g});          setModal("guest-form"); };
 
   const saveGuest = () => {
     const g = guestForm;
-    if (!g.cognome||!g.nome||!g.dataNascita||!g.numDoc) { showToast("Compila cognome, nome, data nascita e n° documento","error"); return; }
+    const isAz = g.tipo === "azienda";
+    if (isAz) {
+      if (!g.ragioneSociale || !g.piva) { showToast("Compila Ragione Sociale e P.IVA","error"); return; }
+    } else {
+      if (!g.cognome||!g.nome||!g.dataNascita||!g.numDoc) { showToast("Compila cognome, nome, data nascita e n° documento","error"); return; }
+    }
     const isNew = !guests.find(x => x.id===g.id);
     if (isNew) {
       setGuests(p => [...p, g]);
@@ -1454,7 +1474,9 @@ Rispondi in italiano, in modo conciso e professionale.`;
     setForm({ id:genId(), guestId:"", guestName:"", companions:[], roomId:"",
       checkIn:"", checkOut:"", guests:1, adulti:1, bambini:0, services:[], notes:"",
       roomServiceItems:[], payments:[], status:"reserved",
-      psInviato:false, istatRegistrato:false, ...prefill });
+      psInviato:false, istatRegistrato:false,
+      trattamento:"", canale:"", motivoSoggiorno:"", linguaOspite:"", mercato:"",
+      ...prefill });
     setModal("new-res");
   };
   const openEditReservation = (res) => { setForm({...res, services:[...(res.services||[])]}); setModal("edit-res"); };
@@ -1468,10 +1490,278 @@ Rispondi in italiano, in modo conciso e professionale.`;
     const g = guests.find(x => x.id===form.guestId);
     const saved = { ...form, roomId:parseInt(form.roomId), guests:parseInt(form.guests),
       guestName: g ? `${g.cognome} ${g.nome}` : form.guestName };
-    if (modal==="new-res") { setReservations(p => [...p, saved]); showToast("Prenotazione creata!"); }
-    else                   { setReservations(p => p.map(r => r.id===form.id ? saved : r)); showToast("Prenotazione aggiornata!"); }
-    dbSaveReservation(saved).catch(()=>{});
-    setModal(null);
+    if (modal==="new-res") { setReservations(p => [...p, saved]); showToast("Prenotazione creata! ✓"); setModal(null); setEmailPreviewRes(saved); const _g2=guests.find(x=>x.id===saved.guestId); setEmailTo(_g2?.email||""); setEmailCc(""); setEmailTab("preview"); }
+    else                   { setReservations(p => p.map(r => r.id===form.id ? saved : r)); showToast("Prenotazione aggiornata!"); setModal(null); }
+  };
+
+  // ─── Genera HTML email di conferma prenotazione ───
+  const buildConfirmEmail = (res, guestObj) => {
+    const room   = ROOMS.find(r => r.id === parseInt(res.roomId));
+    const n      = nights(res.checkIn, res.checkOut);
+    const svcLines = (res.services||[]).map(sid => SERVICES.find(s=>s.id===sid)).filter(Boolean);
+    const sub    = calcTotal(res);
+    const tax    = sub * TAX_RATE;
+    const grand  = sub + tax;
+    const TRATTAMENTO_LABEL = {RO:"Solo Pernottamento",BB:"Bed & Breakfast",HB:"Mezza Pensione",FB:"Pensione Completa",AI:"All Inclusive"};
+    const guestName = guestObj ? `${guestObj.cognome} ${guestObj.nome}` : (res.guestName || "Gentile Ospite");
+    const guestEmail = guestObj?.email || "";
+
+    const svcRows = svcLines.map(s => `
+      <tr>
+        <td style="padding:9px 16px;border-bottom:1px solid #e8edf3;color:#4a5568;font-size:14px;">${s.label}</td>
+        <td style="padding:9px 16px;border-bottom:1px solid #e8edf3;text-align:right;color:#4a5568;font-size:14px;">€${s.price.toFixed(2)} × ${n} notti</td>
+        <td style="padding:9px 16px;border-bottom:1px solid #e8edf3;text-align:right;font-weight:600;font-size:14px;">€${(s.price*n).toFixed(2)}</td>
+      </tr>`).join("");
+
+    return `<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Conferma Prenotazione ${res.id} — Hotel Gasparini</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#f0f4f8;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a202c}
+  .wrapper{max-width:620px;margin:32px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.10)}
+  .header{background:linear-gradient(135deg,#0a1929 0%,#1565c0 100%);padding:40px 40px 32px;text-align:center}
+  .logo-box{display:inline-flex;align-items:center;gap:14px;margin-bottom:22px}
+  .logo-g{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,#1976d2,#42a5f5);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff}
+  .logo-name{text-align:left}
+  .logo-name h1{font-size:22px;font-weight:700;color:#fff;letter-spacing:.5px}
+  .logo-name p{font-size:10px;letter-spacing:3px;color:#90caf9;text-transform:uppercase;margin-top:2px}
+  .confirm-badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:24px;padding:7px 20px;color:#fff;font-size:13px;font-weight:600;letter-spacing:.5px;margin-bottom:16px}
+  .res-id{font-size:32px;font-weight:800;color:#fff;letter-spacing:1px;margin-bottom:6px}
+  .header-sub{color:#90caf9;font-size:14px}
+  .hero{background:linear-gradient(135deg,#e3f2fd,#fafcff);border-bottom:2px solid #bbdefb;padding:28px 40px;display:flex;align-items:center;gap:18px}
+  .hero-icon{font-size:42px;flex-shrink:0}
+  .hero-text h2{font-size:20px;font-weight:700;color:#0a1929;margin-bottom:4px}
+  .hero-text p{font-size:14px;color:#546e7a;line-height:1.5}
+  .section{padding:28px 40px}
+  .section-title{font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#90a4ae;margin-bottom:14px}
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #e8edf3;border-radius:10px;overflow:hidden}
+  .info-cell{padding:14px 18px;border-right:1px solid #e8edf3;border-bottom:1px solid #e8edf3}
+  .info-cell:nth-child(even){border-right:none}
+  .info-cell:nth-last-child(-n+2){border-bottom:none}
+  .info-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#90a4ae;margin-bottom:4px}
+  .info-value{font-size:15px;font-weight:600;color:#1a202c}
+  .info-value.accent{color:#1565c0}
+  .dates-row{display:grid;grid-template-columns:1fr auto 1fr;gap:0;background:#f8fafc;border:1px solid #e8edf3;border-radius:10px;overflow:hidden;margin-bottom:8px;text-align:center}
+  .date-box{padding:18px 14px}
+  .date-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#90a4ae;margin-bottom:6px}
+  .date-val{font-size:18px;font-weight:800;color:#1a202c}
+  .date-sub{font-size:11px;color:#78909c;margin-top:3px}
+  .nights-box{display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a1929,#1565c0);padding:12px 18px}
+  .nights-num{font-size:26px;font-weight:800;color:#fff}
+  .nights-label{font-size:10px;color:#90caf9;text-transform:uppercase;letter-spacing:1px}
+  .totale-box{background:linear-gradient(135deg,#0a1929,#1565c0);border-radius:10px;padding:20px 24px;margin:0 40px 28px;display:flex;justify-content:space-between;align-items:center}
+  .totale-label{color:#90caf9;font-size:13px;font-weight:600;letter-spacing:.5px}
+  .totale-val{color:#fff;font-size:28px;font-weight:800;font-family:monospace;letter-spacing:1px}
+  .totale-sub{color:#90caf9;font-size:11px;margin-top:2px}
+  table{width:100%;border-collapse:collapse}
+  th{padding:10px 16px;background:#f8fafc;text-align:left;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#90a4ae;border-bottom:2px solid #e8edf3}
+  .total-row td{padding:12px 16px;font-weight:700;font-size:15px;border-top:2px solid #e8edf3}
+  .divider{height:1px;background:#e8edf3;margin:0 40px}
+  .chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;background:#e3f2fd;color:#1565c0;margin:2px 2px 2px 0}
+  .note-box{background:#fffde7;border-left:3px solid #f6c90e;border-radius:4px;padding:12px 16px;font-size:13px;color:#5d4037;line-height:1.5}
+  .info-strip{background:#f8fafc;border-top:1px solid #e8edf3;padding:22px 40px;display:flex;gap:20px;flex-wrap:wrap}
+  .info-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#546e7a;flex:1;min-width:140px}
+  .info-item strong{display:block;color:#1a202c;font-size:13px;margin-bottom:2px}
+  .footer{background:#0a1929;padding:28px 40px;text-align:center}
+  .footer p{color:#90b4d4;font-size:12px;line-height:1.8}
+  .footer a{color:#64b5f6;text-decoration:none}
+  .footer .social{margin-top:14px;display:flex;justify-content:center;gap:10px}
+  @media(max-width:480px){
+    .info-grid{grid-template-columns:1fr}
+    .info-cell{border-right:none}
+    .info-cell:nth-last-child(-n+2){border-bottom:1px solid #e8edf3}
+    .info-cell:last-child{border-bottom:none}
+    .dates-row{grid-template-columns:1fr}
+    .nights-box{flex-direction:row;gap:8px;padding:10px 18px}
+    .hero{flex-direction:column;text-align:center}
+    .info-strip{flex-direction:column}
+    .totale-box{flex-direction:column;gap:6px;text-align:center}
+    .section{padding:20px 24px}
+    .header{padding:28px 24px 24px}
+    .totale-box{margin:0 24px 24px}
+    .divider{margin:0 24px}
+    table{font-size:13px}
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo-box">
+      <div class="logo-g">G</div>
+      <div class="logo-name"><h1>Hotel Gasparini</h1><p>Chioggia, Venezia</p></div>
+    </div>
+    <div class="confirm-badge">✓ PRENOTAZIONE CONFERMATA</div>
+    <div class="res-id">${res.id}</div>
+    <div class="header-sub">Data conferma: ${new Date().toLocaleDateString("it-IT",{day:"2-digit",month:"long",year:"numeric"})}</div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-icon">🏨</div>
+    <div class="hero-text">
+      <h2>Benvenuto/a, ${guestName}!</h2>
+      <p>Siamo lieti di confermare la sua prenotazione presso Hotel Gasparini. Di seguito troverà tutti i dettagli del suo soggiorno.</p>
+    </div>
+  </div>
+
+  <!-- DATE SOGGIORNO -->
+  <div class="section">
+    <div class="section-title">Periodo di Soggiorno</div>
+    <div class="dates-row">
+      <div class="date-box">
+        <div class="date-label">Check-In</div>
+        <div class="date-val">${new Date(res.checkIn).toLocaleDateString("it-IT",{day:"2-digit",month:"short"})}</div>
+        <div class="date-sub">${new Date(res.checkIn).toLocaleDateString("it-IT",{year:"numeric"})}</div>
+      </div>
+      <div class="nights-box">
+        <div class="nights-num">${n}</div>
+        <div class="nights-label">nott${n===1?"e":"i"}</div>
+      </div>
+      <div class="date-box">
+        <div class="date-label">Check-Out</div>
+        <div class="date-val">${new Date(res.checkOut).toLocaleDateString("it-IT",{day:"2-digit",month:"short"})}</div>
+        <div class="date-sub">${new Date(res.checkOut).toLocaleDateString("it-IT",{year:"numeric"})}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETTAGLI CAMERA -->
+  <div class="divider"></div>
+  <div class="section">
+    <div class="section-title">Dettagli Camera</div>
+    <div class="info-grid">
+      <div class="info-cell">
+        <div class="info-label">Camera</div>
+        <div class="info-value accent">N° ${res.roomId}</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">Tipologia</div>
+        <div class="info-value">${room?.type || "—"}</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">Ospiti</div>
+        <div class="info-value">${res.adulti||1} adult${(res.adulti||1)===1?"o":"i"}${res.bambini>0?` · ${res.bambini} bambin${res.bambini===1?"o":"i"}`:""}</div>
+      </div>
+      <div class="info-cell">
+        <div class="info-label">Trattamento</div>
+        <div class="info-value">${TRATTAMENTO_LABEL[res.trattamento]||"—"}</div>
+      </div>
+      ${room?.floor ? `<div class="info-cell"><div class="info-label">Piano</div><div class="info-value">${room.floor}° piano</div></div>` : ""}
+      ${res.motivoSoggiorno ? `<div class="info-cell"><div class="info-label">Motivo Soggiorno</div><div class="info-value">${res.motivoSoggiorno}</div></div>` : ""}
+    </div>
+  </div>
+  ${(res.canale||res.linguaOspite||res.mercato) ? `
+  <!-- DETTAGLI PRENOTAZIONE -->
+  <div class="divider"></div>
+  <div class="section">
+    <div class="section-title">Dettagli Prenotazione</div>
+    <div class="info-grid">
+      ${res.canale ? `<div class="info-cell"><div class="info-label">Canale</div><div class="info-value">${{"booking":"Booking.com","expedia":"Expedia","airbnb":"Airbnb","direct-web":"Sito Web","telefono":"Telefono","email":"Email","walk-in":"Walk-in","agenzia":"Agenzia di Viaggi","to":"Tour Operator","gds":"GDS","altro":"Altro"}[res.canale]||res.canale}</div></div>` : ""}
+      ${res.linguaOspite ? `<div class="info-cell"><div class="info-label">Lingua Preferita</div><div class="info-value">${{"it":"🇮🇹 Italiano","en":"🇬🇧 English","de":"🇩🇪 Deutsch","fr":"🇫🇷 Français","es":"🇪🇸 Español","pt":"🇵🇹 Português","ru":"🇷🇺 Русский","zh":"🇨🇳 中文","ja":"🇯🇵 日本語","ar":"🇸🇦 العربية","nl":"🇳🇱 Nederlands","pl":"🇵🇱 Polski"}[res.linguaOspite]||res.linguaOspite}</div></div>` : ""}
+      ${res.mercato ? `<div class="info-cell" style="grid-column:1/-1"><div class="info-label">Mercato di Provenienza</div><div class="info-value">${{"IT-nord":"Nord Italia","IT-centro":"Centro Italia","IT-sud":"Sud Italia","EU-dach":"DACH (Germania/Austria/Svizzera)","EU-uk":"Regno Unito","EU-fr":"Francia","EU-benelux":"Benelux","EU-scandinavia":"Scandinavia","EU-est":"Europa Orientale","EU-other":"Altro Europa","AM-nord":"Nord America","AM-sud":"Sud America","ASIA":"Asia","MENA":"Medio Oriente / Africa","OCE":"Oceania"}[res.mercato]||res.mercato}</div></div>` : ""}
+    </div>
+  </div>` : ""}
+
+  <!-- RIEPILOGO COSTI -->
+  <div class="divider"></div>
+  <div class="section">
+    <div class="section-title">Riepilogo Importi</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Voce</th>
+          <th style="text-align:right">Dettaglio</th>
+          <th style="text-align:right">Importo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding:9px 16px;border-bottom:1px solid #e8edf3;color:#4a5568;font-size:14px;">Camera ${res.roomId} — ${room?.type||""}</td>
+          <td style="padding:9px 16px;border-bottom:1px solid #e8edf3;text-align:right;color:#4a5568;font-size:14px;">€${room?.price?.toFixed(2)||"—"} × ${n} notti</td>
+          <td style="padding:9px 16px;border-bottom:1px solid #e8edf3;text-align:right;font-weight:600;font-size:14px;">€${((room?.price||0)*n).toFixed(2)}</td>
+        </tr>
+        ${svcRows}
+        <tr class="total-row">
+          <td colspan="2" style="text-align:right;color:#546e7a;">Subtotale</td>
+          <td style="text-align:right;">€${sub.toFixed(2)}</td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="2" style="text-align:right;color:#546e7a;font-weight:400;font-size:13px;">IVA (10%)</td>
+          <td style="text-align:right;font-weight:400;font-size:13px;">€${tax.toFixed(2)}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TOTALE -->
+  <div class="totale-box">
+    <div>
+      <div class="totale-label">TOTALE SOGGIORNO</div>
+      <div class="totale-sub">IVA inclusa</div>
+    </div>
+    <div class="totale-val">€${grand.toFixed(2)}</div>
+  </div>
+
+  ${svcLines.length > 0 ? `
+  <!-- SERVIZI -->
+  <div class="divider"></div>
+  <div class="section">
+    <div class="section-title">Servizi Inclusi</div>
+    <div style="margin-top:4px">${svcLines.map(s=>`<span class="chip">✓ ${s.label}</span>`).join("")}</div>
+  </div>` : ""}
+
+  ${res.notes ? `
+  <div class="divider"></div>
+  <div class="section">
+    <div class="section-title">Note / Richieste Speciali</div>
+    <div class="note-box">📋 ${res.notes}</div>
+  </div>` : ""}
+
+  <!-- INFO PRATICHE -->
+  <div class="divider"></div>
+  <div class="info-strip">
+    <div class="info-item">
+      <span>🕐</span>
+      <div><strong>Orari</strong>Check-in: dalle 14:00<br/>Check-out: entro le 11:00</div>
+    </div>
+    <div class="info-item">
+      <span>📍</span>
+      <div><strong>Indirizzo</strong>Corso del Popolo, 1059<br/>30015 Chioggia (VE)</div>
+    </div>
+    <div class="info-item">
+      <span>📞</span>
+      <div><strong>Contatti</strong>+39 041 400 000<br/>info@hotelgasparini.it</div>
+    </div>
+    <div class="info-item">
+      <span>🅿</span>
+      <div><strong>Parcheggio</strong>Disponibile su richiesta<br/>€20/giorno</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <p>
+      <strong style="color:#fff;font-size:14px">Hotel Gasparini ★★★</strong><br/>
+      Corso del Popolo, 1059 · 30015 Chioggia (VE) · Italia<br/>
+      📞 +39 041 400 000 · ✉ <a href="mailto:info@hotelgasparini.it">info@hotelgasparini.it</a><br/>
+      <a href="https://www.hotelgasparini.it">www.hotelgasparini.it</a>
+    </p>
+    <p style="margin-top:14px;font-size:11px;color:#546e7a;">
+      Questa è una comunicazione automatica. Per modifiche o cancellazioni contattaci entro 24 ore.<br/>
+      P.IVA 01234567890 · REA VE-123456 · Rif. pren. ${res.id}
+    </p>
+  </div>
+
+</div>
+</body>
+</html>`;
   };
 
   const doCheckIn  = (res) => {
@@ -1558,8 +1848,15 @@ Rispondi in italiano, in modo conciso e professionale.`;
     return !q || r.guestName?.toLowerCase().includes(q) || r.id?.includes(q);
   });
   const filteredGuests = guests.filter(g => {
+    if (g.tipo === "azienda") return false;
     const q = guestSearch.toLowerCase();
     return !q || `${g.cognome} ${g.nome}`.toLowerCase().includes(q) || g.numDoc?.toLowerCase().includes(q) || g.email?.toLowerCase().includes(q);
+  });
+
+  const filteredAziende = guests.filter(g => {
+    if (g.tipo !== "azienda") return false;
+    const q = guestSearch.toLowerCase();
+    return !q || g.ragioneSociale?.toLowerCase().includes(q) || g.piva?.toLowerCase().includes(q) || g.email?.toLowerCase().includes(q) || g.referente?.toLowerCase().includes(q);
   });
 
   const psRes    = reservations.filter(r => r.status!=="cancelled" && r.checkIn?.startsWith(psMonth));
@@ -2435,52 +2732,134 @@ Rispondi in italiano, in modo conciso e professionale.`;
         {/*   ANAGRAFICA   */}
         {page==="Anagrafica" && (
           <div>
+            {/* Header */}
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:22 }}>
-              <div className="page-header"><div><h1>Anagrafica Ospiti</h1><div className="page-subtitle">Gestione anagrafiche, documenti e storico soggiorni</div></div></div>
-              <button className="btn-primary" onClick={() => openNewGuest()}>+ Nuovo Ospite</button>
+              <div className="page-header"><div><h1>Anagrafica</h1><div className="page-subtitle">Clienti individuali e aziende · {guests.filter(g=>g.tipo!=="azienda").length} persone · {guests.filter(g=>g.tipo==="azienda").length} aziende</div></div></div>
+              <div style={{ display:"flex", gap:8 }}>
+                {anagraficaTab==="individuali"
+                  ? <button className="btn-primary" onClick={() => openNewGuest()}>+ Nuovo Ospite</button>
+                  : <button className="btn-primary" onClick={() => openNewAzienda()}>+ Nuova Azienda</button>}
+              </div>
             </div>
+
+            {/* Tab switcher */}
+            <div style={{ display:"flex", gap:0, marginBottom:20, border:`1px solid ${C.border}`, borderRadius:8, overflow:"hidden", width:"fit-content" }}>
+              {[["individuali","👤 Clienti Individuali"], ["aziende","🏢 Clienti Aziende"]].map(([tab,label]) => (
+                <button key={tab} onClick={() => { setAnagraficaTab(tab); setGuestSearch(""); }}
+                  style={{ padding:"9px 22px", border:"none", cursor:"pointer", fontSize:13, fontWeight:600,
+                    background: anagraficaTab===tab ? C.gold : C.surface,
+                    color: anagraficaTab===tab ? "#fff" : C.text2,
+                    borderRight: tab==="individuali" ? `1px solid ${C.border}` : "none",
+                    transition:"all .15s" }}>
+                  {label}
+                  <span style={{ marginLeft:8, background: anagraficaTab===tab?"rgba(255,255,255,.25)":C.surface2, color: anagraficaTab===tab?"#fff":C.text3, borderRadius:10, padding:"1px 7px", fontSize:11 }}>
+                    {tab==="individuali" ? guests.filter(g=>g.tipo!=="azienda").length : guests.filter(g=>g.tipo==="azienda").length}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Barra ricerca */}
             <div style={{ display:"flex", gap:10, marginBottom:18, alignItems:"center" }}>
-              <input className="input-field" placeholder="Cerca per nome, documento, email..." style={{ maxWidth:320 }} value={guestSearch} onChange={e=>setGuestSearch(e.target.value)} />
-              <span style={{ fontSize:12, color:C.text3, fontWeight:500 }}>{filteredGuests.length} ospiti</span>
+              <input className="input-field" style={{ maxWidth:340 }}
+                placeholder={anagraficaTab==="individuali" ? "Cerca per nome, documento, email..." : "Cerca per ragione sociale, P.IVA, referente..."}
+                value={guestSearch} onChange={e=>setGuestSearch(e.target.value)} />
+              <span style={{ fontSize:12, color:C.text3, fontWeight:500 }}>
+                {anagraficaTab==="individuali" ? filteredGuests.length : filteredAziende.length} risultati
+              </span>
             </div>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(370px,1fr))", gap:14 }}>
-              {filteredGuests.map(g => {
-                const gRes=reservations.filter(r=>r.guestId===g.id||(r.companions||[]).includes(g.id));
-                const last=gRes.sort((a,b)=>new Date(b.checkIn)-new Date(a.checkIn))[0];
-                const naz=NAZIONALITA.find(n=>n.code===g.nazionalita);
-                const docExp=g.scadenzaDoc?new Date(g.scadenzaDoc)<new Date():false;
-                return (
-                  <div key={g.id} className="guest-card">
-                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:12 }}>
-                      <div>
-                        <div style={{ fontSize:17, fontWeight:700 }}>{g.cognome} {g.nome}</div>
-                        <div style={{ fontSize:11, color:C.text3, marginTop:2, fontWeight:500 }}>{g.id} · {naz?.name}</div>
+
+            {/* ─── TAB: INDIVIDUALI ─── */}
+            {anagraficaTab==="individuali" && (
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(370px,1fr))", gap:14 }}>
+                {filteredGuests.map(g => {
+                  const gRes=reservations.filter(r=>r.guestId===g.id||(r.companions||[]).includes(g.id));
+                  const last=gRes.sort((a,b)=>new Date(b.checkIn)-new Date(a.checkIn))[0];
+                  const naz=NAZIONALITA.find(n=>n.code===g.nazionalita);
+                  const docExp=g.scadenzaDoc?new Date(g.scadenzaDoc)<new Date():false;
+                  return (
+                    <div key={g.id} className="guest-card">
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:12 }}>
+                        <div>
+                          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                            <div style={{ width:34, height:34, borderRadius:"50%", background:`linear-gradient(135deg,${C.navy},${C.gold})`, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:14, fontWeight:700, flexShrink:0 }}>
+                              {(g.cognome||"?")[0]}{(g.nome||"")[0]}
+                            </div>
+                            <div>
+                              <div style={{ fontSize:16, fontWeight:700 }}>{g.cognome} {g.nome}</div>
+                              <div style={{ fontSize:11, color:C.text3, marginTop:1 }}>{g.id} · {naz?.name}</div>
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ display:"flex", gap:6 }}>
+                          <button className="btn-secondary" style={{ padding:"4px 10px", fontSize:11 }} onClick={() => openEditGuest(g)}>Modifica</button>
+                          <button className="btn-danger"    style={{ padding:"4px 10px", fontSize:11 }} onClick={() => deleteGuest(g.id)}>✕</button>
+                        </div>
                       </div>
-                      <div style={{ display:"flex", gap:6 }}>
-                        <button className="btn-secondary" style={{ padding:"4px 10px", fontSize:11 }} onClick={() => openEditGuest(g)}>Modifica</button>
-                        <button className="btn-danger"    style={{ padding:"4px 10px", fontSize:11 }} onClick={() => deleteGuest(g.id)}>✕</button>
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:5, fontSize:12, color:C.text2 }}>
+                        <div>📅 {fmtDate(g.dataNascita)}</div>
+                        <div>📍 {g.luogoNascita} ({g.provinciaNascita})</div>
+                        <div style={{ color:docExp?C.red:C.text2 }}>🪪 {g.tipoDoc}</div>
+                        <div style={{ fontWeight:docExp?700:400, color:docExp?C.red:C.text2 }}>{g.numDoc}{docExp?" ⚠ SCADUTO":""}</div>
+                        {g.email    && <div>📧 {g.email}</div>}
+                        {g.telefono && <div>📞 {g.telefono}</div>}
                       </div>
+                      {last && (
+                        <div style={{ marginTop:10, padding:"7px 10px", background:C.surface2, border:`1px solid ${C.border}`, borderRadius:6, fontSize:11, color:C.text3 }}>
+                          Ultimo sogg: {last.id} · Cam {last.roomId} · {fmtDate(last.checkIn)} &nbsp;
+                          <span className="badge" style={{ background:STATUS_CFG[last.status].bg, color:STATUS_CFG[last.status].text, border:`1px solid ${STATUS_CFG[last.status].border}`, fontSize:9 }}>{STATUS_CFG[last.status].label}</span>
+                        </div>
+                      )}
+                      <div style={{ marginTop:8, fontSize:11, color:C.text3 }}>{gRes.length} soggiorni registrati</div>
                     </div>
-                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:5, fontSize:12, color:C.text2 }}>
-                      <div>📅 {fmtDate(g.dataNascita)}</div>
-                      <div>📍 {g.luogoNascita} ({g.provinciaNascita})</div>
-                      <div style={{ color:docExp?C.red:C.text2 }}>🪪 {g.tipoDoc}</div>
-                      <div style={{ fontWeight:docExp?700:400, color:docExp?C.red:C.text2 }}>{g.numDoc}{docExp?" ⚠ SCADUTO":""}</div>
-                      {g.email    && <div>📧 {g.email}</div>}
-                      {g.telefono && <div>📞 {g.telefono}</div>}
-                    </div>
-                    {last && (
-                      <div style={{ marginTop:10, padding:"7px 10px", background:C.surface2, border:`1px solid ${C.border}`, borderRadius:6, fontSize:11, color:C.text3 }}>
-                        Ultimo sogg: {last.id} · Cam {last.roomId} · {fmtDate(last.checkIn)} &nbsp;
-                        <span className="badge" style={{ background:STATUS_CFG[last.status].bg, color:STATUS_CFG[last.status].text, border:`1px solid ${STATUS_CFG[last.status].border}`, fontSize:9 }}>{STATUS_CFG[last.status].label}</span>
+                  );
+                })}
+                {filteredGuests.length===0 && <div style={{ color:C.text3, padding:40, textAlign:"center", gridColumn:"1/-1" }}>Nessun ospite trovato</div>}
+              </div>
+            )}
+
+            {/* ─── TAB: AZIENDE ─── */}
+            {anagraficaTab==="aziende" && (
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(400px,1fr))", gap:14 }}>
+                {filteredAziende.map(az => {
+                  const azRes = reservations.filter(r => r.guestId===az.id);
+                  const last  = azRes.sort((a,b)=>new Date(b.checkIn)-new Date(a.checkIn))[0];
+                  return (
+                    <div key={az.id} className="guest-card">
+                      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:12 }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                          <div style={{ width:38, height:38, borderRadius:8, background:`linear-gradient(135deg,${C.navy},#1565c0)`, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:18, flexShrink:0 }}>🏢</div>
+                          <div>
+                            <div style={{ fontSize:16, fontWeight:700 }}>{az.ragioneSociale}</div>
+                            <div style={{ fontSize:11, color:C.text3, marginTop:1 }}>{az.id} · P.IVA {az.piva||"—"}</div>
+                          </div>
+                        </div>
+                        <div style={{ display:"flex", gap:6 }}>
+                          <button className="btn-secondary" style={{ padding:"4px 10px", fontSize:11 }} onClick={() => openEditGuest(az)}>Modifica</button>
+                          <button className="btn-danger"    style={{ padding:"4px 10px", fontSize:11 }} onClick={() => deleteGuest(az.id)}>✕</button>
+                        </div>
                       </div>
-                    )}
-                    <div style={{ marginTop:8, fontSize:11, color:C.text3 }}>{gRes.length} soggiorni registrati</div>
-                  </div>
-                );
-              })}
-              {filteredGuests.length===0 && <div style={{ color:C.text3, padding:40, textAlign:"center", gridColumn:"1/-1" }}>Nessun ospite trovato</div>}
-            </div>
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:5, fontSize:12, color:C.text2 }}>
+                        {az.settore    && <div>🏭 {az.settore}</div>}
+                        {az.referente  && <div>👤 {az.referente}{az.ruoloReferente ? ` · ${az.ruoloReferente}` : ""}</div>}
+                        {az.pec        && <div style={{ gridColumn:"1/-1" }}>📧 PEC: {az.pec}</div>}
+                        {az.sdi        && <div>📋 SDI: {az.sdi}</div>}
+                        {az.telefono   && <div>📞 {az.telefono}</div>}
+                        {az.citta      && <div style={{ gridColumn:"1/-1" }}>📍 {az.indirizzo ? az.indirizzo+", " : ""}{az.citta} {az.cap} ({az.provincia})</div>}
+                      </div>
+                      {last && (
+                        <div style={{ marginTop:10, padding:"7px 10px", background:C.surface2, border:`1px solid ${C.border}`, borderRadius:6, fontSize:11, color:C.text3 }}>
+                          Ultima pren: {last.id} · Cam {last.roomId} · {fmtDate(last.checkIn)} &nbsp;
+                          <span className="badge" style={{ background:STATUS_CFG[last.status].bg, color:STATUS_CFG[last.status].text, border:`1px solid ${STATUS_CFG[last.status].border}`, fontSize:9 }}>{STATUS_CFG[last.status].label}</span>
+                        </div>
+                      )}
+                      <div style={{ marginTop:8, fontSize:11, color:C.text3 }}>{azRes.length} prenotazioni registrate</div>
+                    </div>
+                  );
+                })}
+                {filteredAziende.length===0 && <div style={{ color:C.text3, padding:40, textAlign:"center", gridColumn:"1/-1" }}>Nessuna azienda trovata. Clicca "+ Nuova Azienda" per aggiungerne una.</div>}
+              </div>
+            )}
           </div>
         )}
 
@@ -3731,68 +4110,159 @@ Rispondi in italiano, in modo conciso e professionale.`;
         })()}
 
 
-      {/*   MODAL: FORM OSPITE   */}
+      {/*   MODAL: FORM OSPITE / AZIENDA   */}
       {modal && modal.startsWith("guest-form") && (
         <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setModal(null)}>
-          <div className="modal-box" style={{ maxWidth:820 }}>
+          <div className="modal-box" style={{ maxWidth:860 }}>
             <div className="modal-header">
-              <div><div style={{ fontSize:10, fontWeight:700, color:C.text3, letterSpacing:2, marginBottom:3 }}>ANAGRAFICA</div>
-                <h2 style={{ fontSize:22, fontWeight:600 }}>{guests.find(g=>g.id===guestForm.id)?"Modifica Ospite":"Nuovo Ospite"}</h2></div>
-              <span style={{ fontSize:11, color:C.text3 }}>{guestForm.id}</span>
+              <div>
+                <div style={{ fontSize:10, fontWeight:700, color:C.text3, letterSpacing:2, marginBottom:3 }}>
+                  {guestForm.tipo==="azienda" ? "ANAGRAFICA AZIENDA" : "ANAGRAFICA INDIVIDUALE"}
+                </div>
+                <h2 style={{ fontSize:22, fontWeight:600 }}>
+                  {guests.find(g=>g.id===guestForm.id)
+                    ? (guestForm.tipo==="azienda" ? guestForm.ragioneSociale : `${guestForm.cognome} ${guestForm.nome}`)
+                    : (guestForm.tipo==="azienda" ? "Nuova Azienda" : "Nuovo Ospite")}
+                </h2>
+              </div>
+              <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:6 }}>
+                <span style={{ fontSize:11, color:C.text3 }}>{guestForm.id}</span>
+                {/* Badge tipo — non modificabile in edit, solo in creazione */}
+                {!guests.find(g=>g.id===guestForm.id) && (
+                  <div style={{ display:"flex", gap:0, border:`1px solid ${C.border}`, borderRadius:6, overflow:"hidden", fontSize:11 }}>
+                    {[["individuale","👤 Individuale"],["azienda","🏢 Azienda"]].map(([t,l]) => (
+                      <button key={t} onClick={() => setGuestForm(t==="azienda" ? emptyAzienda() : emptyGuest())}
+                        style={{ padding:"4px 12px", border:"none", cursor:"pointer", fontWeight:600,
+                          background: guestForm.tipo===t ? C.navy : C.surface,
+                          color: guestForm.tipo===t ? "#fff" : C.text2 }}>
+                        {l}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
+
             <div className="modal-body">
-              <div className="section-title">Dati Anagrafici</div>
-              <div className="form-grid" style={{ marginBottom:12 }}>
-                <div><label className="label">Cognome *</label><input className="input-field" value={guestForm.cognome} onChange={e=>setGuestForm(f=>({...f,cognome:e.target.value}))} /></div>
-                <div><label className="label">Nome *</label><input className="input-field" value={guestForm.nome} onChange={e=>setGuestForm(f=>({...f,nome:e.target.value}))} /></div>
-                <div><label className="label">Sesso</label><select className="input-field" value={guestForm.sesso} onChange={e=>setGuestForm(f=>({...f,sesso:e.target.value}))}><option value="M">Maschile</option><option value="F">Femminile</option></select></div>
-                <div><label className="label">Data di Nascita *</label><input type="date" className="input-field" value={guestForm.dataNascita} onChange={e=>setGuestForm(f=>({...f,dataNascita:e.target.value}))} /></div>
-                <div><label className="label">Luogo di Nascita</label><input className="input-field" value={guestForm.luogoNascita} onChange={e=>setGuestForm(f=>({...f,luogoNascita:e.target.value}))} /></div>
-                <div style={{ gridColumn:"1/-1" }}>
-                  <ComuneInput
-                    label="Comune di Nascita *"
-                    value={guestForm.luogoNascita}
-                    onChange={item => setGuestForm(f=>({...f, luogoNascita:item.c, provinciaNascita:item.p||f.provinciaNascita}))}
-                  />
+
+              {/* ═══ FORM INDIVIDUALE ═══ */}
+              {guestForm.tipo !== "azienda" && (<>
+                <div className="section-title">Dati Anagrafici</div>
+                <div className="form-grid" style={{ marginBottom:12 }}>
+                  <div><label className="label">Cognome *</label><input className="input-field" value={guestForm.cognome||""} onChange={e=>setGuestForm(f=>({...f,cognome:e.target.value}))} /></div>
+                  <div><label className="label">Nome *</label><input className="input-field" value={guestForm.nome||""} onChange={e=>setGuestForm(f=>({...f,nome:e.target.value}))} /></div>
+                  <div><label className="label">Sesso</label>
+                    <select className="input-field" value={guestForm.sesso||"M"} onChange={e=>setGuestForm(f=>({...f,sesso:e.target.value}))}>
+                      <option value="M">Maschile</option><option value="F">Femminile</option>
+                    </select>
+                  </div>
+                  <div><label className="label">Data di Nascita *</label><input type="date" className="input-field" value={guestForm.dataNascita||""} onChange={e=>setGuestForm(f=>({...f,dataNascita:e.target.value}))} /></div>
+                  <div style={{ gridColumn:"1/-1" }}>
+                    <ComuneInput label="Comune di Nascita *" value={guestForm.luogoNascita||""}
+                      onChange={item => setGuestForm(f=>({...f, luogoNascita:item.c, provinciaNascita:item.p||f.provinciaNascita}))} />
+                  </div>
+                  <div><label className="label">Provincia Nascita</label><input className="input-field" maxLength={2} placeholder="MI" value={guestForm.provinciaNascita||""} onChange={e=>setGuestForm(f=>({...f,provinciaNascita:e.target.value.toUpperCase()}))} /></div>
+                  <div><label className="label">Nazionalità</label>
+                    <select className="input-field" value={guestForm.nazionalita||"IT"} onChange={e=>setGuestForm(f=>({...f,nazionalita:e.target.value}))}>
+                      {NAZIONALITA.map(n=><option key={n.code} value={n.code}>{n.name}</option>)}
+                    </select>
+                  </div>
                 </div>
-                <div><label className="label">Provincia Nascita</label><input className="input-field" maxLength={2} placeholder="MI" value={guestForm.provinciaNascita} onChange={e=>setGuestForm(f=>({...f,provinciaNascita:e.target.value.toUpperCase()}))} /></div>
-                <div><label className="label">Nazionalità</label><select className="input-field" value={guestForm.nazionalita} onChange={e=>setGuestForm(f=>({...f,nazionalita:e.target.value}))}>{NAZIONALITA.map(n=><option key={n.code} value={n.code}>{n.name}</option>)}</select></div>
-              </div>
-              <hr className="divider"/>
-              <div className="section-title">Documento d'Identità (obbligatorio PS)</div>
-              <div className="form-grid-3" style={{ marginBottom:12 }}>
-                <div><label className="label">Tipo Documento *</label><select className="input-field" value={guestForm.tipoDoc} onChange={e=>setGuestForm(f=>({...f,tipoDoc:e.target.value}))}>{TIPO_DOC.map(t=><option key={t}>{t}</option>)}</select></div>
-                <div><label className="label">N° Documento *</label><input className="input-field" value={guestForm.numDoc} onChange={e=>setGuestForm(f=>({...f,numDoc:e.target.value.toUpperCase()}))} /></div>
-                <div><label className="label">Rilasciato da</label><input className="input-field" value={guestForm.rilasciatoDa} onChange={e=>setGuestForm(f=>({...f,rilasciatoDa:e.target.value}))} /></div>
-                <div><label className="label">Data Rilascio</label><input type="date" className="input-field" value={guestForm.dataRilascio} onChange={e=>setGuestForm(f=>({...f,dataRilascio:e.target.value}))} /></div>
-                <div><label className="label">Scadenza</label><input type="date" className="input-field" value={guestForm.scadenzaDoc} onChange={e=>setGuestForm(f=>({...f,scadenzaDoc:e.target.value}))} /></div>
-              </div>
-              <hr className="divider"/>
-              <div className="section-title">Residenza</div>
-              <div className="form-grid" style={{ marginBottom:12 }}>
-                <div style={{ gridColumn:"1/-1" }}><label className="label">Indirizzo</label><input className="input-field" value={guestForm.indirizzo} onChange={e=>setGuestForm(f=>({...f,indirizzo:e.target.value}))} /></div>
-                <div style={{ gridColumn:"span 2" }}>
-                  <ComuneInput
-                    label="Città di Residenza"
-                    value={guestForm.citta}
-                    onChange={item => setGuestForm(f=>({...f, citta:item.c, cap:item.z||f.cap, provincia:item.p||f.provincia}))}
-                  />
+
+                <hr className="divider"/>
+                <div className="section-title">Documento d'Identità <span style={{ color:C.text3, fontWeight:400 }}>(obbligatorio per Pubblica Sicurezza)</span></div>
+                <div className="form-grid-3" style={{ marginBottom:12 }}>
+                  <div><label className="label">Tipo Documento *</label>
+                    <select className="input-field" value={guestForm.tipoDoc||""} onChange={e=>setGuestForm(f=>({...f,tipoDoc:e.target.value}))}>
+                      {TIPO_DOC.map(t=><option key={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div><label className="label">N° Documento *</label><input className="input-field" value={guestForm.numDoc||""} onChange={e=>setGuestForm(f=>({...f,numDoc:e.target.value.toUpperCase()}))} /></div>
+                  <div><label className="label">Rilasciato da</label><input className="input-field" value={guestForm.rilasciatoDa||""} onChange={e=>setGuestForm(f=>({...f,rilasciatoDa:e.target.value}))} /></div>
+                  <div><label className="label">Data Rilascio</label><input type="date" className="input-field" value={guestForm.dataRilascio||""} onChange={e=>setGuestForm(f=>({...f,dataRilascio:e.target.value}))} /></div>
+                  <div><label className="label">Scadenza</label><input type="date" className="input-field" value={guestForm.scadenzaDoc||""} onChange={e=>setGuestForm(f=>({...f,scadenzaDoc:e.target.value}))} /></div>
                 </div>
-                <div><label className="label">CAP</label><input className="input-field" maxLength={5} value={guestForm.cap} onChange={e=>setGuestForm(f=>({...f,cap:e.target.value}))} /></div>
-                <div><label className="label">Provincia</label><input className="input-field" maxLength={2} placeholder="VE" value={guestForm.provincia} onChange={e=>setGuestForm(f=>({...f,provincia:e.target.value.toUpperCase()}))} /></div>
-                <div><label className="label">Paese</label><input className="input-field" value={guestForm.paese} onChange={e=>setGuestForm(f=>({...f,paese:e.target.value}))} /></div>
-              </div>
-              <hr className="divider"/>
-              <div className="section-title">Contatti</div>
-              <div className="form-grid" style={{ marginBottom:12 }}>
-                <div><label className="label">Email</label><input type="email" className="input-field" value={guestForm.email} onChange={e=>setGuestForm(f=>({...f,email:e.target.value}))} /></div>
-                <div><label className="label">Telefono</label><input className="input-field" value={guestForm.telefono} onChange={e=>setGuestForm(f=>({...f,telefono:e.target.value}))} /></div>
-              </div>
-              <div><label className="label">Note interne</label><textarea className="input-field" rows={2} value={guestForm.note} onChange={e=>setGuestForm(f=>({...f,note:e.target.value}))} style={{ resize:"none" }} /></div>
+
+                <hr className="divider"/>
+                <div className="section-title">Residenza</div>
+                <div className="form-grid" style={{ marginBottom:12 }}>
+                  <div style={{ gridColumn:"1/-1" }}><label className="label">Indirizzo</label><input className="input-field" value={guestForm.indirizzo||""} onChange={e=>setGuestForm(f=>({...f,indirizzo:e.target.value}))} /></div>
+                  <div style={{ gridColumn:"span 2" }}>
+                    <ComuneInput label="Città di Residenza" value={guestForm.citta||""}
+                      onChange={item => setGuestForm(f=>({...f, citta:item.c, cap:item.z||f.cap, provincia:item.p||f.provincia}))} />
+                  </div>
+                  <div><label className="label">CAP</label><input className="input-field" maxLength={5} value={guestForm.cap||""} onChange={e=>setGuestForm(f=>({...f,cap:e.target.value}))} /></div>
+                  <div><label className="label">Prov.</label><input className="input-field" maxLength={2} placeholder="VE" value={guestForm.provincia||""} onChange={e=>setGuestForm(f=>({...f,provincia:e.target.value.toUpperCase()}))} /></div>
+                  <div><label className="label">Paese</label><input className="input-field" value={guestForm.paese||"Italia"} onChange={e=>setGuestForm(f=>({...f,paese:e.target.value}))} /></div>
+                </div>
+
+                <hr className="divider"/>
+                <div className="section-title">Contatti</div>
+                <div className="form-grid" style={{ marginBottom:12 }}>
+                  <div><label className="label">Email</label><input type="email" className="input-field" value={guestForm.email||""} onChange={e=>setGuestForm(f=>({...f,email:e.target.value}))} /></div>
+                  <div><label className="label">Telefono</label><input className="input-field" value={guestForm.telefono||""} onChange={e=>setGuestForm(f=>({...f,telefono:e.target.value}))} /></div>
+                </div>
+              </>)}
+
+              {/* ═══ FORM AZIENDA ═══ */}
+              {guestForm.tipo === "azienda" && (<>
+                <div className="section-title">Dati Societari</div>
+                <div className="form-grid" style={{ marginBottom:12 }}>
+                  <div style={{ gridColumn:"1/-1" }}><label className="label">Ragione Sociale *</label><input className="input-field" value={guestForm.ragioneSociale||""} onChange={e=>setGuestForm(f=>({...f,ragioneSociale:e.target.value}))} placeholder="Es. Acme S.r.l." /></div>
+                  <div><label className="label">Partita IVA *</label><input className="input-field" value={guestForm.piva||""} onChange={e=>setGuestForm(f=>({...f,piva:e.target.value.toUpperCase()}))} placeholder="IT01234567890" maxLength={13} /></div>
+                  <div><label className="label">Codice Fiscale</label><input className="input-field" value={guestForm.codiceFiscale||""} onChange={e=>setGuestForm(f=>({...f,codiceFiscale:e.target.value.toUpperCase()}))} maxLength={16} /></div>
+                  <div><label className="label">Codice SDI</label><input className="input-field" value={guestForm.sdi||""} onChange={e=>setGuestForm(f=>({...f,sdi:e.target.value.toUpperCase()}))} placeholder="0000000" maxLength={7} /></div>
+                  <div><label className="label">Settore / Attività</label>
+                    <select className="input-field" value={guestForm.settore||""} onChange={e=>setGuestForm(f=>({...f,settore:e.target.value}))}>
+                      <option value="">— Seleziona —</option>
+                      {["Turismo / Hospitality","Commercio al dettaglio","Commercio all'ingrosso","Industria manifatturiera","Edilizia / Costruzioni","Trasporti / Logistica","Finanza / Assicurazioni","Sanità / Farmaceutico","ICT / Tecnologia","Media / Comunicazione","Agricoltura / Alimentare","Istruzione / Formazione","Pubblica Amministrazione","Professionisti / Studi","Sport / Intrattenimento","Altro"].map(s=><option key={s}>{s}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <hr className="divider"/>
+                <div className="section-title">Persona di Riferimento</div>
+                <div className="form-grid" style={{ marginBottom:12 }}>
+                  <div><label className="label">Cognome e Nome</label><input className="input-field" value={guestForm.referente||""} onChange={e=>setGuestForm(f=>({...f,referente:e.target.value}))} placeholder="Rossi Mario" /></div>
+                  <div><label className="label">Ruolo / Qualifica</label>
+                    <select className="input-field" value={guestForm.ruoloReferente||""} onChange={e=>setGuestForm(f=>({...f,ruoloReferente:e.target.value}))}>
+                      <option value="">— Seleziona —</option>
+                      {["Titolare / CEO","Direttore Generale","Responsabile Acquisti","Responsabile Viaggi","Segreteria","Ufficio Amministrativo","Ufficio Marketing","Travel Manager","Altro"].map(r=><option key={r}>{r}</option>)}
+                    </select>
+                  </div>
+                </div>
+
+                <hr className="divider"/>
+                <div className="section-title">Sede Legale</div>
+                <div className="form-grid" style={{ marginBottom:12 }}>
+                  <div style={{ gridColumn:"1/-1" }}><label className="label">Indirizzo</label><input className="input-field" value={guestForm.indirizzo||""} onChange={e=>setGuestForm(f=>({...f,indirizzo:e.target.value}))} /></div>
+                  <div style={{ gridColumn:"span 2" }}>
+                    <ComuneInput label="Città" value={guestForm.citta||""}
+                      onChange={item => setGuestForm(f=>({...f, citta:item.c, cap:item.z||f.cap, provincia:item.p||f.provincia}))} />
+                  </div>
+                  <div><label className="label">CAP</label><input className="input-field" maxLength={5} value={guestForm.cap||""} onChange={e=>setGuestForm(f=>({...f,cap:e.target.value}))} /></div>
+                  <div><label className="label">Prov.</label><input className="input-field" maxLength={2} placeholder="VE" value={guestForm.provincia||""} onChange={e=>setGuestForm(f=>({...f,provincia:e.target.value.toUpperCase()}))} /></div>
+                  <div><label className="label">Paese</label><input className="input-field" value={guestForm.paese||"Italia"} onChange={e=>setGuestForm(f=>({...f,paese:e.target.value}))} /></div>
+                </div>
+
+                <hr className="divider"/>
+                <div className="section-title">Contatti & Fatturazione</div>
+                <div className="form-grid" style={{ marginBottom:12 }}>
+                  <div><label className="label">Email generica</label><input type="email" className="input-field" value={guestForm.email||""} onChange={e=>setGuestForm(f=>({...f,email:e.target.value}))} /></div>
+                  <div><label className="label">Telefono</label><input className="input-field" value={guestForm.telefono||""} onChange={e=>setGuestForm(f=>({...f,telefono:e.target.value}))} /></div>
+                  <div><label className="label">PEC (fatturazione)</label><input type="email" className="input-field" value={guestForm.pec||""} onChange={e=>setGuestForm(f=>({...f,pec:e.target.value}))} placeholder="azienda@pec.it" /></div>
+                </div>
+              </>)}
+
+              {/* Note — comune a entrambi */}
+              <div><label className="label">Note interne</label><textarea className="input-field" rows={2} value={guestForm.note||""} onChange={e=>setGuestForm(f=>({...f,note:e.target.value}))} style={{ resize:"none" }} /></div>
             </div>
+
             <div className="modal-footer">
               <button className="btn-secondary" onClick={() => { if(prevModal){ setModal(prevModal); setPrevModal(null); } else setModal(null); }}>Annulla</button>
-              <button className="btn-primary" onClick={saveGuest}>Salva Ospite</button>
+              <button className="btn-primary" onClick={saveGuest}>
+                {guestForm.tipo==="azienda" ? "Salva Azienda" : "Salva Ospite"}
+              </button>
             </div>
           </div>
         </div>
@@ -3853,6 +4323,100 @@ Rispondi in italiano, in modo conciso e professionale.`;
                 </span>)}
               </div>
 
+              <hr className="divider"/>
+              <div className="section-title">Dettagli Soggiorno</div>
+              <div className="form-grid" style={{ marginBottom:12 }}>
+                <div>
+                  <label className="label">Trattamento</label>
+                  <select className="input-field" value={form.trattamento||""} onChange={e=>setForm(f=>({...f,trattamento:e.target.value}))}>
+                    <option value="">— Seleziona —</option>
+                    <option value="RO">RO · Solo Pernottamento</option>
+                    <option value="BB">BB · Bed & Breakfast</option>
+                    <option value="HB">HB · Mezza Pensione</option>
+                    <option value="FB">FB · Pensione Completa</option>
+                    <option value="AI">AI · All Inclusive</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Canale di Provenienza</label>
+                  <select className="input-field" value={form.canale||""} onChange={e=>setForm(f=>({...f,canale:e.target.value}))}>
+                    <option value="">— Seleziona —</option>
+                    <option value="booking">Booking.com</option>
+                    <option value="expedia">Expedia</option>
+                    <option value="airbnb">Airbnb</option>
+                    <option value="direct-web">Sito Web diretto</option>
+                    <option value="telefono">Telefono</option>
+                    <option value="email">Email</option>
+                    <option value="walk-in">Walk-in</option>
+                    <option value="agenzia">Agenzia di Viaggi</option>
+                    <option value="to">Tour Operator</option>
+                    <option value="gds">GDS (Amadeus/Galileo)</option>
+                    <option value="altro">Altro</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Motivo del Soggiorno</label>
+                  <select className="input-field" value={form.motivoSoggiorno||""} onChange={e=>setForm(f=>({...f,motivoSoggiorno:e.target.value}))}>
+                    <option value="">— Seleziona —</option>
+                    <option value="leisure">Leisure / Vacanza</option>
+                    <option value="business">Business / Lavoro</option>
+                    <option value="mice">MICE / Congresso</option>
+                    <option value="evento">Evento / Cerimonia</option>
+                    <option value="luna-di-miele">Luna di Miele</option>
+                    <option value="anniversario">Anniversario</option>
+                    <option value="famiglia">Visita Familiare</option>
+                    <option value="sport">Sport / Competizione</option>
+                    <option value="salute">Salute / Benessere</option>
+                    <option value="altro">Altro</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Lingua Preferita</label>
+                  <select className="input-field" value={form.linguaOspite||""} onChange={e=>setForm(f=>({...f,linguaOspite:e.target.value}))}>
+                    <option value="">— Seleziona —</option>
+                    <option value="it">🇮🇹 Italiano</option>
+                    <option value="en">🇬🇧 English</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="pt">🇵🇹 Português</option>
+                    <option value="ru">🇷🇺 Русский</option>
+                    <option value="zh">🇨🇳 中文</option>
+                    <option value="ja">🇯🇵 日本語</option>
+                    <option value="ar">🇸🇦 العربية</option>
+                    <option value="nl">🇳🇱 Nederlands</option>
+                    <option value="pl">🇵🇱 Polski</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="label">Mercato di Provenienza</label>
+                  <select className="input-field" value={form.mercato||""} onChange={e=>setForm(f=>({...f,mercato:e.target.value}))}>
+                    <option value="">— Seleziona —</option>
+                    <optgroup label="Italia">
+                      <option value="IT-nord">Nord Italia</option>
+                      <option value="IT-centro">Centro Italia</option>
+                      <option value="IT-sud">Sud Italia e Isole</option>
+                    </optgroup>
+                    <optgroup label="Europa">
+                      <option value="EU-dach">DACH (Germania/Austria/Svizzera)</option>
+                      <option value="EU-uk">Regno Unito</option>
+                      <option value="EU-fr">Francia</option>
+                      <option value="EU-benelux">Benelux</option>
+                      <option value="EU-scandinavia">Scandinavia</option>
+                      <option value="EU-est">Europa Orientale</option>
+                      <option value="EU-other">Altro Europa</option>
+                    </optgroup>
+                    <optgroup label="Resto del Mondo">
+                      <option value="AM-nord">Nord America</option>
+                      <option value="AM-sud">Sud America</option>
+                      <option value="ASIA">Asia</option>
+                      <option value="MENA">Medio Oriente / Africa</option>
+                      <option value="OCE">Oceania</option>
+                    </optgroup>
+                  </select>
+                </div>
+              </div>
+
               <div><label className="label">Note</label><textarea className="input-field" rows={2} value={form.notes||""} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} style={{ resize:"none" }} /></div>
 
               {modal==="edit-res" && form.status==="checked-in" && (
@@ -3871,6 +4435,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
             <div className="modal-footer">
               {modal==="edit-res" && !["checked-out","cancelled"].includes(form.status) && <button className="btn-danger" onClick={()=>cancelReservation(form.id)}>Annulla Pren.</button>}
               {modal==="edit-res" && <button className="btn-secondary" onClick={()=>openInvoice(form)}>Conto</button>}
+              {modal==="edit-res" && <button className="btn-secondary" style={{ gap:5 }} onClick={()=>{ const g2=guests.find(x=>x.id===form.id); setEmailPreviewRes({...form}); setEmailTo(guests.find(x=>x.id===form.guestId)?.email||""); setEmailCc(""); setEmailTab("preview"); setModal(null); }}>✉ Email Conferma</button>}
               <button className="btn-secondary" onClick={()=>setModal(null)}>Chiudi</button>
               {!["checked-out","cancelled"].includes(form.status) && <button className="btn-primary" onClick={saveReservation}>Salva</button>}
             </div>
@@ -4178,6 +4743,157 @@ Rispondi in italiano, in modo conciso e professionale.`;
                   </button>
                 )}
               </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/*   MODAL: ANTEPRIMA EMAIL CONFERMA   */}
+      {emailPreviewRes && (() => {
+        const res = emailPreviewRes;
+        const g   = guests.find(x => x.id === res.guestId);
+        const htmlEmail = buildConfirmEmail(res, g);
+        const subject   = `Conferma Prenotazione ${res.id} — Hotel Gasparini`;
+        const subjectEnc = encodeURIComponent(subject);
+        const textBody  = encodeURIComponent(
+          `Gentile ${g ? g.cognome+" "+g.nome : res.guestName||"Ospite"},\n\nLa sua prenotazione ${res.id} è stata confermata.\n\nCamera: ${res.roomId} | Check-In: ${res.checkIn} | Check-Out: ${res.checkOut}\nImporto: €${calcTotal(res).toFixed(2)}\n\nPer qualsiasi informazione siamo a sua disposizione.\n\nCordiali saluti,\nHotel Gasparini — Chioggia (VE)\n📞 +39 041 400 000 | info@hotelgasparini.it`
+        );
+        const mailtoUrl = `mailto:${emailTo}${emailCc?`?cc=${encodeURIComponent(emailCc)}&`:"?"}subject=${subjectEnc}&body=${textBody}`;
+
+        const copyHtml = () => {
+          navigator.clipboard.writeText(htmlEmail)
+            .then(() => showToast("HTML email copiato negli appunti ✓"))
+            .catch(() => showToast("Copia non riuscita","error"));
+        };
+        const downloadHtml = () => {
+          const blob = new Blob([htmlEmail], { type:"text/html" });
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = `conferma-${res.id}.html`;
+          a.click();
+          showToast("File HTML scaricato ✓");
+        };
+        const printEmail = () => {
+          const win = window.open("","_blank");
+          win.document.write(htmlEmail);
+          win.document.close();
+          win.focus();
+          win.print();
+        };
+
+        return (
+          <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setEmailPreviewRes(null)}
+            style={{ zIndex:600 }}>
+            <div style={{ background:"#fff", borderRadius:12, width:"min(94vw,860px)", maxHeight:"95vh",
+              display:"flex", flexDirection:"column", boxShadow:"0 24px 70px rgba(0,0,0,.28)", overflow:"hidden" }}>
+
+              {/* ── Header ── */}
+              <div style={{ padding:"16px 22px", borderBottom:`1px solid ${C.border}`, display:"flex", justifyContent:"space-between", alignItems:"center", flexShrink:0, background:C.navy }}>
+                <div>
+                  <div style={{ fontSize:10, fontWeight:700, color:"#90b4d4", letterSpacing:2, marginBottom:2 }}>EMAIL CONFERMA PRENOTAZIONE</div>
+                  <div style={{ fontSize:17, fontWeight:700, color:"#fff" }}>{res.id} · {res.guestName}</div>
+                </div>
+                <button onClick={()=>setEmailPreviewRes(null)} style={{ background:"none", border:"none", fontSize:24, cursor:"pointer", color:"#90b4d4", lineHeight:1 }}>×</button>
+              </div>
+
+              {/* ── Composition strip ── */}
+              <div style={{ padding:"14px 22px", borderBottom:`1px solid ${C.border}`, background:"#f8fafc", flexShrink:0 }}>
+                {/* Campo A: */}
+                <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
+                  <span style={{ fontSize:11, fontWeight:700, color:C.text3, width:40, flexShrink:0 }}>A:</span>
+                  <input className="input-field" style={{ flex:1, fontSize:13 }}
+                    placeholder="email@destinatario.it"
+                    value={emailTo} onChange={e=>setEmailTo(e.target.value)} />
+                  {g?.email && emailTo !== g.email && (
+                    <button onClick={()=>setEmailTo(g.email||"")}
+                      style={{ fontSize:11, background:C.navyL, border:`1px solid ${C.navyLb}`, borderRadius:5, padding:"4px 10px", cursor:"pointer", color:C.navy, whiteSpace:"nowrap", fontWeight:600 }}>
+                      ← Ospite: {g.email}
+                    </button>
+                  )}
+                </div>
+                {/* Campo CC: */}
+                <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
+                  <span style={{ fontSize:11, fontWeight:700, color:C.text3, width:40, flexShrink:0 }}>CC:</span>
+                  <input className="input-field" style={{ flex:1, fontSize:13 }}
+                    placeholder="info@hotelgasparini.it (opzionale)"
+                    value={emailCc} onChange={e=>setEmailCc(e.target.value)} />
+                </div>
+                {/* Oggetto (statico) */}
+                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                  <span style={{ fontSize:11, fontWeight:700, color:C.text3, width:40, flexShrink:0 }}>Ogg:</span>
+                  <span style={{ fontSize:13, color:C.text2, background:"#fff", border:`1px solid ${C.border}`, borderRadius:6, padding:"6px 12px", flex:1 }}>{subject}</span>
+                </div>
+              </div>
+
+              {/* ── Tabs Anteprima / HTML ── */}
+              <div style={{ display:"flex", gap:0, borderBottom:`1px solid ${C.border}`, flexShrink:0 }}>
+                {[["preview","👁 Anteprima"],["html","</> Codice HTML"]].map(([t,l])=>(
+                  <button key={t} onClick={()=>setEmailTab(t)}
+                    style={{ padding:"10px 20px", border:"none", cursor:"pointer", fontSize:12, fontWeight:600,
+                      background: emailTab===t ? "#fff" : C.surface2,
+                      color: emailTab===t ? C.navy : C.text3,
+                      borderBottom: emailTab===t ? `2px solid ${C.navy}` : "2px solid transparent" }}>
+                    {l}
+                  </button>
+                ))}
+                {/* Info badge */}
+                <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", padding:"0 16px", gap:8 }}>
+                  {emailTo
+                    ? <span style={{ fontSize:11, background:C.greenL, border:`1px solid ${C.greenLb}`, color:C.green, padding:"2px 9px", borderRadius:12, fontWeight:600 }}>✓ Destinatario impostato</span>
+                    : <span style={{ fontSize:11, background:C.goldL, border:`1px solid ${C.goldLb}`, color:C.gold, padding:"2px 9px", borderRadius:12, fontWeight:600 }}>⚠ Imposta un destinatario</span>}
+                </div>
+              </div>
+
+              {/* ── Corpo: anteprima iframe o codice ── */}
+              <div style={{ flex:1, overflow:"hidden", background: emailTab==="preview" ? "#e8edf3" : "#1e293b", padding:16 }}>
+                {emailTab==="preview" ? (
+                  <iframe
+                    srcDoc={htmlEmail}
+                    title="Anteprima email"
+                    style={{ width:"100%", height:"100%", border:"none", borderRadius:8, boxShadow:"0 4px 20px rgba(0,0,0,.15)", background:"#fff" }}
+                    sandbox="allow-same-origin"
+                  />
+                ) : (
+                  <div style={{ height:"100%", overflow:"auto" }}>
+                    <pre style={{ color:"#e2e8f0", fontSize:11, lineHeight:1.6, whiteSpace:"pre-wrap", fontFamily:"'JetBrains Mono',Consolas,monospace", margin:0 }}>
+                      {htmlEmail}
+                    </pre>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Footer azioni ── */}
+              <div style={{ padding:"12px 22px", borderTop:`1px solid ${C.border}`, display:"flex", gap:8, justifyContent:"space-between", alignItems:"center", flexShrink:0, background:"#fafbfc" }}>
+                <div style={{ display:"flex", gap:6 }}>
+                  <button className="btn-secondary" onClick={copyHtml} style={{ fontSize:12 }} title="Copia sorgente HTML">
+                    📋 Copia HTML
+                  </button>
+                  <button className="btn-secondary" onClick={downloadHtml} style={{ fontSize:12 }} title="Scarica file .html">
+                    ⬇ Scarica .html
+                  </button>
+                  <button className="btn-secondary" onClick={printEmail} style={{ fontSize:12 }} title="Stampa / Salva PDF">
+                    🖨 Stampa
+                  </button>
+                </div>
+                <div style={{ display:"flex", gap:8 }}>
+                  <a href={emailTo ? mailtoUrl : "#"} onClick={e=>{ if(!emailTo){e.preventDefault(); showToast("Inserisci un indirizzo email destinatario","error"); }}}
+                    style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"8px 14px",
+                      background: emailTo ? C.surface2 : "#f0f0f0",
+                      border:`1px solid ${C.border}`, borderRadius:6, fontSize:12, fontWeight:600,
+                      color: emailTo ? C.text2 : C.text3, textDecoration:"none", cursor: emailTo ? "pointer" : "not-allowed" }}>
+                    ✉ Apri client posta
+                  </a>
+                  <a href={emailTo ? mailtoUrl : "#"} onClick={e=>{ if(!emailTo){e.preventDefault(); showToast("Inserisci un indirizzo email destinatario","error"); }}}
+                    style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"8px 18px",
+                      background: emailTo ? C.navy : "#ccc",
+                      border:`1px solid ${emailTo ? C.navy : "#ccc"}`, borderRadius:6, fontSize:13,
+                      fontWeight:700, color:"#fff", textDecoration:"none", cursor: emailTo ? "pointer" : "not-allowed" }}>
+                    📤 Invia{emailTo ? ` a ${emailTo.split("@")[0]}…` : ""}
+                  </a>
+                  <button className="btn-secondary" onClick={()=>setEmailPreviewRes(null)} style={{ fontSize:12 }}>Chiudi</button>
+                </div>
+              </div>
+
             </div>
           </div>
         );
