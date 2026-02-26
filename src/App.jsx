@@ -6076,7 +6076,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
         })()}
 
         {/*   MICE & MEETING   */}
-        {page==="MICE & Meeting" && <MICEModule />}
+        {page==="MICE & Meeting" && <MICEModule reservations={reservations} setReservations={setReservations} guests={guests} />}
 
         {/* ── MODAL PREVENTIVO MICE ── */}
         {micePreviewEv && (() => {
@@ -6452,7 +6452,7 @@ const DEMO_PREV = [
 // ════════════════════════════════════════════════════════════════
 //  COMPONENTE PRINCIPALE
 // ════════════════════════════════════════════════════════════════
-function MICEModule() {
+function MICEModule({ reservations=[], setReservations=()=>{}, guests=[] }) {
   const [view, setView]           = useState("dashboard");   // dashboard | lista | form | dettaglio | sale | config
   const [preventivi, setPreventivi] = useState(DEMO_PREV);
   const [sale, setSale]           = useState(SALE_DEFAULT);
@@ -6491,12 +6491,19 @@ function MICEModule() {
       return s + (item?.prezzo||0) * (f.qty||1);
     }, 0);
 
-    const sub      = costSala + costAttr + costFb;
+    // Camere hotel
+    const costCamere = (prev.camere||[]).reduce((s,c) => {
+      const tipoRoom = ROOMS.find(r => r.type === c.tipo);
+      const nottiCam = Math.max(1, mDiffDays(c.checkIn||prev.evento?.dataInizio, c.checkOut||prev.evento?.dataFine));
+      return s + (tipoRoom?.price||0) * (c.qty||1) * nottiCam;
+    }, 0);
+
+    const sub      = costSala + costAttr + costFb + costCamere;
     const scontVal = sub * ((prev.sconto||0)/100);
     const imponib  = sub - scontVal;
     const iva      = imponib * 0.10;
 
-    return { sala:costSala, attr:costAttr, fb:costFb, sub, sconto:scontVal, iva, totale:imponib+iva };
+    return { sala:costSala, attr:costAttr, fb:costFb, camere:costCamere, sub, sconto:scontVal, iva, totale:imponib+iva };
   }, []);
 
   // ─── LISTA FILTRATA ───
@@ -6519,7 +6526,7 @@ function MICEModule() {
       cliente:{ nome:"", cognome:"", azienda:"", email:"", tel:"", piva:"" },
       evento:{ titolo:"", tipo:"meeting", dataInizio:"", dataFine:"", oraInizio:"09:00", oraFine:"18:00", partecipanti:10 },
       sala:{ id:"S1", layout:"boardroom", allestimento:"Mezza giornata" },
-      attrezzature:[], fb:[],
+      attrezzature:[], fb:[], camere:[],
       note:"", sconto:0,
       creatoIl: mTodayStr(), inviatoIl:null, confermatoIl:null,
     });
@@ -6608,8 +6615,8 @@ function MICEModule() {
       <div style={{ padding:24 }}>
         {view === "dashboard"  && <Dashboard preventivi={preventivi} sale={sale} calcTotale={calcTotale} onNew={nuovoPreventivo} onView={p=>{setSelected(p);setView("dettaglio");}} />}
         {view === "lista"      && <ListaPreventivi preventivi={listFiltrata} sale={sale} calcTotale={calcTotale} filterStato={filterStato} setFilterStato={setFilterStato} searchQ={searchQ} setSearchQ={setSearchQ} onNew={nuovoPreventivo} onEdit={editPreventivo} onView={p=>{setSelected(p);setView("dettaglio");}} onStato={cambiaStato} onDelete={eliminaPreventivo} />}
-        {view === "form"       && formData && <FormPreventivo data={formData} setData={setFormData} sale={sale} calcTotale={calcTotale} activeTab={activeTab} setActiveTab={setActiveTab} onSave={salvaPreventivo} onCancel={() => setView("lista")} />}
-        {view === "dettaglio"  && selected && <DettaglioPreventivo prev={selected} sale={sale} calcTotale={calcTotale} onEdit={() => editPreventivo(selected)} onStato={cambiaStato} onDelete={eliminaPreventivo} onBack={() => setView("lista")} />}
+        {view === "form"       && formData && <FormPreventivo data={formData} setData={setFormData} sale={sale} calcTotale={calcTotale} activeTab={activeTab} setActiveTab={setActiveTab} onSave={salvaPreventivo} onCancel={() => setView("lista")} reservations={reservations} />}
+        {view === "dettaglio"  && selected && <DettaglioPreventivo prev={selected} sale={sale} calcTotale={calcTotale} onEdit={() => editPreventivo(selected)} onStato={cambiaStato} onDelete={eliminaPreventivo} onBack={() => setView("lista")} reservations={reservations} setReservations={setReservations} guests={guests} />}
         {view === "sale"       && <GestioneSale sale={sale} preventivi={preventivi} onSalva={salvaSala} />}
       </div>
 
@@ -6897,7 +6904,7 @@ const btnSmall = { padding:"5px 8px", borderRadius:5, border:`1px solid ${MC.bor
 // ════════════════════════════════════════════════════════════════
 //  FORM PREVENTIVO (multi-tab)
 // ════════════════════════════════════════════════════════════════
-function FormPreventivo({ data, setData, sale, calcTotale, activeTab, setActiveTab, onSave, onCancel }) {
+function FormPreventivo({ data, setData, sale, calcTotale, activeTab, setActiveTab, onSave, onCancel, reservations=[] }) {
   const upd = (path, val) => {
     setData(prev => {
       const clone = JSON.parse(JSON.stringify(prev));
@@ -6917,7 +6924,8 @@ function FormPreventivo({ data, setData, sale, calcTotale, activeTab, setActiveT
     { k:"sala",       label:"2 · Sala & Allestimento", icon:"🏛️" },
     { k:"attr",       label:"3 · Attrezzature", icon:"🖥️" },
     { k:"fb",         label:"4 · F&B", icon:"🍽️" },
-    { k:"riepilogo",  label:"5 · Riepilogo & Sconto", icon:"💶" },
+    { k:"camere",     label:"5 · Camere Hotel", icon:"🛏️" },
+    { k:"riepilogo",  label:"6 · Riepilogo & Sconto", icon:"💶" },
   ];
 
   return (
@@ -7232,19 +7240,236 @@ function FormPreventivo({ data, setData, sale, calcTotale, activeTab, setActiveT
 
             <div style={{ marginTop:20, display:"flex", justifyContent:"space-between" }}>
               <button onClick={()=>setActiveTab("attr")} style={btnBack}>← Attrezzature</button>
-              <button onClick={()=>setActiveTab("riepilogo")} style={btnNext}>Avanti: Riepilogo →</button>
+              <button onClick={()=>setActiveTab("camere")} style={btnNext}>Avanti: Camere Hotel →</button>
             </div>
           </div>
         )}
 
-        {/* ── TAB 5: RIEPILOGO ── */}
+        {/* ── TAB 5: CAMERE HOTEL ── */}
+        {activeTab === "camere" && (
+          <CamereTab data={data} setData={setData} reservations={reservations}
+            onBack={()=>setActiveTab("fb")} onNext={()=>setActiveTab("riepilogo")} />
+        )}
+
+        {/* ── TAB 6: RIEPILOGO ── */}
         {activeTab === "riepilogo" && (
-          <RiepilogoTab data={data} setData={setData} sale={sale} calcTotale={calcTotale} onBack={()=>setActiveTab("fb")} onSave={()=>onSave(data)} />
+          <RiepilogoTab data={data} setData={setData} sale={sale} calcTotale={calcTotale} onBack={()=>setActiveTab("camere")} onSave={()=>onSave(data)} />
         )}
       </div>
     </div>
   );
 }
+
+// ─── CAMERE TAB ──────────────────────────────────────────────────
+function CamereTab({ data, setData, reservations, onBack, onNext }) {
+  // Raggruppa ROOMS per tipo e prendi prezzo minimo
+  const tipiCamera = useMemo(() => {
+    const map = {};
+    ROOMS.forEach(r => {
+      if (!map[r.type]) map[r.type] = { tipo:r.type, prezzoMin:r.price, prezzoMax:r.price, capacita:r.capacity };
+      else {
+        map[r.type].prezzoMin = Math.min(map[r.type].prezzoMin, r.price);
+        map[r.type].prezzoMax = Math.max(map[r.type].prezzoMax, r.price);
+        map[r.type].capacita  = Math.max(map[r.type].capacita,  r.capacity);
+      }
+    });
+    return Object.values(map);
+  }, []);
+
+  // Conta camere disponibili per tipo nelle date dell'evento
+  const disponibili = useCallback((tipo, checkIn, checkOut) => {
+    if (!checkIn || !checkOut) return ROOMS.filter(r=>r.type===tipo).length;
+    const occupate = reservations.filter(res =>
+      ROOMS.find(r=>r.id===res.roomId&&r.type===tipo) &&
+      !["cancelled","checked-out"].includes(res.status) &&
+      res.checkIn < checkOut && res.checkOut > checkIn
+    ).length;
+    const totali = ROOMS.filter(r=>r.type===tipo).length;
+    return Math.max(0, totali - occupate);
+  }, [reservations]);
+
+  const TRATTAMENTI = ["Solo pernottamento","B&B","Mezza pensione","Pensione completa"];
+  const ICONE_CAMERA = {
+    "Standard":"🛏️","Standard Accessibile":"♿","Superior":"🌟",
+    "Deluxe":"✨","Junior Suite":"🛋️","Suite":"👑","Suite Vista Laguna":"🌊",
+  };
+
+  const addCamera = (tipo) => {
+    setData(prev => {
+      const c = JSON.parse(JSON.stringify(prev));
+      c.camere = [...(c.camere||[]), {
+        tipo, qty:1,
+        checkIn:  prev.evento?.dataInizio || "",
+        checkOut: prev.evento?.dataFine   || prev.evento?.dataInizio || "",
+        trattamento:"B&B", note:"",
+      }];
+      return c;
+    });
+  };
+
+  const updCamera = (idx, field, val) => {
+    setData(prev => {
+      const c = JSON.parse(JSON.stringify(prev));
+      c.camere[idx][field] = val;
+      return c;
+    });
+  };
+
+  const removeCamera = (idx) => {
+    setData(prev => {
+      const c = JSON.parse(JSON.stringify(prev));
+      c.camere.splice(idx, 1);
+      return c;
+    });
+  };
+
+  const camere = data.camere || [];
+  const ci = data.evento?.dataInizio;
+  const co = data.evento?.dataFine || data.evento?.dataInizio;
+
+  return (
+    <div>
+      <SectionHeader icon="🛏️" title="Camere Hotel" subtitle="Aggiungi camere per i partecipanti all'evento" />
+
+      {/* Info date evento */}
+      {ci && (
+        <div style={{ background:MC.blueL, border:`1px solid ${MC.blueLb}`, borderRadius:8, padding:"10px 14px", marginBottom:16, fontSize:13, color:MC.navy, display:"flex", alignItems:"center", gap:8 }}>
+          📅 Date evento: <strong>{mFmtDate(ci)}</strong> → <strong>{mFmtDate(co||ci)}</strong>
+          {" · "}Le date camere sono preimpostate ma modificabili per soggiorni estesi.
+        </div>
+      )}
+
+      {/* Griglia tipi camera */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10, marginBottom:24 }}>
+        {tipiCamera.map(t => {
+          const disp = disponibili(t.tipo, ci, co);
+          const giàAggiunte = camere.filter(c=>c.tipo===t.tipo).reduce((s,c)=>s+(c.qty||1),0);
+          const dispReale = Math.max(0, disp - giàAggiunte);
+          return (
+            <div key={t.tipo} style={{
+              border:`1.5px solid ${MC.border}`, borderRadius:10, padding:14, background:MC.surface,
+              opacity: dispReale===0 ? .5 : 1,
+            }}>
+              <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
+                <span style={{ fontSize:24 }}>{ICONE_CAMERA[t.tipo]||"🏨"}</span>
+                <div>
+                  <div style={{ fontWeight:700, fontSize:13 }}>{t.tipo}</div>
+                  <div style={{ fontSize:11, color:MC.text3 }}>fino a {t.capacita} ospiti</div>
+                </div>
+              </div>
+              <div style={{ fontSize:13, fontWeight:700, color:MC.blue, marginBottom:4 }}>
+                €{t.prezzoMin}{t.prezzoMin!==t.prezzoMax?`–${t.prezzoMax}`:""}<span style={{ fontSize:11, fontWeight:400, color:MC.text3 }}>/notte</span>
+              </div>
+              <div style={{ fontSize:11, marginBottom:10, color: dispReale>0?MC.green:MC.red, fontWeight:600 }}>
+                {dispReale>0 ? `✓ ${dispReale} disponibili` : "✗ Non disponibile"}
+              </div>
+              <button
+                onClick={() => dispReale>0 && addCamera(t.tipo)}
+                disabled={dispReale===0}
+                style={{
+                  width:"100%", padding:"7px", borderRadius:6, border:"none", cursor: dispReale>0?"pointer":"not-allowed",
+                  background: dispReale>0 ? MC.blue : MC.border, color: dispReale>0?"#fff":MC.text3,
+                  fontSize:12, fontWeight:600, fontFamily:"'IBM Plex Sans',sans-serif",
+                }}>
+                + Aggiungi
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Camere selezionate */}
+      {camere.length > 0 && (
+        <div>
+          <div style={{ fontSize:12, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:MC.text3, marginBottom:10, borderBottom:`1px solid ${MC.border}`, paddingBottom:6 }}>
+            Camere selezionate ({camere.length})
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+            {camere.map((cam, idx) => {
+              const tipo = tipiCamera.find(t=>t.tipo===cam.tipo);
+              const notti = Math.max(1, mDiffDays(cam.checkIn||ci, cam.checkOut||co||ci));
+              const subtot = (tipo?.prezzoMin||0) * (cam.qty||1) * notti;
+              return (
+                <div key={idx} style={{ border:`1.5px solid ${MC.border}`, borderRadius:10, overflow:"hidden" }}>
+                  {/* Header riga camera */}
+                  <div style={{ background:MC.blueL, padding:"10px 14px", display:"flex", alignItems:"center", gap:10 }}>
+                    <span style={{ fontSize:20 }}>{ICONE_CAMERA[cam.tipo]||"🏨"}</span>
+                    <span style={{ fontWeight:700, fontSize:14, color:MC.navy, flex:1 }}>{cam.tipo}</span>
+                    <span style={{ fontSize:13, fontWeight:700, color:MC.blue }}>≈ {mFmtEur(subtot)}</span>
+                    <button onClick={() => removeCamera(idx)} style={{ background:"none", border:"none", color:MC.red, cursor:"pointer", fontSize:18, lineHeight:1, padding:"0 4px" }}>×</button>
+                  </div>
+                  {/* Dettagli riga */}
+                  <div style={{ padding:"12px 14px", display:"grid", gridTemplateColumns:"80px 1fr 1fr auto auto", gap:10, alignItems:"end", background:MC.surface }}>
+                    <Field label="N° camere">
+                      <input type="number" min={1} max={10} style={{...mInp, textAlign:"center"}}
+                        value={cam.qty||1} onChange={e=>updCamera(idx,"qty",Math.max(1,parseInt(e.target.value)||1))}/>
+                    </Field>
+                    <Field label="Check-In">
+                      <input type="date" style={mInp} value={cam.checkIn||ci||""}
+                        onChange={e=>updCamera(idx,"checkIn",e.target.value)}/>
+                    </Field>
+                    <Field label="Check-Out">
+                      <input type="date" style={mInp} value={cam.checkOut||co||""}
+                        onChange={e=>updCamera(idx,"checkOut",e.target.value)}/>
+                    </Field>
+                    <Field label="Trattamento">
+                      <select style={mInp} value={cam.trattamento||"B&B"}
+                        onChange={e=>updCamera(idx,"trattamento",e.target.value)}>
+                        {TRATTAMENTI.map(t=><option key={t}>{t}</option>)}
+                      </select>
+                    </Field>
+                    <div style={{ fontSize:11, color:MC.text3, textAlign:"center", paddingBottom:4 }}>
+                      <div style={{ fontWeight:700, color:MC.navy, fontSize:13 }}>{notti} nott{notti===1?"e":"i"}</div>
+                      <div>× €{tipo?.prezzoMin}/notte</div>
+                    </div>
+                  </div>
+                  <div style={{ padding:"0 14px 12px", background:MC.surface }}>
+                    <Field label="Note camera (es. piano alto, letti separati)">
+                      <input style={mInp} placeholder="Richieste speciali per questa camera…"
+                        value={cam.note||""} onChange={e=>updCamera(idx,"note",e.target.value)}/>
+                    </Field>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Totale camere */}
+          <div style={{ marginTop:12, background:MC.surface2, borderRadius:8, padding:"10px 14px", display:"flex", justifyContent:"space-between", fontSize:13 }}>
+            <span style={{ color:MC.text3 }}>Subtotale camere ({camere.reduce((s,c)=>s+(c.qty||1),0)} camera{camere.reduce((s,c)=>s+(c.qty||1),0)!==1?"e":""})</span>
+            <span style={{ fontWeight:700 }}>
+              {mFmtEur(camere.reduce((s,cam)=>{
+                const tipo=tipiCamera.find(t=>t.tipo===cam.tipo);
+                const notti=Math.max(1,mDiffDays(cam.checkIn||ci,cam.checkOut||co||ci));
+                return s+(tipo?.prezzoMin||0)*(cam.qty||1)*notti;
+              },0))}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {camere.length === 0 && (
+        <div style={{ textAlign:"center", padding:"32px 20px", color:MC.text3, background:MC.surface2, borderRadius:10, border:`1px dashed ${MC.border2}` }}>
+          <div style={{ fontSize:40, marginBottom:10 }}>🛏️</div>
+          <div style={{ fontSize:14, fontWeight:600, marginBottom:4 }}>Nessuna camera aggiunta</div>
+          <div style={{ fontSize:13 }}>Le camere sono opzionali. Puoi procedere senza aggiungerle.</div>
+        </div>
+      )}
+
+      <div style={{ marginTop:20, display:"flex", justifyContent:"space-between" }}>
+        <button onClick={onBack} style={btnBack}>← F&B</button>
+        <button onClick={onNext} style={btnNext}>Avanti: Riepilogo →</button>
+      </div>
+    </div>
+  );
+}
+
+// Stile input interno al MICE (alias locale)
+const mInp = {
+  border:`1.5px solid ${MC.border}`, borderRadius:6, padding:"8px 12px",
+  fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif", color:MC.text,
+  outline:"none", width:"100%", background:MC.surface,
+};
 
 // ─── RIEPILOGO TAB ───────────────────────────────────────────────
 function RiepilogoTab({ data, setData, sale, calcTotale, onBack, onSave }) {
@@ -7317,6 +7542,30 @@ function RiepilogoTab({ data, setData, sale, calcTotale, onBack, onSave }) {
               <div style={{ textAlign:"right", fontSize:12, color:MC.text3, marginTop:6 }}>Subtotale: {mFmtEur(tot.fb)}</div>
             </div>
           )}
+
+          {/* Camere */}
+          {data.camere?.length>0 && (
+            <div style={{ background:MC.surface2, borderRadius:8, padding:14, marginBottom:12 }}>
+              <div style={{ fontWeight:700, fontSize:12, letterSpacing:.5, textTransform:"uppercase", color:MC.text3, marginBottom:8 }}>
+                🛏️ Camere Hotel ({data.camere.reduce((s,c)=>s+(c.qty||1),0)} camera{data.camere.reduce((s,c)=>s+(c.qty||1),0)!==1?"e":""})
+              </div>
+              {data.camere.map((cam,i)=>{
+                const tipoRoom=ROOMS.find(r=>r.type===cam.tipo);
+                const notti=Math.max(1,mDiffDays(cam.checkIn||data.evento?.dataInizio, cam.checkOut||data.evento?.dataFine||data.evento?.dataInizio));
+                return (
+                  <div key={i} style={{ display:"flex", justifyContent:"space-between", fontSize:13, padding:"5px 0", borderBottom:`1px solid ${MC.border}` }}>
+                    <div>
+                      <span style={{fontWeight:600}}>{cam.tipo}</span>
+                      <span style={{color:MC.text3}}> × {cam.qty} · {cam.trattamento} · {notti} nott{notti===1?"e":"i"}</span>
+                      <div style={{fontSize:11,color:MC.text3}}>{mFmtDate(cam.checkIn)} → {mFmtDate(cam.checkOut)}{cam.note?` · ${cam.note}`:""}</div>
+                    </div>
+                    <span style={{fontWeight:600}}>{mFmtEur((tipoRoom?.price||0)*(cam.qty||1)*notti)}</span>
+                  </div>
+                );
+              })}
+              <div style={{ textAlign:"right", fontSize:12, color:MC.text3, marginTop:6 }}>Subtotale: {mFmtEur(tot.camere)}</div>
+            </div>
+          )}
         </div>
 
         {/* Box totali + sconto */}
@@ -7327,6 +7576,7 @@ function RiepilogoTab({ data, setData, sale, calcTotale, onBack, onSave }) {
             <Row label="Sala meeting" val={mFmtEur(tot.sala)} />
             <Row label="Attrezzature" val={mFmtEur(tot.attr)} />
             <Row label="F&B totale" val={mFmtEur(tot.fb)} />
+            {tot.camere > 0 && <Row label="Camere hotel" val={mFmtEur(tot.camere)} />}
             <Row label="Subtotale" val={mFmtEur(tot.sub)} bold sep />
 
             {/* Sconto */}
@@ -7360,7 +7610,7 @@ function RiepilogoTab({ data, setData, sale, calcTotale, onBack, onSave }) {
       </div>
 
       <div style={{ marginTop:20 }}>
-        <button onClick={onBack} style={btnBack}>← F&B</button>
+        <button onClick={onBack} style={btnBack}>← Camere Hotel</button>
       </div>
     </div>
   );
@@ -7369,12 +7619,58 @@ function RiepilogoTab({ data, setData, sale, calcTotale, onBack, onSave }) {
 // ════════════════════════════════════════════════════════════════
 //  DETTAGLIO PREVENTIVO
 // ════════════════════════════════════════════════════════════════
-function DettaglioPreventivo({ prev, sale, calcTotale, onEdit, onStato, onDelete, onBack }) {
+function DettaglioPreventivo({ prev, sale, calcTotale, onEdit, onStato, onDelete, onBack, reservations=[], setReservations=()=>{}, guests=[] }) {
   const [confDel, setConfDel] = useState(false);
+  const [creatoMsg, setCreatoMsg] = useState(null);
   const tot      = calcTotale(prev, sale);
   const salaObj  = sale.find(s=>s.id===prev.sala?.id);
   const st       = STATI[prev.stato];
   const giorni   = Math.max(1, mDiffDays(prev.evento?.dataInizio, prev.evento?.dataFine)+1);
+
+  // Crea prenotazioni camere nel PMS
+  const creaPrenotazioni = () => {
+    if (!prev.camere?.length) return;
+    const nuoveRes = [];
+    prev.camere.forEach(cam => {
+      const roomsDisp = ROOMS.filter(r => r.type === cam.tipo);
+      // Trova camere libere nelle date richieste
+      const libere = roomsDisp.filter(room => {
+        return !reservations.some(res =>
+          res.roomId === room.id &&
+          !["cancelled"].includes(res.status) &&
+          (cam.checkIn||prev.evento?.dataInizio) < (res.checkOut) &&
+          (cam.checkOut||prev.evento?.dataFine||prev.evento?.dataInizio) > (res.checkIn)
+        );
+      });
+      const qty = Math.min(cam.qty||1, libere.length);
+      for (let i=0; i<qty; i++) {
+        nuoveRes.push({
+          id: "RES" + Date.now().toString().slice(-6) + Math.floor(Math.random()*100) + i,
+          guestId: null,
+          guestName: prev.cliente?.azienda || `${prev.cliente?.nome||""} ${prev.cliente?.cognome||""}`.trim() || "Ospite MICE",
+          roomId: libere[i].id,
+          checkIn:  cam.checkIn  || prev.evento?.dataInizio || "",
+          checkOut: cam.checkOut || prev.evento?.dataFine   || prev.evento?.dataInizio || "",
+          guests: libere[i].capacity,
+          adulti: libere[i].capacity, bambini: 0,
+          services: cam.trattamento==="B&B"?["colazione"]:[],
+          status: "reserved",
+          notes: `MICE ${prev.id} — ${prev.evento?.titolo||""}${cam.note?` — ${cam.note}`:""}`,
+          roomServiceItems:[], payments:[],
+          psInviato:false, istatRegistrato:false,
+          miceId: prev.id,
+        });
+      }
+    });
+    if (nuoveRes.length > 0) {
+      setReservations(r => [...r, ...nuoveRes]);
+      setCreatoMsg(`✓ Create ${nuoveRes.length} prenotazione${nuoveRes.length!==1?"i":""} nel PMS`);
+      setTimeout(()=>setCreatoMsg(null), 5000);
+    }
+  };
+
+  // Prenotazioni già create per questo MICE
+  const resCollegati = reservations.filter(r => r.miceId === prev.id);
 
   return (
     <div>
@@ -7464,6 +7760,78 @@ function DettaglioPreventivo({ prev, sale, calcTotale, onEdit, onStato, onDelete
               })}
             </InfoCard>
           )}
+
+          {/* Camere hotel */}
+          {prev.camere?.length>0 && (
+            <InfoCard icon="🛏️" title="Camere Hotel" subtitle={`${prev.camere.reduce((s,c)=>s+(c.qty||1),0)} camera${prev.camere.reduce((s,c)=>s+(c.qty||1),0)!==1?"e":""} · ${mFmtEur(tot.camere)}`}>
+              {prev.camere.map((cam,i)=>{
+                const tipoRoom=ROOMS.find(r=>r.type===cam.tipo);
+                const notti=Math.max(1,mDiffDays(cam.checkIn||prev.evento?.dataInizio, cam.checkOut||prev.evento?.dataFine||prev.evento?.dataInizio));
+                return (
+                  <div key={i} style={{ padding:"8px 0", borderBottom:`1px solid ${MC.border}`, fontSize:13 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between" }}>
+                      <span style={{fontWeight:600}}>{cam.tipo} × {cam.qty}</span>
+                      <span style={{fontWeight:600}}>{mFmtEur((tipoRoom?.price||0)*(cam.qty||1)*notti)}</span>
+                    </div>
+                    <div style={{fontSize:11,color:MC.text3}}>
+                      {mFmtDate(cam.checkIn)} → {mFmtDate(cam.checkOut)} · {notti} nott{notti===1?"e":"i"} · {cam.trattamento}
+                      {cam.note ? ` · ${cam.note}` : ""}
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Prenotazioni già create */}
+              {resCollegati.length > 0 && (
+                <div style={{ marginTop:12, background:MC.greenL, border:`1px solid ${MC.greenLb}`, borderRadius:6, padding:"8px 12px" }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:MC.green, marginBottom:4 }}>✓ Prenotazioni PMS collegate ({resCollegati.length})</div>
+                  {resCollegati.map(r => (
+                    <div key={r.id} style={{ fontSize:12, color:MC.green }}>
+                      {r.id} · Camera {r.roomId} · {r.checkIn} → {r.checkOut}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Bottone crea prenotazioni */}
+              {prev.stato === "confermato" && resCollegati.length === 0 && (
+                <div style={{ marginTop:12 }}>
+                  <button onClick={creaPrenotazioni} style={{
+                    width:"100%", padding:"10px", borderRadius:8, border:"none", cursor:"pointer",
+                    background:`linear-gradient(135deg,${MC.green},#2ecc71)`, color:"#fff",
+                    fontWeight:700, fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif",
+                    boxShadow:"0 4px 14px rgba(27,122,74,.3)",
+                  }}>
+                    🏨 Crea prenotazioni nel PMS
+                  </button>
+                  <div style={{ fontSize:11, color:MC.text3, textAlign:"center", marginTop:4 }}>
+                    Le camere verranno registrate in "Prenotazioni" con stato Riservato
+                  </div>
+                </div>
+              )}
+              {prev.stato === "confermato" && resCollegati.length > 0 && (
+                <div style={{ marginTop:10 }}>
+                  <button onClick={creaPrenotazioni} style={{
+                    width:"100%", padding:"8px", borderRadius:8, border:`1px solid ${MC.border}`,
+                    cursor:"pointer", background:MC.surface, color:MC.text3,
+                    fontSize:12, fontFamily:"'IBM Plex Sans',sans-serif",
+                  }}>
+                    + Crea ulteriori prenotazioni
+                  </button>
+                </div>
+              )}
+              {prev.stato !== "confermato" && resCollegati.length === 0 && (
+                <div style={{ marginTop:10, fontSize:12, color:MC.text3, background:MC.amberL, borderRadius:6, padding:"8px 10px" }}>
+                  ⚠ Conferma il preventivo per creare le prenotazioni nel PMS
+                </div>
+              )}
+              {creatoMsg && (
+                <div style={{ marginTop:8, background:MC.greenL, color:MC.green, borderRadius:6, padding:"8px 12px", fontSize:13, fontWeight:600, textAlign:"center" }}>
+                  {creatoMsg}
+                </div>
+              )}
+            </InfoCard>
+          )}
         </div>
 
         {/* Sidebar totali */}
@@ -7474,6 +7842,7 @@ function DettaglioPreventivo({ prev, sale, calcTotale, onEdit, onStato, onDelete
               { label:"Sala meeting", val:tot.sala },
               { label:"Attrezzature", val:tot.attr },
               { label:"Food & Beverage", val:tot.fb },
+              ...(tot.camere>0 ? [{ label:"Camere hotel", val:tot.camere }] : []),
             ].map(r=>(
               <div key={r.label} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:`1px solid ${MC.border}`, fontSize:13 }}>
                 <span style={{color:MC.text2}}>{r.label}</span><span style={{fontWeight:600}}>{mFmtEur(r.val)}</span>
