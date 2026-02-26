@@ -6268,7 +6268,7 @@ ${ev.noteCliente?`<div style="padding:0 48px 28px"><div class="conditions">${ev.
 
 
 // ─── PALETTE (speculare a App.jsx) ──────────────────────────────
-const C = {
+const MC = {
   bg: "#f0f3f7", surface: "#ffffff", surface2: "#f5f7fa",
   border: "#dde3ec", border2: "#c4cdd9",
   text: "#1a2535", text2: "#4a5568", text3: "#8896a8",
@@ -6406,11 +6406,11 @@ const LAYOUT_ICONS = {
 
 // ─── HELPERS ────────────────────────────────────────────────────
 const genMICEId = () => "MICE" + Date.now().toString().slice(-6);
-const fmtEur  = (n) => "€" + (Number(n)||0).toLocaleString("it-IT", {minimumFractionDigits:2, maximumFractionDigits:2});
-const fmtDate = (d) => d ? new Date(d + "T12:00:00").toLocaleDateString("it-IT",{day:"2-digit",month:"short",year:"numeric"}) : "—";
-const fmtDateShort = (d) => d ? new Date(d + "T12:00:00").toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit"}) : "—";
-const todayStr = () => new Date().toISOString().split("T")[0];
-const diffDays = (d1,d2) => Math.max(0,Math.round((new Date(d2)-new Date(d1))/86400000));
+const mFmtEur = (n) => "€" + (Number(n)||0).toLocaleString("it-IT", {minimumFractionDigits:2, maximumFractionDigits:2});
+const mFmtDate = (d) => d ? new Date(d + "T12:00:00").toLocaleDateString("it-IT",{day:"2-digit",month:"short",year:"numeric"}) : "—";
+const mFmtDateShort = (d) => d ? new Date(d + "T12:00:00").toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit"}) : "—";
+const mTodayStr = () => new Date().toISOString().split("T")[0];
+const mDiffDays = (d1,d2) => Math.max(0,Math.round((new Date(d2)-new Date(d1))/86400000));
 
 // ─── DATI DEMO ───────────────────────────────────────────────────
 const DEMO_PREV = [
@@ -6473,7 +6473,7 @@ function MICEModule() {
   const calcTotale = useCallback((prev, saleList) => {
     if (!prev) return { sala:0, attr:0, fb:0, sub:0, sconto:0, iva:0, totale:0 };
     const salaObj  = saleList.find(s => s.id === prev.sala?.id);
-    const giorni   = Math.max(1, diffDays(prev.evento?.dataInizio, prev.evento?.dataFine) + 1);
+    const giorni   = Math.max(1, mDiffDays(prev.evento?.dataInizio, prev.evento?.dataFine) + 1);
 
     // Costo sala
     const tariffa = prev.sala?.allestimento === "Giornata intera" ? "intera" : "mezza";
@@ -6521,7 +6521,7 @@ function MICEModule() {
       sala:{ id:"S1", layout:"boardroom", allestimento:"Mezza giornata" },
       attrezzature:[], fb:[],
       note:"", sconto:0,
-      creatoIl: todayStr(), inviatoIl:null, confermatoIl:null,
+      creatoIl: mTodayStr(), inviatoIl:null, confermatoIl:null,
     });
     setActiveTab("preventivo");
     setView("form");
@@ -6547,8 +6547,8 @@ function MICEModule() {
     setPreventivi(prev => prev.map(p => {
       if (p.id !== id) return p;
       const up = { ...p, stato };
-      if (stato === "inviato" && !p.inviatoIl) up.inviatoIl = todayStr();
-      if (stato === "confermato" && !p.confermatoIl) up.confermatoIl = todayStr();
+      if (stato === "inviato" && !p.inviatoIl) up.inviatoIl = mTodayStr();
+      if (stato === "confermato" && !p.confermatoIl) up.confermatoIl = mTodayStr();
       return up;
     }));
     showToast(`Stato aggiornato: ${STATI[stato].label}`,"ok");
@@ -6568,15 +6568,15 @@ function MICEModule() {
 
   // ─── RENDER ─────────────────────────────────────────────────
   return (
-    <div style={{ fontFamily:"'IBM Plex Sans', system-ui, sans-serif", background:C.bg, minHeight:"100%", color:C.text }}>
+    <div style={{ fontFamily:"'IBM Plex Sans', system-ui, sans-serif", background:MC.bg, minHeight:"100%", color:MC.text }}>
 
       {/* Topbar MICE */}
-      <div style={{ background:C.surface, borderBottom:`1px solid ${C.border}`, padding:"0 24px", display:"flex", alignItems:"center", gap:16, height:56 }}>
+      <div style={{ background:MC.surface, borderBottom:`1px solid ${MC.border}`, padding:"0 24px", display:"flex", alignItems:"center", gap:16, height:56 }}>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
           <div style={{ width:32, height:32, borderRadius:8, background:"linear-gradient(135deg,#5c35cc,#0f62fe)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>🎪</div>
           <div>
-            <div style={{ fontSize:15, fontWeight:700, color:C.text }}>MICE Manager</div>
-            <div style={{ fontSize:10, letterSpacing:2, textTransform:"uppercase", color:C.text3 }}>Meetings · Incentives · Conferences · Events</div>
+            <div style={{ fontSize:15, fontWeight:700, color:MC.text }}>MICE Manager</div>
+            <div style={{ fontSize:10, letterSpacing:2, textTransform:"uppercase", color:MC.text3 }}>Meetings · Incentives · Conferences · Events</div>
           </div>
         </div>
         <div style={{ flex:1 }} />
@@ -6589,8 +6589,8 @@ function MICEModule() {
           <button key={n.k} onClick={() => setView(n.k)} style={{
             padding:"6px 14px", borderRadius:6, border:"none", cursor:"pointer",
             fontFamily:"'IBM Plex Sans',sans-serif", fontSize:13, fontWeight:500,
-            background: view===n.k ? C.blueL : "transparent",
-            color: view===n.k ? C.blue : C.text2,
+            background: view===n.k ? MC.blueL : "transparent",
+            color: view===n.k ? MC.blue : MC.text2,
             display:"flex", alignItems:"center", gap:6,
           }}>
             <span>{n.icon}</span>{n.label}
@@ -6599,7 +6599,7 @@ function MICEModule() {
         <button onClick={nuovoPreventivo} style={{
           display:"flex", alignItems:"center", gap:6,
           padding:"8px 16px", borderRadius:6, border:"none", cursor:"pointer",
-          background:C.blue, color:"#fff", fontWeight:600, fontSize:13,
+          background:MC.blue, color:"#fff", fontWeight:600, fontSize:13,
           fontFamily:"'IBM Plex Sans',sans-serif",
         }}>+ Nuovo Preventivo</button>
       </div>
@@ -6617,7 +6617,7 @@ function MICEModule() {
       {toast && (
         <div style={{
           position:"fixed", bottom:24, right:24, zIndex:9999,
-          background: toast.type==="ok" ? C.green : toast.type==="warn" ? C.amber : C.red,
+          background: toast.type==="ok" ? MC.green : toast.type==="warn" ? MC.amber : MC.red,
           color:"#fff", borderRadius:8, padding:"12px 20px", fontSize:13, fontWeight:500,
           boxShadow:"0 4px 20px rgba(0,0,0,.2)",
           animation:"slideInRight .3s ease",
@@ -6653,9 +6653,9 @@ function Dashboard({ preventivi, sale, calcTotale, onNew, onView }) {
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
         <div>
           <h2 style={{ fontSize:22, fontWeight:700, margin:0 }}>Dashboard MICE</h2>
-          <p style={{ fontSize:12, color:C.text3, marginTop:3 }}>Panoramica sale, preventivi e revenue</p>
+          <p style={{ fontSize:12, color:MC.text3, marginTop:3 }}>Panoramica sale, preventivi e revenue</p>
         </div>
-        <button onClick={onNew} style={{ padding:"9px 18px", borderRadius:6, border:"none", cursor:"pointer", background:C.blue, color:"#fff", fontWeight:600, fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>
+        <button onClick={onNew} style={{ padding:"9px 18px", borderRadius:6, border:"none", cursor:"pointer", background:MC.blue, color:"#fff", fontWeight:600, fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>
           + Nuovo Preventivo
         </button>
       </div>
@@ -6663,25 +6663,25 @@ function Dashboard({ preventivi, sale, calcTotale, onNew, onView }) {
       {/* KPI Cards */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:12, marginBottom:24 }}>
         {[
-          { label:"Preventivi totali", val:stats.totali,    bg:C.surface, accent:C.text, icon:"📋" },
-          { label:"Bozze",             val:stats.bozze,     bg:C.surface, accent:C.text3,icon:"✏️" },
-          { label:"Inviati",           val:stats.inviati,   bg:C.blueL,  accent:C.blue,  icon:"📤" },
-          { label:"Confermati",        val:stats.confermati,bg:C.greenL, accent:C.green, icon:"✅" },
-          { label:"Revenue confermata",val:fmtEur(stats.revenue),   bg:"linear-gradient(135deg,#1b7a4a,#2ecc71)", accent:"#fff", icon:"💰", light:true },
-          { label:"Pipeline attiva",   val:fmtEur(stats.pipeline),  bg:"linear-gradient(135deg,#5c35cc,#818cf8)", accent:"#fff", icon:"📈", light:true },
+          { label:"Preventivi totali", val:stats.totali,    bg:MC.surface, accent:MC.text, icon:"📋" },
+          { label:"Bozze",             val:stats.bozze,     bg:MC.surface, accent:MC.text3,icon:"✏️" },
+          { label:"Inviati",           val:stats.inviati,   bg:MC.blueL,  accent:MC.blue,  icon:"📤" },
+          { label:"Confermati",        val:stats.confermati,bg:MC.greenL, accent:MC.green, icon:"✅" },
+          { label:"Revenue confermata",val:mFmtEur(stats.revenue),   bg:"linear-gradient(135deg,#1b7a4a,#2ecc71)", accent:"#fff", icon:"💰", light:true },
+          { label:"Pipeline attiva",   val:mFmtEur(stats.pipeline),  bg:"linear-gradient(135deg,#5c35cc,#818cf8)", accent:"#fff", icon:"📈", light:true },
         ].map((k,i) => (
-          <div key={i} style={{ background:k.bg, borderRadius:10, padding:"16px", border: k.light?0:`1px solid ${C.border}`, boxShadow: k.light?"0 4px 16px rgba(0,0,0,.12)":"none" }}>
+          <div key={i} style={{ background:k.bg, borderRadius:10, padding:"16px", border: k.light?0:`1px solid ${MC.border}`, boxShadow: k.light?"0 4px 16px rgba(0,0,0,.12)":"none" }}>
             <div style={{ fontSize:18, marginBottom:6 }}>{k.icon}</div>
             <div style={{ fontSize:22, fontWeight:700, color:k.light?"#fff":k.accent }}>{k.val}</div>
-            <div style={{ fontSize:11, color:k.light?"rgba(255,255,255,.75)":C.text3, marginTop:2 }}>{k.label}</div>
+            <div style={{ fontSize:11, color:k.light?"rgba(255,255,255,.75)":MC.text3, marginTop:2 }}>{k.label}</div>
           </div>
         ))}
       </div>
 
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20 }}>
         {/* Occupazione sale prossimi 14 gg */}
-        <div style={{ background:C.surface, borderRadius:10, border:`1px solid ${C.border}`, overflow:"hidden" }}>
-          <div style={{ padding:"14px 18px", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", gap:8 }}>
+        <div style={{ background:MC.surface, borderRadius:10, border:`1px solid ${MC.border}`, overflow:"hidden" }}>
+          <div style={{ padding:"14px 18px", borderBottom:`1px solid ${MC.border}`, display:"flex", alignItems:"center", gap:8 }}>
             <span style={{ fontSize:15 }}>🏛️</span>
             <span style={{ fontSize:14, fontWeight:700 }}>Occupazione Sale — prossimi 14 giorni</span>
           </div>
@@ -6689,9 +6689,9 @@ function Dashboard({ preventivi, sale, calcTotale, onNew, onView }) {
             <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
               <thead>
                 <tr>
-                  <th style={{ textAlign:"left", padding:"4px 8px", color:C.text3, fontWeight:600, whiteSpace:"nowrap", width:100 }}>Sala</th>
+                  <th style={{ textAlign:"left", padding:"4px 8px", color:MC.text3, fontWeight:600, whiteSpace:"nowrap", width:100 }}>Sala</th>
                   {mese.slice(0,14).map(d => (
-                    <th key={d} style={{ textAlign:"center", padding:"4px 4px", color:C.text3, fontWeight:500, fontSize:10, minWidth:28 }}>
+                    <th key={d} style={{ textAlign:"center", padding:"4px 4px", color:MC.text3, fontWeight:500, fontSize:10, minWidth:28 }}>
                       {new Date(d+"T12:00:00").toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit"}).slice(0,5)}
                     </th>
                   ))}
@@ -6713,8 +6713,8 @@ function Dashboard({ preventivi, sale, calcTotale, onNew, onView }) {
                         <td key={d} style={{ textAlign:"center", padding:"3px" }}>
                           <div style={{
                             width:24, height:24, borderRadius:4, margin:"0 auto",
-                            background: occ.length>0 ? (occ[0].stato==="confermato" ? C.greenL : C.blueL) : C.surface2,
-                            border: `1px solid ${occ.length>0 ? (occ[0].stato==="confermato" ? C.greenLb : C.blueLb) : C.border}`,
+                            background: occ.length>0 ? (occ[0].stato==="confermato" ? MC.greenL : MC.blueL) : MC.surface2,
+                            border: `1px solid ${occ.length>0 ? (occ[0].stato==="confermato" ? MC.greenLb : MC.blueLb) : MC.border}`,
                             display:"flex", alignItems:"center", justifyContent:"center", fontSize:10,
                           }} title={occ.length>0 ? occ[0].evento?.titolo : "Libera"}>
                             {occ.length>0 ? (occ[0].stato==="confermato"?"✓":"·") : ""}
@@ -6726,17 +6726,17 @@ function Dashboard({ preventivi, sale, calcTotale, onNew, onView }) {
                 ))}
               </tbody>
             </table>
-            <div style={{ display:"flex", gap:12, marginTop:10, fontSize:10, color:C.text3 }}>
-              <span style={{ display:"flex", alignItems:"center", gap:4 }}><span style={{ width:12,height:12,borderRadius:2,background:C.greenL,border:`1px solid ${C.greenLb}`,display:"inline-block" }}/> Confermato</span>
-              <span style={{ display:"flex", alignItems:"center", gap:4 }}><span style={{ width:12,height:12,borderRadius:2,background:C.blueL,border:`1px solid ${C.blueLb}`,display:"inline-block" }}/> In attesa</span>
-              <span style={{ display:"flex", alignItems:"center", gap:4 }}><span style={{ width:12,height:12,borderRadius:2,background:C.surface2,border:`1px solid ${C.border}`,display:"inline-block" }}/> Libera</span>
+            <div style={{ display:"flex", gap:12, marginTop:10, fontSize:10, color:MC.text3 }}>
+              <span style={{ display:"flex", alignItems:"center", gap:4 }}><span style={{ width:12,height:12,borderRadius:2,background:MC.greenL,border:`1px solid ${MC.greenLb}`,display:"inline-block" }}/> Confermato</span>
+              <span style={{ display:"flex", alignItems:"center", gap:4 }}><span style={{ width:12,height:12,borderRadius:2,background:MC.blueL,border:`1px solid ${MC.blueLb}`,display:"inline-block" }}/> In attesa</span>
+              <span style={{ display:"flex", alignItems:"center", gap:4 }}><span style={{ width:12,height:12,borderRadius:2,background:MC.surface2,border:`1px solid ${MC.border}`,display:"inline-block" }}/> Libera</span>
             </div>
           </div>
         </div>
 
         {/* Ultimi preventivi */}
-        <div style={{ background:C.surface, borderRadius:10, border:`1px solid ${C.border}`, overflow:"hidden" }}>
-          <div style={{ padding:"14px 18px", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", gap:8 }}>
+        <div style={{ background:MC.surface, borderRadius:10, border:`1px solid ${MC.border}`, overflow:"hidden" }}>
+          <div style={{ padding:"14px 18px", borderBottom:`1px solid ${MC.border}`, display:"flex", alignItems:"center", gap:8 }}>
             <span style={{ fontSize:15 }}>📋</span>
             <span style={{ fontSize:14, fontWeight:700 }}>Preventivi recenti</span>
           </div>
@@ -6746,18 +6746,18 @@ function Dashboard({ preventivi, sale, calcTotale, onNew, onView }) {
               const tot = calcTotale(p, sale);
               return (
                 <div key={p.id} onClick={() => onView(p)} style={{
-                  padding:"12px 18px", borderBottom: i<4 ? `1px solid ${C.border}` : "none",
+                  padding:"12px 18px", borderBottom: i<4 ? `1px solid ${MC.border}` : "none",
                   cursor:"pointer", transition:"background .15s",
                   display:"flex", alignItems:"center", gap:12,
                 }}
-                onMouseEnter={e=>e.currentTarget.style.background=C.surface2}
+                onMouseEnter={e=>e.currentTarget.style.background=MC.surface2}
                 onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
                   <div style={{ flex:1, minWidth:0 }}>
                     <div style={{ fontWeight:600, fontSize:13, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.evento?.titolo}</div>
-                    <div style={{ fontSize:11, color:C.text3 }}>{p.cliente?.azienda} · {fmtDate(p.evento?.dataInizio)}</div>
+                    <div style={{ fontSize:11, color:MC.text3 }}>{p.cliente?.azienda} · {mFmtDate(p.evento?.dataInizio)}</div>
                   </div>
                   <div style={{ textAlign:"right", flexShrink:0 }}>
-                    <div style={{ fontSize:12, fontWeight:700 }}>{fmtEur(tot.totale)}</div>
+                    <div style={{ fontSize:12, fontWeight:700 }}>{mFmtEur(tot.totale)}</div>
                     <div style={{ fontSize:10, background:s.bg, color:s.text, border:`1px solid ${s.border}`, borderRadius:20, padding:"1px 8px", marginTop:2 }}>{s.label}</div>
                   </div>
                 </div>
@@ -6772,19 +6772,19 @@ function Dashboard({ preventivi, sale, calcTotale, onNew, onView }) {
         <h3 style={{ fontSize:15, fontWeight:700, marginBottom:12 }}>Sale Meeting</h3>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:12 }}>
           {sale.map(s => {
-            const occOggi = preventivi.filter(p => p.sala?.id===s.id && ["confermato","inviato"].includes(p.stato) && p.evento?.dataInizio <= todayStr() && p.evento?.dataFine >= todayStr());
+            const occOggi = preventivi.filter(p => p.sala?.id===s.id && ["confermato","inviato"].includes(p.stato) && p.evento?.dataInizio <= mTodayStr() && p.evento?.dataFine >= mTodayStr());
             return (
-              <div key={s.id} style={{ background:C.surface, borderRadius:10, border:`1px solid ${C.border}`, overflow:"hidden" }}>
+              <div key={s.id} style={{ background:MC.surface, borderRadius:10, border:`1px solid ${MC.border}`, overflow:"hidden" }}>
                 <div style={{ height:6, background:s.colore }} />
                 <div style={{ padding:"14px" }}>
                   <div style={{ fontSize:13, fontWeight:700, marginBottom:2, color:s.colore }}>{s.nome}</div>
-                  <div style={{ fontSize:11, color:C.text3, marginBottom:10 }}>Piano {s.piano} · {s.mq} mq</div>
+                  <div style={{ fontSize:11, color:MC.text3, marginBottom:10 }}>Piano {s.piano} · {s.mq} mq</div>
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:4, fontSize:10, marginBottom:10 }}>
                     {Object.entries(s.capienze).filter(([,v])=>v>0).slice(0,4).map(([k,v]) => (
-                      <div key={k} style={{ color:C.text3 }}>{LAYOUT_ICONS[k]} {v}px</div>
+                      <div key={k} style={{ color:MC.text3 }}>{LAYOUT_ICONS[k]} {v}px</div>
                     ))}
                   </div>
-                  <div style={{ fontSize:11, fontWeight:600, color: occOggi.length>0?C.amber:C.green }}>
+                  <div style={{ fontSize:11, fontWeight:600, color: occOggi.length>0?MC.amber:MC.green }}>
                     {occOggi.length>0 ? "● Occupata oggi" : "● Libera oggi"}
                   </div>
                 </div>
@@ -6806,20 +6806,20 @@ function ListaPreventivi({ preventivi, sale, calcTotale, filterStato, setFilterS
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
         <div>
           <h2 style={{ fontSize:22, fontWeight:700, margin:0 }}>Preventivi MICE</h2>
-          <p style={{ fontSize:12, color:C.text3 }}>{preventivi.length} preventivo{preventivi.length!==1?"i":""} trovato{preventivi.length!==1?"i":""}</p>
+          <p style={{ fontSize:12, color:MC.text3 }}>{preventivi.length} preventivo{preventivi.length!==1?"i":""} trovato{preventivi.length!==1?"i":""}</p>
         </div>
-        <button onClick={onNew} style={{ padding:"9px 18px", borderRadius:6, border:"none", cursor:"pointer", background:C.blue, color:"#fff", fontWeight:600, fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>
+        <button onClick={onNew} style={{ padding:"9px 18px", borderRadius:6, border:"none", cursor:"pointer", background:MC.blue, color:"#fff", fontWeight:600, fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>
           + Nuovo Preventivo
         </button>
       </div>
 
       {/* Filtri */}
       <div style={{ display:"flex", gap:10, marginBottom:16, alignItems:"center", flexWrap:"wrap" }}>
-        <input value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="🔍 Cerca cliente, evento, ID…" style={{ padding:"8px 12px", borderRadius:6, border:`1px solid ${C.border}`, fontSize:13, width:260, fontFamily:"'IBM Plex Sans',sans-serif", outline:"none" }}/>
+        <input value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="🔍 Cerca cliente, evento, ID…" style={{ padding:"8px 12px", borderRadius:6, border:`1px solid ${MC.border}`, fontSize:13, width:260, fontFamily:"'IBM Plex Sans',sans-serif", outline:"none" }}/>
         {["tutti","bozza","inviato","confermato","declinato","annullato","completato"].map(s => (
           <button key={s} onClick={()=>setFilterStato(s)} style={{
-            padding:"6px 12px", borderRadius:20, border:`1px solid ${filterStato===s?C.blue:C.border}`,
-            background: filterStato===s?C.blueL:"transparent", color: filterStato===s?C.blue:C.text3,
+            padding:"6px 12px", borderRadius:20, border:`1px solid ${filterStato===s?MC.blue:MC.border}`,
+            background: filterStato===s?MC.blueL:"transparent", color: filterStato===s?MC.blue:MC.text3,
             fontSize:12, fontWeight:filterStato===s?700:400, cursor:"pointer", fontFamily:"'IBM Plex Sans',sans-serif",
           }}>
             {s==="tutti" ? "Tutti" : STATI[s]?.label}
@@ -6828,39 +6828,39 @@ function ListaPreventivi({ preventivi, sale, calcTotale, filterStato, setFilterS
       </div>
 
       {/* Tabella */}
-      <div style={{ background:C.surface, borderRadius:10, border:`1px solid ${C.border}`, overflow:"hidden" }}>
+      <div style={{ background:MC.surface, borderRadius:10, border:`1px solid ${MC.border}`, overflow:"hidden" }}>
         <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
           <thead>
-            <tr style={{ background:C.surface2, borderBottom:`1px solid ${C.border}` }}>
+            <tr style={{ background:MC.surface2, borderBottom:`1px solid ${MC.border}` }}>
               {["ID","Cliente / Azienda","Evento","Date","Sala","Partec.","Totale IVA incl.","Stato","Azioni"].map(h=>(
-                <th key={h} style={{ padding:"10px 14px", textAlign:"left", fontSize:11, fontWeight:700, letterSpacing:.5, textTransform:"uppercase", color:C.text3, whiteSpace:"nowrap" }}>{h}</th>
+                <th key={h} style={{ padding:"10px 14px", textAlign:"left", fontSize:11, fontWeight:700, letterSpacing:.5, textTransform:"uppercase", color:MC.text3, whiteSpace:"nowrap" }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {preventivi.length === 0 && (
-              <tr><td colSpan={9} style={{ padding:"40px", textAlign:"center", color:C.text3, fontSize:14 }}>Nessun preventivo trovato</td></tr>
+              <tr><td colSpan={9} style={{ padding:"40px", textAlign:"center", color:MC.text3, fontSize:14 }}>Nessun preventivo trovato</td></tr>
             )}
             {preventivi.map((p, i) => {
               const sala = sale.find(s=>s.id===p.sala?.id);
               const st   = STATI[p.stato];
               const tot  = calcTotale(p, sale);
               return (
-                <tr key={p.id} style={{ borderBottom:`1px solid ${C.border}`, cursor:"pointer", transition:"background .1s" }}
-                  onMouseEnter={e=>e.currentTarget.style.background=C.surface2}
+                <tr key={p.id} style={{ borderBottom:`1px solid ${MC.border}`, cursor:"pointer", transition:"background .1s" }}
+                  onMouseEnter={e=>e.currentTarget.style.background=MC.surface2}
                   onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-                  <td style={{ padding:"10px 14px", fontWeight:700, fontSize:12, color:C.blue }} onClick={()=>onView(p)}>{p.id}</td>
+                  <td style={{ padding:"10px 14px", fontWeight:700, fontSize:12, color:MC.blue }} onClick={()=>onView(p)}>{p.id}</td>
                   <td style={{ padding:"10px 14px" }} onClick={()=>onView(p)}>
                     <div style={{ fontWeight:600 }}>{p.cliente?.azienda}</div>
-                    <div style={{ fontSize:11, color:C.text3 }}>{p.cliente?.nome} {p.cliente?.cognome}</div>
+                    <div style={{ fontSize:11, color:MC.text3 }}>{p.cliente?.nome} {p.cliente?.cognome}</div>
                   </td>
                   <td style={{ padding:"10px 14px", maxWidth:180 }} onClick={()=>onView(p)}>
                     <div style={{ fontWeight:500, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.evento?.titolo}</div>
-                    <div style={{ fontSize:11, color:C.text3 }}>{p.evento?.tipo}</div>
+                    <div style={{ fontSize:11, color:MC.text3 }}>{p.evento?.tipo}</div>
                   </td>
                   <td style={{ padding:"10px 14px", whiteSpace:"nowrap", fontSize:12 }} onClick={()=>onView(p)}>
-                    {fmtDateShort(p.evento?.dataInizio)}
-                    {p.evento?.dataFine && p.evento.dataFine !== p.evento.dataInizio ? ` → ${fmtDateShort(p.evento.dataFine)}` : ""}
+                    {mFmtDateShort(p.evento?.dataInizio)}
+                    {p.evento?.dataFine && p.evento.dataFine !== p.evento.dataInizio ? ` → ${mFmtDateShort(p.evento.dataFine)}` : ""}
                   </td>
                   <td style={{ padding:"10px 14px" }} onClick={()=>onView(p)}>
                     {sala ? <span style={{ display:"inline-flex", alignItems:"center", gap:4, fontSize:12 }}>
@@ -6869,7 +6869,7 @@ function ListaPreventivi({ preventivi, sale, calcTotale, filterStato, setFilterS
                     </span> : "—"}
                   </td>
                   <td style={{ padding:"10px 14px", textAlign:"center", fontSize:12 }} onClick={()=>onView(p)}>{p.evento?.partecipanti}</td>
-                  <td style={{ padding:"10px 14px", fontWeight:700, fontSize:13 }} onClick={()=>onView(p)}>{fmtEur(tot.totale)}</td>
+                  <td style={{ padding:"10px 14px", fontWeight:700, fontSize:13 }} onClick={()=>onView(p)}>{mFmtEur(tot.totale)}</td>
                   <td style={{ padding:"10px 14px" }}>
                     <span style={{ display:"inline-block", padding:"3px 10px", borderRadius:20, fontSize:11, fontWeight:600, background:st.bg, color:st.text, border:`1px solid ${st.border}` }}>{st.label}</span>
                   </td>
@@ -6877,7 +6877,7 @@ function ListaPreventivi({ preventivi, sale, calcTotale, filterStato, setFilterS
                     <div style={{ display:"flex", gap:4 }}>
                       <button onClick={()=>onView(p)} title="Dettaglio" style={btnSmall}><span>👁</span></button>
                       <button onClick={()=>onEdit(p)} title="Modifica" style={btnSmall}><span>✏️</span></button>
-                      <select value={p.stato} onChange={e=>onStato(p.id,e.target.value)} onClick={e=>e.stopPropagation()} style={{ fontSize:11, padding:"3px 6px", borderRadius:4, border:`1px solid ${C.border}`, cursor:"pointer", fontFamily:"'IBM Plex Sans',sans-serif" }}>
+                      <select value={p.stato} onChange={e=>onStato(p.id,e.target.value)} onClick={e=>e.stopPropagation()} style={{ fontSize:11, padding:"3px 6px", borderRadius:4, border:`1px solid ${MC.border}`, cursor:"pointer", fontFamily:"'IBM Plex Sans',sans-serif" }}>
                         {Object.entries(STATI).map(([k,v])=>(<option key={k} value={k}>{v.label}</option>))}
                       </select>
                     </div>
@@ -6892,7 +6892,7 @@ function ListaPreventivi({ preventivi, sale, calcTotale, filterStato, setFilterS
   );
 }
 
-const btnSmall = { padding:"5px 8px", borderRadius:5, border:`1px solid ${C.border}`, background:C.surface, cursor:"pointer", fontSize:13, display:"flex",alignItems:"center" };
+const btnSmall = { padding:"5px 8px", borderRadius:5, border:`1px solid ${MC.border}`, background:MC.surface, cursor:"pointer", fontSize:13, display:"flex",alignItems:"center" };
 
 // ════════════════════════════════════════════════════════════════
 //  FORM PREVENTIVO (multi-tab)
@@ -6924,29 +6924,29 @@ function FormPreventivo({ data, setData, sale, calcTotale, activeTab, setActiveT
     <div>
       {/* Header */}
       <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
-        <button onClick={onCancel} style={{ padding:"7px 14px", borderRadius:6, border:`1px solid ${C.border}`, background:C.surface, cursor:"pointer", fontFamily:"'IBM Plex Sans',sans-serif", fontSize:13 }}>← Indietro</button>
+        <button onClick={onCancel} style={{ padding:"7px 14px", borderRadius:6, border:`1px solid ${MC.border}`, background:MC.surface, cursor:"pointer", fontFamily:"'IBM Plex Sans',sans-serif", fontSize:13 }}>← Indietro</button>
         <div>
           <h2 style={{ margin:0, fontSize:20, fontWeight:700 }}>{data.id ? `Preventivo ${data.id}` : "Nuovo Preventivo"}</h2>
-          <div style={{ fontSize:12, color:C.text3 }}>Creato il {fmtDate(data.creatoIl)}</div>
+          <div style={{ fontSize:12, color:MC.text3 }}>Creato il {mFmtDate(data.creatoIl)}</div>
         </div>
         <div style={{ flex:1 }} />
         {/* Mini totale */}
         <div style={{ textAlign:"right" }}>
-          <div style={{ fontSize:11, color:C.text3 }}>Totale IVA incl.</div>
-          <div style={{ fontSize:20, fontWeight:800, color:C.blue }}>{fmtEur(tot.totale)}</div>
+          <div style={{ fontSize:11, color:MC.text3 }}>Totale IVA incl.</div>
+          <div style={{ fontSize:20, fontWeight:800, color:MC.blue }}>{mFmtEur(tot.totale)}</div>
         </div>
-        <button onClick={() => onSave(data)} style={{ padding:"9px 20px", borderRadius:6, border:"none", background:C.blue, color:"#fff", cursor:"pointer", fontWeight:700, fontSize:14, fontFamily:"'IBM Plex Sans',sans-serif" }}>
+        <button onClick={() => onSave(data)} style={{ padding:"9px 20px", borderRadius:6, border:"none", background:MC.blue, color:"#fff", cursor:"pointer", fontWeight:700, fontSize:14, fontFamily:"'IBM Plex Sans',sans-serif" }}>
           💾 Salva Preventivo
         </button>
       </div>
 
       {/* Tab nav */}
-      <div style={{ display:"flex", gap:0, marginBottom:20, background:C.surface, borderRadius:8, border:`1px solid ${C.border}`, overflow:"hidden" }}>
+      <div style={{ display:"flex", gap:0, marginBottom:20, background:MC.surface, borderRadius:8, border:`1px solid ${MC.border}`, overflow:"hidden" }}>
         {tabs.map(t => (
           <button key={t.k} onClick={()=>setActiveTab(t.k)} style={{
-            flex:1, padding:"11px 12px", border:"none", borderRight:`1px solid ${C.border}`,
-            background: activeTab===t.k ? C.blue : C.surface, cursor:"pointer",
-            color: activeTab===t.k ? "#fff" : C.text2,
+            flex:1, padding:"11px 12px", border:"none", borderRight:`1px solid ${MC.border}`,
+            background: activeTab===t.k ? MC.blue : MC.surface, cursor:"pointer",
+            color: activeTab===t.k ? "#fff" : MC.text2,
             fontWeight: activeTab===t.k ? 700 : 400, fontSize:12,
             fontFamily:"'IBM Plex Sans',sans-serif",
             display:"flex", alignItems:"center", justifyContent:"center", gap:6,
@@ -6959,7 +6959,7 @@ function FormPreventivo({ data, setData, sale, calcTotale, activeTab, setActiveT
       </div>
 
       {/* TAB CONTENT */}
-      <div style={{ background:C.surface, borderRadius:10, border:`1px solid ${C.border}`, padding:24 }}>
+      <div style={{ background:MC.surface, borderRadius:10, border:`1px solid ${MC.border}`, padding:24 }}>
 
         {/* ── TAB 1: CLIENTE & EVENTO ── */}
         {activeTab === "preventivo" && (
@@ -7035,19 +7035,19 @@ function FormPreventivo({ data, setData, sale, calcTotale, activeTab, setActiveT
                 const capMax = Math.max(...Object.values(s.capienze));
                 return (
                   <div key={s.id} onClick={()=>upd("sala.id",s.id)} style={{
-                    border:`2px solid ${isSelected?s.colore:C.border}`,
+                    border:`2px solid ${isSelected?s.colore:MC.border}`,
                     borderRadius:10, padding:16, cursor:"pointer",
-                    background: isSelected ? `${s.colore}10` : C.surface,
+                    background: isSelected ? `${s.colore}10` : MC.surface,
                     transition:"all .15s",
                   }}>
                     <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
                       <div style={{ width:12, height:12, borderRadius:"50%", background:s.colore, flexShrink:0 }}/>
                       <div style={{ fontWeight:700, fontSize:14, color:s.colore }}>{s.nome}</div>
                     </div>
-                    <div style={{ fontSize:12, color:C.text3, marginBottom:8 }}>Piano {s.piano} · {s.mq} mq · fino a {capMax}px</div>
-                    <div style={{ fontSize:11, color:C.text2, lineHeight:1.5 }}>{s.note?.slice(0,80)}{s.note?.length>80?"…":""}</div>
+                    <div style={{ fontSize:12, color:MC.text3, marginBottom:8 }}>Piano {s.piano} · {s.mq} mq · fino a {capMax}px</div>
+                    <div style={{ fontSize:11, color:MC.text2, lineHeight:1.5 }}>{s.note?.slice(0,80)}{s.note?.length>80?"…":""}</div>
                     <div style={{ marginTop:8, fontSize:12, fontWeight:700, color:s.colore }}>
-                      da {fmtEur(s.tariffe.mezza)}/mezza giornata
+                      da {mFmtEur(s.tariffe.mezza)}/mezza giornata
                     </div>
                   </div>
                 );
@@ -7063,13 +7063,13 @@ function FormPreventivo({ data, setData, sale, calcTotale, activeTab, setActiveT
                     const isActive = data.sala?.layout === layout;
                     return (
                       <div key={layout} onClick={()=>upd("sala.layout",layout)} style={{
-                        border:`2px solid ${isActive?C.blue:C.border}`,
+                        border:`2px solid ${isActive?MC.blue:MC.border}`,
                         borderRadius:8, padding:"12px 10px", textAlign:"center", cursor:"pointer",
-                        background: isActive ? C.blueL : C.surface, transition:"all .15s",
+                        background: isActive ? MC.blueL : MC.surface, transition:"all .15s",
                       }}>
                         <div style={{ fontSize:22, marginBottom:4 }}>{LAYOUT_ICONS[layout]}</div>
-                        <div style={{ fontSize:12, fontWeight:600, color:isActive?C.blue:C.text }}>{LAYOUT_LABELS[layout]}</div>
-                        <div style={{ fontSize:11, color:C.text3 }}>{cap} px max</div>
+                        <div style={{ fontSize:12, fontWeight:600, color:isActive?MC.blue:MC.text }}>{LAYOUT_LABELS[layout]}</div>
+                        <div style={{ fontSize:11, color:MC.text3 }}>{cap} px max</div>
                       </div>
                     );
                   })}
@@ -7078,25 +7078,25 @@ function FormPreventivo({ data, setData, sale, calcTotale, activeTab, setActiveT
                 <SectionHeader icon="⏱️" title="Durata / Tariffa" mt={8} />
                 <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:20 }}>
                   {[
-                    { k:"Mezza giornata", label:`Mezza giornata — ${fmtEur(salaObj.tariffe.mezza)}/giorno` },
-                    { k:"Giornata intera", label:`Giornata intera — ${fmtEur(salaObj.tariffe.intera)}/giorno` },
-                    ...(salaObj.tariffe.settimanale>0?[{ k:"Settimana", label:`Settimanale — ${fmtEur(salaObj.tariffe.settimanale)}` }]:[]),
+                    { k:"Mezza giornata", label:`Mezza giornata — ${mFmtEur(salaObj.tariffe.mezza)}/giorno` },
+                    { k:"Giornata intera", label:`Giornata intera — ${mFmtEur(salaObj.tariffe.intera)}/giorno` },
+                    ...(salaObj.tariffe.settimanale>0?[{ k:"Settimana", label:`Settimanale — ${mFmtEur(salaObj.tariffe.settimanale)}` }]:[]),
                   ].map(opt => (
                     <button key={opt.k} onClick={()=>upd("sala.allestimento",opt.k)} style={{
-                      padding:"10px 18px", borderRadius:8, border:`2px solid ${data.sala?.allestimento===opt.k?C.blue:C.border}`,
-                      background: data.sala?.allestimento===opt.k?C.blueL:C.surface,
-                      color: data.sala?.allestimento===opt.k?C.blue:C.text, fontWeight:600,
+                      padding:"10px 18px", borderRadius:8, border:`2px solid ${data.sala?.allestimento===opt.k?MC.blue:MC.border}`,
+                      background: data.sala?.allestimento===opt.k?MC.blueL:MC.surface,
+                      color: data.sala?.allestimento===opt.k?MC.blue:MC.text, fontWeight:600,
                       cursor:"pointer", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif",
                     }}>{opt.label}</button>
                   ))}
                 </div>
 
                 {/* Dotazioni incluse */}
-                <div style={{ background:C.surface2, borderRadius:8, padding:14 }}>
-                  <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:C.text3, marginBottom:8 }}>Dotazioni incluse nella sala</div>
+                <div style={{ background:MC.surface2, borderRadius:8, padding:14 }}>
+                  <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:MC.text3, marginBottom:8 }}>Dotazioni incluse nella sala</div>
                   <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
                     {salaObj.dotazioni.map(d => (
-                      <span key={d} style={{ padding:"4px 10px", borderRadius:20, background:C.surface, border:`1px solid ${C.border}`, fontSize:12, color:C.text2 }}>✓ {d}</span>
+                      <span key={d} style={{ padding:"4px 10px", borderRadius:20, background:MC.surface, border:`1px solid ${MC.border}`, fontSize:12, color:MC.text2 }}>✓ {d}</span>
                     ))}
                   </div>
                 </div>
@@ -7114,21 +7114,21 @@ function FormPreventivo({ data, setData, sale, calcTotale, activeTab, setActiveT
         {activeTab === "attr" && (
           <div>
             <SectionHeader icon="🖥️" title="Attrezzature Aggiuntive" />
-            <p style={{ fontSize:13, color:C.text3, marginBottom:16 }}>Le dotazioni base della sala sono incluse. Seleziona attrezzature aggiuntive:</p>
+            <p style={{ fontSize:13, color:MC.text3, marginBottom:16 }}>Le dotazioni base della sala sono incluse. Seleziona attrezzature aggiuntive:</p>
 
             {["Audio/Video","Arredi","Allestimento","Servizi"].map(cat => {
               const items = ATTREZZATURE.filter(a=>a.cat===cat);
               return (
                 <div key={cat} style={{ marginBottom:20 }}>
-                  <div style={{ fontSize:12, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:C.text3, borderBottom:`1px solid ${C.border}`, paddingBottom:6, marginBottom:10 }}>{cat}</div>
+                  <div style={{ fontSize:12, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:MC.text3, borderBottom:`1px solid ${MC.border}`, paddingBottom:6, marginBottom:10 }}>{cat}</div>
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:8 }}>
                     {items.map(item => {
                       const sel = data.attrezzature?.find(a=>a.id===item.id);
                       return (
                         <div key={item.id} style={{
                           display:"flex", alignItems:"center", gap:10, padding:"10px 12px",
-                          border:`1.5px solid ${sel?C.blue:C.border}`, borderRadius:8,
-                          background: sel?C.blueL:C.surface, cursor:"pointer", transition:"all .15s",
+                          border:`1.5px solid ${sel?MC.blue:MC.border}`, borderRadius:8,
+                          background: sel?MC.blueL:MC.surface, cursor:"pointer", transition:"all .15s",
                         }} onClick={()=>{
                           setData(prev=>{
                             const clone = JSON.parse(JSON.stringify(prev));
@@ -7138,18 +7138,18 @@ function FormPreventivo({ data, setData, sale, calcTotale, activeTab, setActiveT
                             return clone;
                           });
                         }}>
-                          <div style={{ width:20,height:20,borderRadius:4,border:`2px solid ${sel?C.blue:C.border}`,background:sel?C.blue:C.surface,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+                          <div style={{ width:20,height:20,borderRadius:4,border:`2px solid ${sel?MC.blue:MC.border}`,background:sel?MC.blue:MC.surface,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
                             {sel && <span style={{ color:"#fff",fontSize:12,fontWeight:700 }}>✓</span>}
                           </div>
                           <div style={{ flex:1, minWidth:0 }}>
                             <div style={{ fontSize:13, fontWeight:500, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{item.nome}</div>
-                            <div style={{ fontSize:11, color:C.text3 }}>{fmtEur(item.prezzo)} / {item.um}</div>
+                            <div style={{ fontSize:11, color:MC.text3 }}>{mFmtEur(item.prezzo)} / {item.um}</div>
                           </div>
                           {sel && (
                             <div style={{ display:"flex", alignItems:"center", gap:4 }} onClick={e=>e.stopPropagation()}>
-                              <button onClick={()=>{setData(prev=>{const c=JSON.parse(JSON.stringify(prev));const a=c.attrezzature.find(a=>a.id===item.id);if(a&&a.qty>1)a.qty--;return c;})}} style={{ width:22,height:22,borderRadius:4,border:`1px solid ${C.border}`,background:C.surface,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13 }}>−</button>
+                              <button onClick={()=>{setData(prev=>{const c=JSON.parse(JSON.stringify(prev));const a=c.attrezzature.find(a=>a.id===item.id);if(a&&a.qty>1)a.qty--;return c;})}} style={{ width:22,height:22,borderRadius:4,border:`1px solid ${MC.border}`,background:MC.surface,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13 }}>−</button>
                               <span style={{ fontSize:13,fontWeight:700,minWidth:20,textAlign:"center" }}>{sel.qty}</span>
-                              <button onClick={()=>{setData(prev=>{const c=JSON.parse(JSON.stringify(prev));const a=c.attrezzature.find(a=>a.id===item.id);if(a)a.qty++;return c;})}} style={{ width:22,height:22,borderRadius:4,border:`1px solid ${C.border}`,background:C.surface,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13 }}>+</button>
+                              <button onClick={()=>{setData(prev=>{const c=JSON.parse(JSON.stringify(prev));const a=c.attrezzature.find(a=>a.id===item.id);if(a)a.qty++;return c;})}} style={{ width:22,height:22,borderRadius:4,border:`1px solid ${MC.border}`,background:MC.surface,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13 }}>+</button>
                             </div>
                           )}
                         </div>
@@ -7171,31 +7171,31 @@ function FormPreventivo({ data, setData, sale, calcTotale, activeTab, setActiveT
         {activeTab === "fb" && (
           <div>
             <SectionHeader icon="🍽️" title="Food & Beverage" />
-            <p style={{ fontSize:13, color:C.text3, marginBottom:16 }}>Seleziona e configura i servizi F&B per l'evento:</p>
+            <p style={{ fontSize:13, color:MC.text3, marginBottom:16 }}>Seleziona e configura i servizi F&B per l'evento:</p>
 
             {["Coffee Break","Pranzo","Aperitivo","Cena","Bevande","Spuntino"].map(cat => {
               const items = FB_PACKAGES.filter(f=>f.cat===cat);
               return (
                 <div key={cat} style={{ marginBottom:20 }}>
-                  <div style={{ fontSize:12, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:C.text3, borderBottom:`1px solid ${C.border}`, paddingBottom:6, marginBottom:10 }}>{cat}</div>
+                  <div style={{ fontSize:12, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:MC.text3, borderBottom:`1px solid ${MC.border}`, paddingBottom:6, marginBottom:10 }}>{cat}</div>
                   <div style={{ display:"grid", gap:8 }}>
                     {items.map(item => {
                       const sels = data.fb?.filter(f=>f.id===item.id) || [];
                       return (
-                        <div key={item.id} style={{ border:`1.5px solid ${C.border}`, borderRadius:8, overflow:"hidden" }}>
-                          <div style={{ padding:"10px 14px", display:"flex", alignItems:"center", gap:12, background: sels.length>0?C.blueL:C.surface }}>
+                        <div key={item.id} style={{ border:`1.5px solid ${MC.border}`, borderRadius:8, overflow:"hidden" }}>
+                          <div style={{ padding:"10px 14px", display:"flex", alignItems:"center", gap:12, background: sels.length>0?MC.blueL:MC.surface }}>
                             <div style={{ flex:1 }}>
                               <div style={{ fontWeight:600, fontSize:13 }}>{item.nome}</div>
-                              <div style={{ fontSize:11, color:C.text3 }}>{item.desc}</div>
+                              <div style={{ fontSize:11, color:MC.text3 }}>{item.desc}</div>
                             </div>
-                            <div style={{ fontWeight:700, fontSize:13, color:C.blue, whiteSpace:"nowrap" }}>{fmtEur(item.prezzo)} / {item.um}</div>
+                            <div style={{ fontWeight:700, fontSize:13, color:MC.blue, whiteSpace:"nowrap" }}>{mFmtEur(item.prezzo)} / {item.um}</div>
                             <button onClick={()=>{
                               setData(prev=>{
                                 const c=JSON.parse(JSON.stringify(prev));
                                 c.fb.push({ id:item.id, qty:data.evento?.partecipanti||10, momento:"Mattina" });
                                 return c;
                               });
-                            }} style={{ padding:"6px 12px", borderRadius:6, border:"none", background:C.blue, color:"#fff", cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'IBM Plex Sans',sans-serif" }}>
+                            }} style={{ padding:"6px 12px", borderRadius:6, border:"none", background:MC.blue, color:"#fff", cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'IBM Plex Sans',sans-serif" }}>
                               + Aggiungi
                             </button>
                           </div>
@@ -7204,21 +7204,21 @@ function FormPreventivo({ data, setData, sale, calcTotale, activeTab, setActiveT
                           {sels.map((sel, si) => {
                             const globalIdx = data.fb?.findIndex((f,i)=>f.id===item.id && data.fb.slice(0,i+1).filter(x=>x.id===item.id).length === si+1);
                             return (
-                              <div key={si} style={{ padding:"8px 14px", background:"#f8f9fc", borderTop:`1px solid ${C.border}`, display:"flex", alignItems:"center", gap:10 }}>
-                                <div style={{ fontSize:11, color:C.text3 }}>Momento:</div>
+                              <div key={si} style={{ padding:"8px 14px", background:"#f8f9fc", borderTop:`1px solid ${MC.border}`, display:"flex", alignItems:"center", gap:10 }}>
+                                <div style={{ fontSize:11, color:MC.text3 }}>Momento:</div>
                                 <select value={sel.momento||"Mattina"} onChange={e=>{
                                   setData(prev=>{const c=JSON.parse(JSON.stringify(prev));c.fb[globalIdx].momento=e.target.value;return c;});
-                                }} style={{ fontSize:12, padding:"4px 8px", borderRadius:4, border:`1px solid ${C.border}`, fontFamily:"'IBM Plex Sans',sans-serif" }}>
+                                }} style={{ fontSize:12, padding:"4px 8px", borderRadius:4, border:`1px solid ${MC.border}`, fontFamily:"'IBM Plex Sans',sans-serif" }}>
                                   {["Mattina","Pranzo","Pomeriggio","Sera","Cena","Welcome"].map(m=><option key={m}>{m}</option>)}
                                 </select>
-                                <div style={{ fontSize:11, color:C.text3 }}>Persone:</div>
+                                <div style={{ fontSize:11, color:MC.text3 }}>Persone:</div>
                                 <input type="number" min={1} value={sel.qty} onChange={e=>{
                                   setData(prev=>{const c=JSON.parse(JSON.stringify(prev));c.fb[globalIdx].qty=parseInt(e.target.value)||1;return c;});
-                                }} style={{ width:60, padding:"4px 8px", borderRadius:4, border:`1px solid ${C.border}`, fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}/>
-                                <span style={{ fontSize:12, color:C.text3 }}>= {fmtEur(item.prezzo * sel.qty)}</span>
+                                }} style={{ width:60, padding:"4px 8px", borderRadius:4, border:`1px solid ${MC.border}`, fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}/>
+                                <span style={{ fontSize:12, color:MC.text3 }}>= {mFmtEur(item.prezzo * sel.qty)}</span>
                                 <button onClick={()=>{
                                   setData(prev=>{const c=JSON.parse(JSON.stringify(prev));c.fb.splice(globalIdx,1);return c;});
-                                }} style={{ marginLeft:"auto", background:"none", border:"none", color:C.red, cursor:"pointer", fontSize:16 }}>×</button>
+                                }} style={{ marginLeft:"auto", background:"none", border:"none", color:MC.red, cursor:"pointer", fontSize:16 }}>×</button>
                               </div>
                             );
                           })}
@@ -7250,10 +7250,10 @@ function FormPreventivo({ data, setData, sale, calcTotale, activeTab, setActiveT
 function RiepilogoTab({ data, setData, sale, calcTotale, onBack, onSave }) {
   const tot      = calcTotale(data, sale);
   const salaObj  = sale.find(s=>s.id===data.sala?.id);
-  const giorni   = Math.max(1, diffDays(data.evento?.dataInizio, data.evento?.dataFine) + 1);
+  const giorni   = Math.max(1, mDiffDays(data.evento?.dataInizio, data.evento?.dataFine) + 1);
 
   const Row = ({ label, val, bold, color, sep }) => (
-    <div style={{ display:"flex", justifyContent:"space-between", padding:"9px 0", borderTop: sep?`1px solid ${C.border}`:"none", fontWeight:bold?700:400, color:color||C.text }}>
+    <div style={{ display:"flex", justifyContent:"space-between", padding:"9px 0", borderTop: sep?`1px solid ${MC.border}`:"none", fontWeight:bold?700:400, color:color||MC.text }}>
       <span>{label}</span><span>{val}</span>
     </div>
   );
@@ -7266,87 +7266,87 @@ function RiepilogoTab({ data, setData, sale, calcTotale, onBack, onSave }) {
         {/* Dettaglio voci */}
         <div>
           {/* Cliente / Evento */}
-          <div style={{ background:C.surface2, borderRadius:8, padding:16, marginBottom:16, fontSize:13 }}>
-            <div style={{ fontWeight:700, fontSize:14, marginBottom:8, color:C.text }}>📋 {data.evento?.titolo || "(senza titolo)"}</div>
-            <div style={{ color:C.text2 }}><b>{data.cliente?.azienda}</b> · {data.cliente?.nome} {data.cliente?.cognome}</div>
-            <div style={{ color:C.text3, marginTop:4 }}>{fmtDate(data.evento?.dataInizio)}{data.evento?.dataFine&&data.evento.dataFine!==data.evento.dataInizio?` → ${fmtDate(data.evento.dataFine)}`:""} · {data.evento?.partecipanti} partecipanti</div>
+          <div style={{ background:MC.surface2, borderRadius:8, padding:16, marginBottom:16, fontSize:13 }}>
+            <div style={{ fontWeight:700, fontSize:14, marginBottom:8, color:MC.text }}>📋 {data.evento?.titolo || "(senza titolo)"}</div>
+            <div style={{ color:MC.text2 }}><b>{data.cliente?.azienda}</b> · {data.cliente?.nome} {data.cliente?.cognome}</div>
+            <div style={{ color:MC.text3, marginTop:4 }}>{mFmtDate(data.evento?.dataInizio)}{data.evento?.dataFine&&data.evento.dataFine!==data.evento.dataInizio?` → ${mFmtDate(data.evento.dataFine)}`:""} · {data.evento?.partecipanti} partecipanti</div>
           </div>
 
           {/* Sala */}
-          <div style={{ background:C.surface2, borderRadius:8, padding:14, marginBottom:12 }}>
-            <div style={{ fontWeight:700, fontSize:12, letterSpacing:.5, textTransform:"uppercase", color:C.text3, marginBottom:8 }}>🏛️ Sala Meeting</div>
+          <div style={{ background:MC.surface2, borderRadius:8, padding:14, marginBottom:12 }}>
+            <div style={{ fontWeight:700, fontSize:12, letterSpacing:.5, textTransform:"uppercase", color:MC.text3, marginBottom:8 }}>🏛️ Sala Meeting</div>
             <div style={{ display:"flex", justifyContent:"space-between", fontSize:13 }}>
               <span>{salaObj?.nome} — {LAYOUT_LABELS[data.sala?.layout]}, {data.sala?.allestimento}</span>
-              <span style={{ fontWeight:700 }}>{fmtEur(tot.sala)}</span>
+              <span style={{ fontWeight:700 }}>{mFmtEur(tot.sala)}</span>
             </div>
-            <div style={{ fontSize:11, color:C.text3 }}>
-              {giorni} giorno{giorni>1?"i":""} × {fmtEur(salaObj?.tariffe[data.sala?.allestimento==="Giornata intera"?"intera":"mezza"] || 0)}
+            <div style={{ fontSize:11, color:MC.text3 }}>
+              {giorni} giorno{giorni>1?"i":""} × {mFmtEur(salaObj?.tariffe[data.sala?.allestimento==="Giornata intera"?"intera":"mezza"] || 0)}
             </div>
           </div>
 
           {/* Attrezzature */}
           {data.attrezzature?.length>0 && (
-            <div style={{ background:C.surface2, borderRadius:8, padding:14, marginBottom:12 }}>
-              <div style={{ fontWeight:700, fontSize:12, letterSpacing:.5, textTransform:"uppercase", color:C.text3, marginBottom:8 }}>🖥️ Attrezzature ({data.attrezzature.length})</div>
+            <div style={{ background:MC.surface2, borderRadius:8, padding:14, marginBottom:12 }}>
+              <div style={{ fontWeight:700, fontSize:12, letterSpacing:.5, textTransform:"uppercase", color:MC.text3, marginBottom:8 }}>🖥️ Attrezzature ({data.attrezzature.length})</div>
               {data.attrezzature.map(a=>{
                 const item=ATTREZZATURE.find(x=>x.id===a.id);
                 return item ? (
                   <div key={a.id} style={{ display:"flex", justifyContent:"space-between", fontSize:13, padding:"3px 0" }}>
                     <span>{item.nome} × {a.qty}</span>
-                    <span style={{ fontWeight:600 }}>{fmtEur(item.prezzo*a.qty*giorni)}</span>
+                    <span style={{ fontWeight:600 }}>{mFmtEur(item.prezzo*a.qty*giorni)}</span>
                   </div>
                 ):null;
               })}
-              <div style={{ textAlign:"right", fontSize:12, color:C.text3, marginTop:6 }}>Subtotale: {fmtEur(tot.attr)}</div>
+              <div style={{ textAlign:"right", fontSize:12, color:MC.text3, marginTop:6 }}>Subtotale: {mFmtEur(tot.attr)}</div>
             </div>
           )}
 
           {/* F&B */}
           {data.fb?.length>0 && (
-            <div style={{ background:C.surface2, borderRadius:8, padding:14, marginBottom:12 }}>
-              <div style={{ fontWeight:700, fontSize:12, letterSpacing:.5, textTransform:"uppercase", color:C.text3, marginBottom:8 }}>🍽️ Food & Beverage ({data.fb.length})</div>
+            <div style={{ background:MC.surface2, borderRadius:8, padding:14, marginBottom:12 }}>
+              <div style={{ fontWeight:700, fontSize:12, letterSpacing:.5, textTransform:"uppercase", color:MC.text3, marginBottom:8 }}>🍽️ Food & Beverage ({data.fb.length})</div>
               {data.fb.map((f,i)=>{
                 const item=FB_PACKAGES.find(x=>x.id===f.id);
                 return item ? (
                   <div key={i} style={{ display:"flex", justifyContent:"space-between", fontSize:13, padding:"3px 0" }}>
                     <span>{item.nome} · {f.momento} × {f.qty}px</span>
-                    <span style={{ fontWeight:600 }}>{fmtEur(item.prezzo*f.qty)}</span>
+                    <span style={{ fontWeight:600 }}>{mFmtEur(item.prezzo*f.qty)}</span>
                   </div>
                 ):null;
               })}
-              <div style={{ textAlign:"right", fontSize:12, color:C.text3, marginTop:6 }}>Subtotale: {fmtEur(tot.fb)}</div>
+              <div style={{ textAlign:"right", fontSize:12, color:MC.text3, marginTop:6 }}>Subtotale: {mFmtEur(tot.fb)}</div>
             </div>
           )}
         </div>
 
         {/* Box totali + sconto */}
         <div>
-          <div style={{ background:C.surface, border:`1.5px solid ${C.border}`, borderRadius:10, padding:20, position:"sticky", top:20 }}>
-            <div style={{ fontSize:13, fontWeight:700, letterSpacing:.5, textTransform:"uppercase", color:C.text3, marginBottom:12 }}>Totale Preventivo</div>
+          <div style={{ background:MC.surface, border:`1.5px solid ${MC.border}`, borderRadius:10, padding:20, position:"sticky", top:20 }}>
+            <div style={{ fontSize:13, fontWeight:700, letterSpacing:.5, textTransform:"uppercase", color:MC.text3, marginBottom:12 }}>Totale Preventivo</div>
 
-            <Row label="Sala meeting" val={fmtEur(tot.sala)} />
-            <Row label="Attrezzature" val={fmtEur(tot.attr)} />
-            <Row label="F&B totale" val={fmtEur(tot.fb)} />
-            <Row label="Subtotale" val={fmtEur(tot.sub)} bold sep />
+            <Row label="Sala meeting" val={mFmtEur(tot.sala)} />
+            <Row label="Attrezzature" val={mFmtEur(tot.attr)} />
+            <Row label="F&B totale" val={mFmtEur(tot.fb)} />
+            <Row label="Subtotale" val={mFmtEur(tot.sub)} bold sep />
 
             {/* Sconto */}
-            <div style={{ padding:"12px 0", borderTop:`1px solid ${C.border}` }}>
-              <div style={{ fontSize:12, color:C.text3, marginBottom:6 }}>Sconto (%)</div>
+            <div style={{ padding:"12px 0", borderTop:`1px solid ${MC.border}` }}>
+              <div style={{ fontSize:12, color:MC.text3, marginBottom:6 }}>Sconto (%)</div>
               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                 <input type="number" min={0} max={50} step={0.5} value={data.sconto||0}
                   onChange={e=>setData(prev=>({...prev,sconto:parseFloat(e.target.value)||0}))}
-                  style={{ width:70, padding:"6px 10px", borderRadius:6, border:`1.5px solid ${C.border}`, fontSize:14, fontWeight:700, textAlign:"center", fontFamily:"'IBM Plex Sans',sans-serif" }}/>
-                <span style={{ fontSize:13, color:C.red, fontWeight:600 }}>− {fmtEur(tot.sconto)}</span>
+                  style={{ width:70, padding:"6px 10px", borderRadius:6, border:`1.5px solid ${MC.border}`, fontSize:14, fontWeight:700, textAlign:"center", fontFamily:"'IBM Plex Sans',sans-serif" }}/>
+                <span style={{ fontSize:13, color:MC.red, fontWeight:600 }}>− {mFmtEur(tot.sconto)}</span>
               </div>
             </div>
 
-            <div style={{ height:1, background:C.border, margin:"4px 0" }}/>
-            <Row label="Imponibile netto" val={fmtEur(tot.sub - tot.sconto)} sep />
-            <Row label="IVA 10%" val={fmtEur(tot.iva)} />
+            <div style={{ height:1, background:MC.border, margin:"4px 0" }}/>
+            <Row label="Imponibile netto" val={mFmtEur(tot.sub - tot.sconto)} sep />
+            <Row label="IVA 10%" val={mFmtEur(tot.iva)} />
 
             <div style={{ background:"linear-gradient(135deg,#0a1929,#1565c0)", borderRadius:8, padding:"14px 16px", marginTop:12, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <span style={{ color:"rgba(255,255,255,.7)", fontSize:14, fontWeight:600 }}>TOTALE IVA incl.</span>
-              <span style={{ color:"#fff", fontSize:22, fontWeight:800, fontFamily:"monospace" }}>{fmtEur(tot.totale)}</span>
+              <span style={{ color:"#fff", fontSize:22, fontWeight:800, fontFamily:"monospace" }}>{mFmtEur(tot.totale)}</span>
             </div>
 
             <button onClick={onSave} style={{ ...btnNext, width:"100%", justifyContent:"center", marginTop:14, padding:"12px", fontSize:14 }}>
@@ -7374,30 +7374,30 @@ function DettaglioPreventivo({ prev, sale, calcTotale, onEdit, onStato, onDelete
   const tot      = calcTotale(prev, sale);
   const salaObj  = sale.find(s=>s.id===prev.sala?.id);
   const st       = STATI[prev.stato];
-  const giorni   = Math.max(1, diffDays(prev.evento?.dataInizio, prev.evento?.dataFine)+1);
+  const giorni   = Math.max(1, mDiffDays(prev.evento?.dataInizio, prev.evento?.dataFine)+1);
 
   return (
     <div>
       {/* Header */}
       <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
-        <button onClick={onBack} style={{ padding:"7px 14px", borderRadius:6, border:`1px solid ${C.border}`, background:C.surface, cursor:"pointer", fontFamily:"'IBM Plex Sans',sans-serif", fontSize:13 }}>← Lista</button>
+        <button onClick={onBack} style={{ padding:"7px 14px", borderRadius:6, border:`1px solid ${MC.border}`, background:MC.surface, cursor:"pointer", fontFamily:"'IBM Plex Sans',sans-serif", fontSize:13 }}>← Lista</button>
         <div>
           <div style={{ display:"flex", alignItems:"center", gap:10 }}>
             <h2 style={{ margin:0, fontSize:20, fontWeight:800 }}>{prev.id}</h2>
             <span style={{ padding:"4px 12px", borderRadius:20, fontSize:12, fontWeight:700, background:st.bg, color:st.text, border:`1px solid ${st.border}` }}>{st.label}</span>
           </div>
-          <div style={{ fontSize:12, color:C.text3 }}>Creato {fmtDate(prev.creatoIl)}{prev.inviatoIl?` · Inviato ${fmtDate(prev.inviatoIl)}`:""}{prev.confermatoIl?` · Confermato ${fmtDate(prev.confermatoIl)}`:""}</div>
+          <div style={{ fontSize:12, color:MC.text3 }}>Creato {mFmtDate(prev.creatoIl)}{prev.inviatoIl?` · Inviato ${mFmtDate(prev.inviatoIl)}`:""}{prev.confermatoIl?` · Confermato ${mFmtDate(prev.confermatoIl)}`:""}</div>
         </div>
         <div style={{ flex:1 }}/>
         <div style={{ display:"flex", gap:8 }}>
-          {prev.stato === "bozza"   && <CtaBtn color={C.blue} onClick={()=>onStato(prev.id,"inviato")}>📤 Segna come Inviato</CtaBtn>}
-          {prev.stato === "inviato" && <CtaBtn color={C.green} onClick={()=>onStato(prev.id,"confermato")}>✅ Conferma</CtaBtn>}
-          {prev.stato === "inviato" && <CtaBtn color={C.red} outline onClick={()=>onStato(prev.id,"declinato")}>✗ Declinato</CtaBtn>}
-          {prev.stato === "confermato" && <CtaBtn color={C.purple} onClick={()=>onStato(prev.id,"completato")}>🏁 Segna Completato</CtaBtn>}
-          <button onClick={onEdit} style={{ padding:"8px 16px", borderRadius:6, border:`1px solid ${C.border}`, background:C.surface, cursor:"pointer", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>✏️ Modifica</button>
-          <button onClick={()=>printPreventivo(prev, sale, calcTotale)} style={{ padding:"8px 16px", borderRadius:6, border:`1px solid ${C.border}`, background:C.surface, cursor:"pointer", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>🖨️ Stampa</button>
-          {!confDel && <button onClick={()=>setConfDel(true)} style={{ padding:"8px 14px", borderRadius:6, border:`1px solid ${C.redL}`, background:C.redL, color:C.red, cursor:"pointer", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>🗑</button>}
-          {confDel && <><button onClick={()=>onDelete(prev.id)} style={{ padding:"8px 14px", borderRadius:6, border:`none`, background:C.red, color:"#fff", cursor:"pointer", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif", fontWeight:700 }}>Elimina</button><button onClick={()=>setConfDel(false)} style={{ padding:"8px 12px", borderRadius:6, border:`1px solid ${C.border}`, background:C.surface, cursor:"pointer" }}>Annulla</button></>}
+          {prev.stato === "bozza"   && <CtaBtn color={MC.blue} onClick={()=>onStato(prev.id,"inviato")}>📤 Segna come Inviato</CtaBtn>}
+          {prev.stato === "inviato" && <CtaBtn color={MC.green} onClick={()=>onStato(prev.id,"confermato")}>✅ Conferma</CtaBtn>}
+          {prev.stato === "inviato" && <CtaBtn color={MC.red} outline onClick={()=>onStato(prev.id,"declinato")}>✗ Declinato</CtaBtn>}
+          {prev.stato === "confermato" && <CtaBtn color={MC.purple} onClick={()=>onStato(prev.id,"completato")}>🏁 Segna Completato</CtaBtn>}
+          <button onClick={onEdit} style={{ padding:"8px 16px", borderRadius:6, border:`1px solid ${MC.border}`, background:MC.surface, cursor:"pointer", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>✏️ Modifica</button>
+          <button onClick={()=>printPreventivo(prev, sale, calcTotale)} style={{ padding:"8px 16px", borderRadius:6, border:`1px solid ${MC.border}`, background:MC.surface, cursor:"pointer", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>🖨️ Stampa</button>
+          {!confDel && <button onClick={()=>setConfDel(true)} style={{ padding:"8px 14px", borderRadius:6, border:`1px solid ${MC.redL}`, background:MC.redL, color:MC.red, cursor:"pointer", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>🗑</button>}
+          {confDel && <><button onClick={()=>onDelete(prev.id)} style={{ padding:"8px 14px", borderRadius:6, border:`none`, background:MC.red, color:"#fff", cursor:"pointer", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif", fontWeight:700 }}>Elimina</button><button onClick={()=>setConfDel(false)} style={{ padding:"8px 12px", borderRadius:6, border:`1px solid ${MC.border}`, background:MC.surface, cursor:"pointer" }}>Annulla</button></>}
         </div>
       </div>
 
@@ -7407,19 +7407,19 @@ function DettaglioPreventivo({ prev, sale, calcTotale, onEdit, onStato, onDelete
           {/* Evento */}
           <InfoCard icon="🎯" title={prev.evento?.titolo || "(senza titolo)"} subtitle={`${prev.evento?.tipo} · ${prev.evento?.partecipanti} partecipanti`}>
             <InfoGrid items={[
-              { k:"Data inizio", v:fmtDate(prev.evento?.dataInizio) },
-              { k:"Data fine",   v:fmtDate(prev.evento?.dataFine)||"—" },
+              { k:"Data inizio", v:mFmtDate(prev.evento?.dataInizio) },
+              { k:"Data fine",   v:mFmtDate(prev.evento?.dataFine)||"—" },
               { k:"Ora inizio",  v:prev.evento?.oraInizio },
               { k:"Ora fine",    v:prev.evento?.oraFine },
               { k:"Durata",      v:`${giorni} giorno${giorni>1?"i":""}` },
             ]}/>
-            {prev.note && <div style={{ marginTop:10, background:C.amberL, border:`1px solid ${C.amberLb}`, borderRadius:6, padding:"8px 12px", fontSize:12, color:C.amber }}>📌 {prev.note}</div>}
+            {prev.note && <div style={{ marginTop:10, background:MC.amberL, border:`1px solid ${MC.amberLb}`, borderRadius:6, padding:"8px 12px", fontSize:12, color:MC.amber }}>📌 {prev.note}</div>}
           </InfoCard>
 
           {/* Cliente */}
           <InfoCard icon="🏢" title={prev.cliente?.azienda||"—"} subtitle={`${prev.cliente?.nome} ${prev.cliente?.cognome}`.trim()}>
             <InfoGrid items={[
-              { k:"Email",  v:<a href={`mailto:${prev.cliente?.email}`} style={{color:C.blue}}>{prev.cliente?.email}</a> },
+              { k:"Email",  v:<a href={`mailto:${prev.cliente?.email}`} style={{color:MC.blue}}>{prev.cliente?.email}</a> },
               { k:"Tel",    v:prev.cliente?.tel },
               { k:"P.IVA",  v:prev.cliente?.piva||"—" },
             ]}/>
@@ -7431,10 +7431,10 @@ function DettaglioPreventivo({ prev, sale, calcTotale, onEdit, onStato, onDelete
               <InfoGrid items={[
                 { k:"Layout",     v:LAYOUT_LABELS[prev.sala?.layout]||"—" },
                 { k:"Tariffa",    v:prev.sala?.allestimento||"—" },
-                { k:"Costo sala", v:fmtEur(tot.sala) },
+                { k:"Costo sala", v:mFmtEur(tot.sala) },
               ]}/>
               <div style={{ display:"flex", flexWrap:"wrap", gap:5, marginTop:10 }}>
-                {salaObj.dotazioni.map(d=><span key={d} style={{ fontSize:11, padding:"3px 8px", borderRadius:20, background:C.surface2, border:`1px solid ${C.border}`, color:C.text2 }}>✓ {d}</span>)}
+                {salaObj.dotazioni.map(d=><span key={d} style={{ fontSize:11, padding:"3px 8px", borderRadius:20, background:MC.surface2, border:`1px solid ${MC.border}`, color:MC.text2 }}>✓ {d}</span>)}
               </div>
             </InfoCard>
           )}
@@ -7444,9 +7444,9 @@ function DettaglioPreventivo({ prev, sale, calcTotale, onEdit, onStato, onDelete
             <InfoCard icon="🖥️" title="Attrezzature" subtitle={`${prev.attrezzature.length} voce${prev.attrezzature.length>1?"i":""}`}>
               {prev.attrezzature.map(a=>{
                 const item=ATTREZZATURE.find(x=>x.id===a.id);
-                return item?<div key={a.id} style={{ display:"flex", justifyContent:"space-between", padding:"5px 0", borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
-                  <span>{item.nome} <span style={{color:C.text3}}>× {a.qty}</span></span>
-                  <span style={{fontWeight:600}}>{fmtEur(item.prezzo*a.qty*giorni)}</span>
+                return item?<div key={a.id} style={{ display:"flex", justifyContent:"space-between", padding:"5px 0", borderBottom:`1px solid ${MC.border}`, fontSize:13 }}>
+                  <span>{item.nome} <span style={{color:MC.text3}}>× {a.qty}</span></span>
+                  <span style={{fontWeight:600}}>{mFmtEur(item.prezzo*a.qty*giorni)}</span>
                 </div>:null;
               })}
             </InfoCard>
@@ -7457,9 +7457,9 @@ function DettaglioPreventivo({ prev, sale, calcTotale, onEdit, onStato, onDelete
             <InfoCard icon="🍽️" title="Food & Beverage" subtitle={`${prev.fb.length} servizi`}>
               {prev.fb.map((f,i)=>{
                 const item=FB_PACKAGES.find(x=>x.id===f.id);
-                return item?<div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"5px 0", borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
-                  <span>{item.nome} <span style={{color:C.text3}}>· {f.momento} · {f.qty}px</span></span>
-                  <span style={{fontWeight:600}}>{fmtEur(item.prezzo*f.qty)}</span>
+                return item?<div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"5px 0", borderBottom:`1px solid ${MC.border}`, fontSize:13 }}>
+                  <span>{item.nome} <span style={{color:MC.text3}}>· {f.momento} · {f.qty}px</span></span>
+                  <span style={{fontWeight:600}}>{mFmtEur(item.prezzo*f.qty)}</span>
                 </div>:null;
               })}
             </InfoCard>
@@ -7468,34 +7468,34 @@ function DettaglioPreventivo({ prev, sale, calcTotale, onEdit, onStato, onDelete
 
         {/* Sidebar totali */}
         <div>
-          <div style={{ background:C.surface, border:`1.5px solid ${C.border}`, borderRadius:10, padding:20, position:"sticky", top:20 }}>
-            <div style={{ fontSize:12, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:C.text3, marginBottom:14 }}>Riepilogo Economico</div>
+          <div style={{ background:MC.surface, border:`1.5px solid ${MC.border}`, borderRadius:10, padding:20, position:"sticky", top:20 }}>
+            <div style={{ fontSize:12, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:MC.text3, marginBottom:14 }}>Riepilogo Economico</div>
             {[
               { label:"Sala meeting", val:tot.sala },
               { label:"Attrezzature", val:tot.attr },
               { label:"Food & Beverage", val:tot.fb },
             ].map(r=>(
-              <div key={r.label} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
-                <span style={{color:C.text2}}>{r.label}</span><span style={{fontWeight:600}}>{fmtEur(r.val)}</span>
+              <div key={r.label} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:`1px solid ${MC.border}`, fontSize:13 }}>
+                <span style={{color:MC.text2}}>{r.label}</span><span style={{fontWeight:600}}>{mFmtEur(r.val)}</span>
               </div>
             ))}
-            <div style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:`1px solid ${C.border}`, fontSize:13, fontWeight:600 }}>
-              <span>Subtotale</span><span>{fmtEur(tot.sub)}</span>
+            <div style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:`1px solid ${MC.border}`, fontSize:13, fontWeight:600 }}>
+              <span>Subtotale</span><span>{mFmtEur(tot.sub)}</span>
             </div>
-            {prev.sconto>0 && <div style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:`1px solid ${C.border}`, fontSize:13, color:C.red }}>
-              <span>Sconto {prev.sconto}%</span><span>− {fmtEur(tot.sconto)}</span>
+            {prev.sconto>0 && <div style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:`1px solid ${MC.border}`, fontSize:13, color:MC.red }}>
+              <span>Sconto {prev.sconto}%</span><span>− {mFmtEur(tot.sconto)}</span>
             </div>}
-            <div style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
-              <span style={{color:C.text2}}>IVA 10%</span><span>{fmtEur(tot.iva)}</span>
+            <div style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:`1px solid ${MC.border}`, fontSize:13 }}>
+              <span style={{color:MC.text2}}>IVA 10%</span><span>{mFmtEur(tot.iva)}</span>
             </div>
             <div style={{ background:"linear-gradient(135deg,#0a1929,#1565c0)", borderRadius:8, padding:"14px 16px", marginTop:12, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <span style={{ color:"rgba(255,255,255,.7)", fontSize:13 }}>TOTALE IVA incl.</span>
-              <span style={{ color:"#fff", fontSize:20, fontWeight:800 }}>{fmtEur(tot.totale)}</span>
+              <span style={{ color:"#fff", fontSize:20, fontWeight:800 }}>{mFmtEur(tot.totale)}</span>
             </div>
 
             <div style={{ marginTop:14 }}>
-              <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:C.text3, marginBottom:8 }}>Cambia stato</div>
-              <select value={prev.stato} onChange={e=>onStato(prev.id,e.target.value)} style={{ width:"100%", padding:"9px", borderRadius:6, border:`1.5px solid ${C.border}`, fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>
+              <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:MC.text3, marginBottom:8 }}>Cambia stato</div>
+              <select value={prev.stato} onChange={e=>onStato(prev.id,e.target.value)} style={{ width:"100%", padding:"9px", borderRadius:6, border:`1.5px solid ${MC.border}`, fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>
                 {Object.entries(STATI).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
               </select>
             </div>
@@ -7538,7 +7538,7 @@ function GestioneSale({ sale, preventivi, onSalva }) {
     <div>
       <div style={{ marginBottom:20 }}>
         <h2 style={{ fontSize:22, fontWeight:700 }}>Configurazione Sale Meeting</h2>
-        <p style={{ fontSize:13, color:C.text3 }}>5 sale configurabili. Modifica capienze, tariffe e dotazioni.</p>
+        <p style={{ fontSize:13, color:MC.text3 }}>5 sale configurabili. Modifica capienze, tariffe e dotazioni.</p>
       </div>
 
       <div style={{ display:"grid", gap:16 }}>
@@ -7548,24 +7548,24 @@ function GestioneSale({ sale, preventivi, onSalva }) {
           const sd = isEditing ? editData : sala;
 
           return (
-            <div key={sala.id} style={{ background:C.surface, borderRadius:12, border:`1px solid ${C.border}`, overflow:"hidden" }}>
+            <div key={sala.id} style={{ background:MC.surface, borderRadius:12, border:`1px solid ${MC.border}`, overflow:"hidden" }}>
               {/* Header sala */}
-              <div style={{ borderLeft:`5px solid ${sala.colore}`, padding:"14px 20px", display:"flex", alignItems:"center", gap:14, borderBottom: isEditing?`1px solid ${C.border}`:"none" }}>
+              <div style={{ borderLeft:`5px solid ${sala.colore}`, padding:"14px 20px", display:"flex", alignItems:"center", gap:14, borderBottom: isEditing?`1px solid ${MC.border}`:"none" }}>
                 <div style={{ flex:1 }}>
                   <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                     <span style={{ fontSize:18, fontWeight:800, color:sala.colore }}>{sala.nome}</span>
-                    <span style={{ fontSize:11, color:C.text3 }}>Piano {sala.piano} · {sala.mq} mq</span>
-                    <span style={{ fontSize:11, background:sala.attiva?C.greenL:C.redL, color:sala.attiva?C.green:C.red, border:`1px solid ${sala.attiva?C.greenLb:C.redLb}`, borderRadius:20, padding:"2px 8px" }}>
+                    <span style={{ fontSize:11, color:MC.text3 }}>Piano {sala.piano} · {sala.mq} mq</span>
+                    <span style={{ fontSize:11, background:sala.attiva?MC.greenL:MC.redL, color:sala.attiva?MC.green:MC.red, border:`1px solid ${sala.attiva?MC.greenLb:MC.redLb}`, borderRadius:20, padding:"2px 8px" }}>
                       {sala.attiva?"● Attiva":"● Inattiva"}
                     </span>
                   </div>
-                  <div style={{ fontSize:12, color:C.text3, marginTop:2 }}>{occTotali} eventi confermati in totale</div>
+                  <div style={{ fontSize:12, color:MC.text3, marginTop:2 }}>{occTotali} eventi confermati in totale</div>
                 </div>
                 <div style={{ display:"flex", gap:8 }}>
-                  {!isEditing && <button onClick={()=>startEdit(sala)} style={{ padding:"7px 14px", borderRadius:6, border:`1px solid ${C.border}`, background:C.surface, cursor:"pointer", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>✏️ Modifica</button>}
+                  {!isEditing && <button onClick={()=>startEdit(sala)} style={{ padding:"7px 14px", borderRadius:6, border:`1px solid ${MC.border}`, background:MC.surface, cursor:"pointer", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>✏️ Modifica</button>}
                   {isEditing && <>
-                    <button onClick={saveEdit} style={{ padding:"7px 16px", borderRadius:6, border:"none", background:C.blue, color:"#fff", cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>💾 Salva</button>
-                    <button onClick={()=>setEditing(null)} style={{ padding:"7px 14px", borderRadius:6, border:`1px solid ${C.border}`, background:C.surface, cursor:"pointer", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>Annulla</button>
+                    <button onClick={saveEdit} style={{ padding:"7px 16px", borderRadius:6, border:"none", background:MC.blue, color:"#fff", cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>💾 Salva</button>
+                    <button onClick={()=>setEditing(null)} style={{ padding:"7px 14px", borderRadius:6, border:`1px solid ${MC.border}`, background:MC.surface, cursor:"pointer", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>Annulla</button>
                   </>}
                 </div>
               </div>
@@ -7574,19 +7574,19 @@ function GestioneSale({ sale, preventivi, onSalva }) {
               {!isEditing && (
                 <div style={{ padding:"14px 20px", display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:16 }}>
                   <div>
-                    <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:C.text3, marginBottom:6 }}>Capienze</div>
-                    {Object.entries(sala.capienze).map(([k,v])=>v>0?<div key={k} style={{fontSize:12,color:C.text2,marginBottom:2}}>{LAYOUT_ICONS[k]} {LAYOUT_LABELS[k]}: <b>{v}</b>px</div>:null)}
+                    <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:MC.text3, marginBottom:6 }}>Capienze</div>
+                    {Object.entries(sala.capienze).map(([k,v])=>v>0?<div key={k} style={{fontSize:12,color:MC.text2,marginBottom:2}}>{LAYOUT_ICONS[k]} {LAYOUT_LABELS[k]}: <b>{v}</b>px</div>:null)}
                   </div>
                   <div>
-                    <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:C.text3, marginBottom:6 }}>Tariffe</div>
-                    <div style={{fontSize:12,color:C.text2,marginBottom:2}}>½ giornata: <b>{fmtEur(sala.tariffe.mezza)}</b></div>
-                    <div style={{fontSize:12,color:C.text2,marginBottom:2}}>Giornata: <b>{fmtEur(sala.tariffe.intera)}</b></div>
-                    {sala.tariffe.settimanale>0&&<div style={{fontSize:12,color:C.text2}}>Settimana: <b>{fmtEur(sala.tariffe.settimanale)}</b></div>}
+                    <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:MC.text3, marginBottom:6 }}>Tariffe</div>
+                    <div style={{fontSize:12,color:MC.text2,marginBottom:2}}>½ giornata: <b>{mFmtEur(sala.tariffe.mezza)}</b></div>
+                    <div style={{fontSize:12,color:MC.text2,marginBottom:2}}>Giornata: <b>{mFmtEur(sala.tariffe.intera)}</b></div>
+                    {sala.tariffe.settimanale>0&&<div style={{fontSize:12,color:MC.text2}}>Settimana: <b>{mFmtEur(sala.tariffe.settimanale)}</b></div>}
                   </div>
                   <div style={{ gridColumn:"3/5" }}>
-                    <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:C.text3, marginBottom:6 }}>Dotazioni</div>
+                    <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:MC.text3, marginBottom:6 }}>Dotazioni</div>
                     <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>
-                      {sala.dotazioni.map(d=><span key={d} style={{fontSize:11,padding:"2px 8px",borderRadius:20,background:C.surface2,border:`1px solid ${C.border}`,color:C.text2}}>✓ {d}</span>)}
+                      {sala.dotazioni.map(d=><span key={d} style={{fontSize:11,padding:"2px 8px",borderRadius:20,background:MC.surface2,border:`1px solid ${MC.border}`,color:MC.text2}}>✓ {d}</span>)}
                     </div>
                   </div>
                 </div>
@@ -7607,7 +7607,7 @@ function GestioneSale({ sale, preventivi, onSalva }) {
                     </Field>
                   </div>
 
-                  <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:C.text3, marginBottom:10, borderBottom:`1px solid ${C.border}`, paddingBottom:6 }}>Capienze per layout</div>
+                  <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:MC.text3, marginBottom:10, borderBottom:`1px solid ${MC.border}`, paddingBottom:6 }}>Capienze per layout</div>
                   <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:10, marginBottom:20 }}>
                     {Object.entries(sd.capienze).map(([k,v])=>(
                       <Field key={k} label={`${LAYOUT_ICONS[k]} ${LAYOUT_LABELS[k]}`}>
@@ -7616,7 +7616,7 @@ function GestioneSale({ sale, preventivi, onSalva }) {
                     ))}
                   </div>
 
-                  <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:C.text3, marginBottom:10, borderBottom:`1px solid ${C.border}`, paddingBottom:6 }}>Tariffe (€/periodo)</div>
+                  <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:MC.text3, marginBottom:10, borderBottom:`1px solid ${MC.border}`, paddingBottom:6 }}>Tariffe (€/periodo)</div>
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginBottom:20 }}>
                     <Field label="Mezza Giornata (€)">
                       <input style={inp} type="number" min={0} value={sd.tariffe.mezza} onChange={e=>upd("tariffe.mezza",parseFloat(e.target.value)||0)}/>
@@ -7635,7 +7635,7 @@ function GestioneSale({ sale, preventivi, onSalva }) {
 
                   <div style={{ marginTop:12, display:"flex", gap:8, alignItems:"center" }}>
                     <label style={{ display:"flex", alignItems:"center", gap:8, cursor:"pointer", fontSize:13 }}>
-                      <input type="checkbox" checked={sd.attiva} onChange={e=>upd("attiva",e.target.checked)} style={{width:16,height:16,accentColor:C.blue}}/>
+                      <input type="checkbox" checked={sd.attiva} onChange={e=>upd("attiva",e.target.checked)} style={{width:16,height:16,accentColor:MC.blue}}/>
                       Sala attiva (disponibile per prenotazione)
                     </label>
                   </div>
@@ -7655,7 +7655,7 @@ function GestioneSale({ sale, preventivi, onSalva }) {
 function printPreventivo(prev, sale, calcTotale) {
   const tot      = calcTotale(prev, sale);
   const salaObj  = sale.find(s=>s.id===prev.sala?.id);
-  const giorni   = Math.max(1, diffDays(prev.evento?.dataInizio, prev.evento?.dataFine)+1);
+  const giorni   = Math.max(1, mDiffDays(prev.evento?.dataInizio, prev.evento?.dataFine)+1);
   const st       = STATI[prev.stato];
 
   const righeAttr = (prev.attrezzature||[]).map(a=>{
@@ -7703,7 +7703,7 @@ function printPreventivo(prev, sale, calcTotale) {
         <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:.6;margin-bottom:4px">PREVENTIVO MICE</div>
         <h1>${prev.id}</h1>
         <span class="badge">${st.label}</span>
-        <div style="font-size:12px;margin-top:8px;opacity:.7">Emesso il ${fmtDate(prev.creatoIl)}</div>
+        <div style="font-size:12px;margin-top:8px;opacity:.7">Emesso il ${mFmtDate(prev.creatoIl)}</div>
       </div>
       <div class="logo-area">
         <h2>Hotel Gasparini ★★★</h2>
@@ -7727,8 +7727,8 @@ function printPreventivo(prev, sale, calcTotale) {
   <div class="grid2">
     <div><div class="lbl">Evento</div><div class="val">${prev.evento?.titolo||"—"}</div></div>
     <div><div class="lbl">Tipologia</div><div class="val">${prev.evento?.tipo||"—"}</div></div>
-    <div><div class="lbl">Data inizio</div><div class="val">${fmtDate(prev.evento?.dataInizio)}</div></div>
-    <div><div class="lbl">Data fine</div><div class="val">${fmtDate(prev.evento?.dataFine)||"—"}</div></div>
+    <div><div class="lbl">Data inizio</div><div class="val">${mFmtDate(prev.evento?.dataInizio)}</div></div>
+    <div><div class="lbl">Data fine</div><div class="val">${mFmtDate(prev.evento?.dataFine)||"—"}</div></div>
     <div><div class="lbl">Orari</div><div class="val">${prev.evento?.oraInizio||"—"} → ${prev.evento?.oraFine||"—"}</div></div>
     <div><div class="lbl">Partecipanti</div><div class="val">${prev.evento?.partecipanti||"—"}</div></div>
   </div>
@@ -7780,7 +7780,7 @@ function printPreventivo(prev, sale, calcTotale) {
 function Field({ label, children, mt, style }) {
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:5, marginTop:mt||0, ...style }}>
-      <label style={{ fontSize:11, fontWeight:700, letterSpacing:.5, textTransform:"uppercase", color:C.text3 }}>{label}</label>
+      <label style={{ fontSize:11, fontWeight:700, letterSpacing:.5, textTransform:"uppercase", color:MC.text3 }}>{label}</label>
       {children}
     </div>
   );
@@ -7788,11 +7788,11 @@ function Field({ label, children, mt, style }) {
 
 function SectionHeader({ icon, title, subtitle, mt }) {
   return (
-    <div style={{ marginTop:mt||0, marginBottom:16, paddingBottom:8, borderBottom:`2px solid ${C.border}`, display:"flex", alignItems:"center", gap:8 }}>
+    <div style={{ marginTop:mt||0, marginBottom:16, paddingBottom:8, borderBottom:`2px solid ${MC.border}`, display:"flex", alignItems:"center", gap:8 }}>
       <span style={{ fontSize:18 }}>{icon}</span>
       <div>
         <div style={{ fontSize:15, fontWeight:700 }}>{title}</div>
-        {subtitle && <div style={{ fontSize:12, color:C.text3 }}>{subtitle}</div>}
+        {subtitle && <div style={{ fontSize:12, color:MC.text3 }}>{subtitle}</div>}
       </div>
     </div>
   );
@@ -7800,12 +7800,12 @@ function SectionHeader({ icon, title, subtitle, mt }) {
 
 function InfoCard({ icon, title, subtitle, children }) {
   return (
-    <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, overflow:"hidden" }}>
-      <div style={{ padding:"12px 16px", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", gap:8, background:C.surface2 }}>
+    <div style={{ background:MC.surface, border:`1px solid ${MC.border}`, borderRadius:10, overflow:"hidden" }}>
+      <div style={{ padding:"12px 16px", borderBottom:`1px solid ${MC.border}`, display:"flex", alignItems:"center", gap:8, background:MC.surface2 }}>
         <span style={{ fontSize:15 }}>{icon}</span>
         <div>
           <div style={{ fontWeight:700, fontSize:14 }}>{title}</div>
-          {subtitle && <div style={{ fontSize:11, color:C.text3 }}>{subtitle}</div>}
+          {subtitle && <div style={{ fontSize:11, color:MC.text3 }}>{subtitle}</div>}
         </div>
       </div>
       <div style={{ padding:"14px 16px" }}>{children}</div>
@@ -7818,7 +7818,7 @@ function InfoGrid({ items }) {
     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))", gap:10 }}>
       {items.map(it=>(
         <div key={it.k}>
-          <div style={{ fontSize:10, fontWeight:700, letterSpacing:.5, textTransform:"uppercase", color:C.text3, marginBottom:2 }}>{it.k}</div>
+          <div style={{ fontSize:10, fontWeight:700, letterSpacing:.5, textTransform:"uppercase", color:MC.text3, marginBottom:2 }}>{it.k}</div>
           <div style={{ fontSize:13, fontWeight:600 }}>{it.v||"—"}</div>
         </div>
       ))}
@@ -7840,20 +7840,20 @@ function CtaBtn({ color, outline, onClick, children }) {
 
 // ─── STYLE CONSTANTS ─────────────────────────────────────────────
 const inp = {
-  border:`1.5px solid ${C.border}`, borderRadius:6, padding:"8px 12px",
-  fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif", color:C.text,
-  outline:"none", width:"100%", background:C.surface,
+  border:`1.5px solid ${MC.border}`, borderRadius:6, padding:"8px 12px",
+  fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif", color:MC.text,
+  outline:"none", width:"100%", background:MC.surface,
 };
 const grid2 = { display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 };
 const btnNext = {
   display:"inline-flex", alignItems:"center", gap:6,
   padding:"10px 20px", borderRadius:6, border:"none",
-  background:C.blue, color:"#fff", cursor:"pointer", fontWeight:700,
+  background:MC.blue, color:"#fff", cursor:"pointer", fontWeight:700,
   fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif",
 };
 const btnBack = {
   display:"inline-flex", alignItems:"center", gap:6,
-  padding:"10px 18px", borderRadius:6, border:`1px solid ${C.border}`,
-  background:C.surface, color:C.text2, cursor:"pointer",
+  padding:"10px 18px", borderRadius:6, border:`1px solid ${MC.border}`,
+  background:MC.surface, color:MC.text2, cursor:"pointer",
   fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif",
 };
