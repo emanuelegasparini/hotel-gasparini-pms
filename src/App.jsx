@@ -202,7 +202,7 @@ const STATUS_CFG = {
   cancelled:    { bg: C.redL,   text: C.red,   border: C.redLb,   label: "Annullato" },
 };
 
-const PAGES = ["Dashboard","Prenotazioni","Anagrafica","Check-In/Out","Disponibilità","Camere","Prezzi & Revenue","Cassa","Pubblica Sicurezza","ISTAT Veneto","API & Integrazioni","Ristorante POS"];
+const PAGES = ["Dashboard","Prenotazioni","Anagrafica","Check-In/Out","Disponibilità","Camere","Prezzi & Revenue","Cassa","Pubblica Sicurezza","ISTAT Veneto","API & Integrazioni","Ristorante POS","Statistiche"];
 
 // - HELPERS -
 
@@ -1069,11 +1069,12 @@ const PAGE_ICONS = {
   "API & Integrazioni":"⚡",
   "Ristorante POS":    "🍽",
   "MICE & Meeting":    "🎯",
+  "Statistiche":       "📈",
 };
 const PAGE_GROUPS = [
   { label:"Front Office",   pages:["Dashboard","Prenotazioni","Anagrafica","Check-In/Out","Disponibilità"] },
   { label:"Gestione",       pages:["Camere","Prezzi & Revenue","Cassa","MICE & Meeting"] },
-  { label:"Reportistica",   pages:["Pubblica Sicurezza","ISTAT Veneto"] },
+  { label:"Reportistica",   pages:["Pubblica Sicurezza","ISTAT Veneto","Statistiche"] },
   { label:"Integrazioni",   pages:["API & Integrazioni","Ristorante POS"] },
 ];
 
@@ -6077,6 +6078,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
 
         {/*   MICE & MEETING   */}
         {page==="MICE & Meeting" && <MICEModule reservations={reservations} setReservations={setReservations} guests={guests} />}
+        {page==="Statistiche"   && <StatisticheModule reservations={reservations} guests={guests} rooms={rooms} preventivi={preventivi} />}
 
         {/* ── MODAL PREVENTIVO MICE ── */}
         {micePreviewEv && (() => {
@@ -8226,3 +8228,947 @@ const btnBack = {
   background:MC.surface, color:MC.text2, cursor:"pointer",
   fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif",
 };
+
+
+
+// ═══════════════════════════════════════════════════════════════════
+//  MODULO BI — Business Intelligence Dashboard
+//  Hotel Gasparini PMS · KPI · Charts · Heatmap · Trend Analysis
+// ═══════════════════════════════════════════════════════════════════
+
+// ─── DATI DEMO (12 mesi di storia) ──────────────────────────────────
+const DEMO_STATS_RES = (() => {
+  const ROOM_TYPES  = ["Standard","Standard","Standard","Standard","Standard","Superior","Superior","Deluxe","Deluxe","Junior Suite","Suite","Suite Vista Laguna"];
+  const ROOM_PRICES = { "Standard":90,"Superior":140,"Deluxe":190,"Junior Suite":240,"Suite":300,"Suite Vista Laguna":360 };
+  const NAZIONI     = ["IT","IT","IT","IT","IT","DE","DE","DE","FR","FR","GB","AT","CH","NL","US","BE","PL","CN","JP","ES"];
+  const SERVIZI_ALL = [["colazione"],["colazione","parcheggio"],["spa","colazione"],["colazione"],["parcheggio"],["transfer"],["colazione","minibar"],["spa"],[]];
+  const METODI      = ["Carta di Credito","Carta di Credito","Carta di Credito","Contanti","Bonifico","PayPal"];
+  const SVC_PRICE   = {colazione:18,parcheggio:20,spa:45,transfer:60,minibar:35,laundry:25};
+  const BASE = new Date("2026-02-26");
+
+  // Stagionalità mensile (gen=0 … dic=11)
+  const STAGIONE = [0.44,0.49,0.60,0.71,0.82,0.91,0.96,0.93,0.86,0.70,0.53,0.46];
+  // Fattore giorno settimana (0=dom … 6=sab)
+  const DOW_W    = [0.65,0.78,0.82,0.85,0.90,0.95,0.72];
+
+  const res = []; let id = 2000;
+  for (let m = 0; m < 14; m++) {
+    const d = new Date(BASE); d.setMonth(d.getMonth() - m);
+    const mese = d.getMonth();
+    const anno = d.getFullYear();
+    const giorni_nel_mese = new Date(anno, mese+1, 0).getDate();
+    const coeff = STAGIONE[mese];
+    const nPrenotazioni = Math.round(20 * coeff + (Math.random()*5-2.5));
+    for (let i = 0; i < nPrenotazioni; i++) {
+      const gg = Math.floor(Math.random() * (giorni_nel_mese - 5)) + 1;
+      const dow = new Date(anno, mese, gg).getDay();
+      const notti = Math.floor(Math.random() * 5) + 1;
+      const tipo  = ROOM_TYPES[Math.floor(Math.random()*ROOM_TYPES.length)];
+      const prezzo = ROOM_PRICES[tipo] || 120;
+      const svcs = SERVIZI_ALL[Math.floor(Math.random()*SERVIZI_ALL.length)];
+      const svcCost = svcs.reduce((s,sv)=>s+(SVC_PRICE[sv]||0),0);
+      const ci = new Date(anno,mese,gg);
+      const co = new Date(ci); co.setDate(co.getDate()+notti);
+      const totale = prezzo * notti + svcCost;
+      const naz = NAZIONI[Math.floor(Math.random()*NAZIONI.length)];
+      const adulti = Math.floor(Math.random()*2)+1;
+      const stato  = m===0&&i<3?"checked-in":m===0&&i<7?"reserved":"checked-out";
+      // Booking window (giorni di anticipo)
+      const window = Math.floor(Math.random()*90);
+      res.push({
+        id:`RS${id++}`, guestName:`Ospite ${id}`, guestId:`G_DEMO_${id}`,
+        roomId: 100+Math.floor(Math.random()*50), roomType:tipo,
+        checkIn:ci.toISOString().slice(0,10), checkOut:co.toISOString().slice(0,10),
+        notti, adulti, bambini:Math.random()>.75?1:0, guests:adulti,
+        services:svcs, status:stato,
+        payments:[{amount:totale,method:METODI[Math.floor(Math.random()*METODI.length)],date:ci.toISOString().slice(0,10)}],
+        nazionalita:naz, prezzo, totale, dow, bookingWindow:window,
+        istatRegistrato:stato==="checked-out", psInviato:stato==="checked-out",
+      });
+    }
+  }
+  return res;
+})();
+
+// ─── BI COLOR PALETTE (dark theme) ──────────────────────────────────
+const BI = {
+  bg:       "#070c14",
+  surface:  "#0d1520",
+  surface2: "#111d2e",
+  surface3: "#162336",
+  border:   "#1e3048",
+  border2:  "#243a56",
+  text:     "#e2eaf5",
+  text2:    "#8aa3bf",
+  text3:    "#4a6480",
+  // Accenti
+  cyan:     "#00c8ff",
+  cyanDim:  "#0a3d52",
+  green:    "#00e676",
+  greenDim: "#0a3322",
+  red:      "#ff4d6d",
+  redDim:   "#3a0a14",
+  amber:    "#ffa726",
+  amberDim: "#3a2200",
+  purple:   "#b388ff",
+  purpleDim:"#2a1a4a",
+  // Serie grafici
+  series: ["#00c8ff","#00e676","#ffa726","#b388ff","#ff4d6d","#40c4ff","#69f0ae","#ffd740"],
+};
+
+// ─── MINI COMPONENTI SVG ────────────────────────────────────────────
+function SparkLine({ data, color="#00c8ff", width=80, height=28 }) {
+  if (!data || data.length < 2) return null;
+  const max = Math.max(...data, 1);
+  const min = Math.min(...data, 0);
+  const range = max - min || 1;
+  const pts = data.map((v,i) => {
+    const x = (i / (data.length-1)) * width;
+    const y = height - ((v-min)/range) * (height-4) - 2;
+    return `${x},${y}`;
+  }).join(" ");
+  const area = `0,${height} ` + pts + ` ${width},${height}`;
+  return (
+    <svg width={width} height={height} style={{overflow:"visible"}}>
+      <defs>
+        <linearGradient id={`sg_${color.replace("#","")}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.3"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0"/>
+        </linearGradient>
+      </defs>
+      <polygon points={area} fill={`url(#sg_${color.replace("#","")})`}/>
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+}
+
+function AreaChart({ data, color="#00c8ff", color2=null, label1="", label2="", yFmt=v=>v, width=440, height=160 }) {
+  const [tooltip, setTooltip] = useState(null);
+  if (!data || data.length === 0) return null;
+  const pad = { l:44, r:12, t:10, b:28 };
+  const cw = width - pad.l - pad.r;
+  const ch = height - pad.t - pad.b;
+
+  const vals1 = data.map(d=>d.v1||0);
+  const vals2 = data.map(d=>d.v2||0);
+  const allVals = color2 ? [...vals1,...vals2] : vals1;
+  const maxV = Math.max(...allVals, 1);
+
+  const toX = i => pad.l + (i/(data.length-1)) * cw;
+  const toY = v => pad.t + ch - (v/maxV)*ch;
+
+  const pts1 = data.map((d,i)=>`${toX(i)},${toY(d.v1||0)}`).join(" ");
+  const area1 = `${pad.l},${pad.t+ch} ` + pts1 + ` ${pad.l+cw},${pad.t+ch}`;
+  const pts2 = color2 ? data.map((d,i)=>`${toX(i)},${toY(d.v2||0)}`).join(" ") : "";
+  const area2 = color2 ? `${pad.l},${pad.t+ch} ` + pts2 + ` ${pad.l+cw},${pad.t+ch}` : "";
+
+  // Y grid lines (4)
+  const yTicks = [0,.25,.5,.75,1].map(f=>maxV*f);
+
+  return (
+    <svg width={width} height={height} style={{overflow:"visible",cursor:"crosshair"}}
+      onMouseMove={e=>{
+        const rect = e.currentTarget.getBoundingClientRect();
+        const mx = e.clientX - rect.left - pad.l;
+        const idx = Math.round(mx/cw*(data.length-1));
+        if(idx>=0&&idx<data.length) setTooltip({idx,x:toX(idx),y:e.clientY-rect.top});
+      }}
+      onMouseLeave={()=>setTooltip(null)}>
+      <defs>
+        <linearGradient id="ga1" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.25"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0"/>
+        </linearGradient>
+        {color2 && <linearGradient id="ga2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color2} stopOpacity="0.15"/>
+          <stop offset="100%" stopColor={color2} stopOpacity="0"/>
+        </linearGradient>}
+      </defs>
+      {/* Grid */}
+      {yTicks.map((v,i)=>(
+        <g key={i}>
+          <line x1={pad.l} y1={toY(v)} x2={pad.l+cw} y2={toY(v)} stroke={BI.border} strokeWidth="1" strokeDasharray="3,4"/>
+          <text x={pad.l-6} y={toY(v)+4} textAnchor="end" fontSize="9" fill={BI.text3}>{yFmt(v)}</text>
+        </g>
+      ))}
+      {/* Areas */}
+      {color2 && <polygon points={area2} fill="url(#ga2)"/>}
+      <polygon points={area1} fill="url(#ga1)"/>
+      {/* Lines */}
+      {color2 && <polyline points={pts2} fill="none" stroke={color2} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4,3"/>}
+      <polyline points={pts1} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      {/* X labels */}
+      {data.filter((_,i)=>i%2===0||data.length<=8).map((d,i)=>{
+        const origIdx = data.indexOf(d);
+        return <text key={i} x={toX(origIdx)} y={pad.t+ch+16} textAnchor="middle" fontSize="9" fill={BI.text3}>{d.label}</text>;
+      })}
+      {/* Tooltip */}
+      {tooltip && tooltip.idx < data.length && (
+        <g>
+          <line x1={tooltip.x} y1={pad.t} x2={tooltip.x} y2={pad.t+ch} stroke={BI.text3} strokeWidth="1" strokeDasharray="3,3"/>
+          <circle cx={tooltip.x} cy={toY(data[tooltip.idx].v1||0)} r="4" fill={color} stroke={BI.bg} strokeWidth="2"/>
+          {color2&&<circle cx={tooltip.x} cy={toY(data[tooltip.idx].v2||0)} r="3" fill={color2} stroke={BI.bg} strokeWidth="1.5"/>}
+          <rect x={tooltip.x+8} y={tooltip.y-28} width={90} height={color2?38:22} rx="4" fill={BI.surface3} stroke={BI.border2}/>
+          <text x={tooltip.x+13} y={tooltip.y-14} fontSize="10" fill={BI.text}>{label1}: {yFmt(data[tooltip.idx].v1||0)}</text>
+          {color2&&<text x={tooltip.x+13} y={tooltip.y+2} fontSize="10" fill={color2}>{label2}: {yFmt(data[tooltip.idx].v2||0)}</text>}
+        </g>
+      )}
+    </svg>
+  );
+}
+
+function DonutChart({ slices, size=120 }) {
+  const r = size*0.38, cx=size/2, cy=size/2, stroke=size*0.18;
+  const tot = slices.reduce((s,v)=>s+v.val,0)||1;
+  let angle = -90;
+  const paths = slices.map(s=>{
+    const pct=s.val/tot, a1=angle*Math.PI/180, a2=(angle+pct*360)*Math.PI/180;
+    const x1=cx+r*Math.cos(a1),y1=cy+r*Math.sin(a1),x2=cx+r*Math.cos(a2),y2=cy+r*Math.sin(a2);
+    const large=pct>0.5?1:0;
+    const d=`M${cx} ${cy} L${x1} ${y1} A${r} ${r} 0 ${large} 1 ${x2} ${y2}Z`;
+    angle+=pct*360;
+    return {...s,d,pct};
+  });
+  return (
+    <svg width={size} height={size}>
+      {paths.map((p,i)=><path key={i} d={p.d} fill={p.color} stroke={BI.bg} strokeWidth="2"/>)}
+      <circle cx={cx} cy={cy} r={r-stroke} fill={BI.surface}/>
+    </svg>
+  );
+}
+
+function HeatMap({ data, rows, cols, colorFn, cellW=32, cellH=22 }) {
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:2}}>
+      {rows.map((row,ri)=>(
+        <div key={ri} style={{display:"flex",alignItems:"center",gap:2}}>
+          <div style={{width:28,fontSize:9,color:BI.text3,textAlign:"right",paddingRight:4,flexShrink:0}}>{row}</div>
+          {cols.map((col,ci)=>{
+            const v=data[ri]?.[ci]??0;
+            const {bg,label}=colorFn(v);
+            return (
+              <div key={ci} title={`${row} ${col}: ${label}`} style={{
+                width:cellW,height:cellH,borderRadius:3,background:bg,
+                display:"flex",alignItems:"center",justifyContent:"center",
+                fontSize:8,color:v>0.6?"#000":"#fff",fontWeight:600,cursor:"default",
+                transition:"transform .1s",
+              }}
+              onMouseEnter={e=>e.currentTarget.style.transform="scale(1.15)"}
+              onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>
+                {v>0?Math.round(v*100):""}
+              </div>
+            );
+          })}
+        </div>
+      ))}
+      <div style={{display:"flex",gap:2,marginTop:4}}>
+        <div style={{width:28}}/>
+        {cols.map((c,i)=><div key={i} style={{width:cellW,textAlign:"center",fontSize:9,color:BI.text3}}>{c}</div>)}
+      </div>
+    </div>
+  );
+}
+
+// ─── MAIN MODULE ────────────────────────────────────────────────────
+function StatisticheModule({ reservations=[], guests=[], rooms=[], preventivi=[] }) {
+  const [periodo,    setPeriodo]    = useState("12m");
+  const [sezione,    setSezione]    = useState("overview");
+  const [confronto,  setConfronto]  = useState(true);
+  const [filtroTipo, setFiltroTipo] = useState("tutti");
+
+  // ─── MERGE dati reali + demo ──────────────────────────────────────
+  const allRes = useMemo(()=>{
+    const reali = reservations.map(r=>{
+      if(r.roomType) return r;
+      const rm=ROOMS.find(x=>x.id===r.roomId);
+      return{...r,roomType:rm?.type||"Standard",prezzo:rm?.price||90,
+        totale:(r.payments||[]).reduce((s,p)=>s+(p.amount||0),0),
+        nazionalita:guests.find(g=>g.id===r.guestId)?.nazionalita||"IT",
+        notti:Math.max(1,Math.round((new Date(r.checkOut)-new Date(r.checkIn))/86400000)),
+      };
+    });
+    return [...DEMO_STATS_RES,...reali];
+  },[reservations,guests]);
+
+  // ─── RANGE PERIODI ────────────────────────────────────────────────
+  const ranges = useMemo(()=>{
+    const oggi = new Date("2026-02-26");
+    const sub  = (months) => { const d=new Date(oggi);d.setMonth(d.getMonth()-months);return d.toISOString().slice(0,10); };
+    const map  = {
+      "1m":  { cur:[sub(1),oggi.toISOString().slice(0,10)],   prev:[sub(2),sub(1)],   label:"Ultimo mese" },
+      "3m":  { cur:[sub(3),oggi.toISOString().slice(0,10)],   prev:[sub(6),sub(3)],   label:"Ultimi 3 mesi" },
+      "6m":  { cur:[sub(6),oggi.toISOString().slice(0,10)],   prev:[sub(12),sub(6)],  label:"Ultimi 6 mesi" },
+      "12m": { cur:[sub(12),oggi.toISOString().slice(0,10)],  prev:[sub(24),sub(12)], label:"Ultimi 12 mesi" },
+      "ytd": { cur:["2026-01-01",oggi.toISOString().slice(0,10)], prev:["2025-01-01","2025-02-26"], label:"Anno corrente" },
+    };
+    return map[periodo]||map["12m"];
+  },[periodo]);
+
+  const filterRes = useCallback((from,to,tipo="tutti")=>
+    allRes.filter(r=>r.checkIn>=from&&r.checkIn<=to&&r.status!=="cancelled"&&(tipo==="tutti"||r.roomType===tipo))
+  ,[allRes]);
+
+  const resCur  = useMemo(()=>filterRes(...ranges.cur,filtroTipo),[filterRes,ranges,filtroTipo]);
+  const resPrev = useMemo(()=>filterRes(...ranges.prev,filtroTipo),[filterRes,ranges,filtroTipo]);
+
+  // ─── KPI CALC ─────────────────────────────────────────────────────
+  const calcKPI = useCallback((res,from,to)=>{
+    const giorni=Math.max(1,Math.round((new Date(to)-new Date(from))/86400000));
+    const filteredRooms = filtroTipo==="tutti" ? ROOMS : ROOMS.filter(r=>r.type===filtroTipo);
+    const totCam=filteredRooms.length;
+    const dispNotti=totCam*giorni;
+    const venduteNotti=res.reduce((s,r)=>s+(r.notti||1),0);
+    const revCam=res.reduce((s,r)=>s+((r.prezzo||90)*(r.notti||1)),0);
+    const revSvc=res.reduce((s,r)=>s+Math.max(0,(r.totale||0)-((r.prezzo||90)*(r.notti||1))),0);
+    const n=res.length;
+    return {
+      occ:   dispNotti>0?Math.min(100,(venduteNotti/dispNotti)*100):0,
+      adr:   venduteNotti>0?revCam/venduteNotti:0,
+      revpar:dispNotti>0?revCam/dispNotti:0,
+      trevpar:dispNotti>0?(revCam+revSvc)/dispNotti:0,
+      los:   n>0?venduteNotti/n:0,
+      rev:   revCam+revSvc,
+      revCam,revSvc,n,venduteNotti,dispNotti,
+    };
+  },[filtroTipo]);
+
+  const kpiCur  = useMemo(()=>calcKPI(resCur,...ranges.cur),[calcKPI,resCur,ranges]);
+  const kpiPrev = useMemo(()=>calcKPI(resPrev,...ranges.prev),[calcKPI,resPrev,ranges]);
+
+  // Delta % vs periodo precedente
+  const delta = useCallback((cur,prev)=>{
+    if(prev===0) return {pct:null,up:true};
+    const pct=(cur-prev)/prev*100;
+    return {pct,up:pct>=0,fmt:(pct>=0?"▲":"▼")+Math.abs(pct).toFixed(1)+"%"};
+  },[]);
+
+  // ─── TREND MENSILE ────────────────────────────────────────────────
+  const trendMensile = useMemo(()=>{
+    const mesi=[];
+    const base=new Date("2026-02-26");
+    for(let i=11;i>=0;i--){
+      const d=new Date(base); d.setMonth(d.getMonth()-i);
+      const key=d.toISOString().slice(0,7);
+      const label=d.toLocaleDateString("it-IT",{month:"short"}).slice(0,3).toUpperCase();
+      const res=allRes.filter(r=>r.checkIn?.startsWith(key)&&r.status!=="cancelled"&&(filtroTipo==="tutti"||r.roomType===filtroTipo));
+      const giorni=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+      const filteredRooms=filtroTipo==="tutti"?ROOMS:ROOMS.filter(r=>r.type===filtroTipo);
+      const disp=filteredRooms.length*giorni;
+      const notti=res.reduce((s,r)=>s+(r.notti||1),0);
+      const rev=res.reduce((s,r)=>s+((r.prezzo||90)*(r.notti||1)),0);
+      const adr=notti>0?rev/notti:0;
+      const prevKey=new Date(d.getFullYear(),d.getMonth()-12,1).toISOString().slice(0,7);
+      const resPrevM=allRes.filter(r=>r.checkIn?.startsWith(prevKey)&&r.status!=="cancelled");
+      const revPrevM=resPrevM.reduce((s,r)=>s+((r.prezzo||90)*(r.notti||1)),0);
+      mesi.push({key,label,v1:rev,v2:revPrevM,occ:disp>0?Math.min(100,notti/disp*100):0,adr,res:res.length});
+    }
+    return mesi;
+  },[allRes,filtroTipo]);
+
+  // Sparkline data per KPI
+  const sparklines = useMemo(()=>{
+    const base=new Date("2026-02-26");
+    return ["occ","adr","revpar","rev","los"].reduce((acc,k)=>{
+      acc[k]=Array.from({length:8},(_,i)=>{
+        const d=new Date(base);d.setMonth(d.getMonth()-(7-i));
+        const key=d.toISOString().slice(0,7);
+        const res=allRes.filter(r=>r.checkIn?.startsWith(key)&&r.status!=="cancelled");
+        const giorni=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+        const disp=ROOMS.length*giorni;
+        const notti=res.reduce((s,r)=>s+(r.notti||1),0);
+        const rev=res.reduce((s,r)=>s+((r.prezzo||90)*(r.notti||1)),0);
+        if(k==="occ")    return disp>0?notti/disp*100:0;
+        if(k==="adr")    return notti>0?rev/notti:0;
+        if(k==="revpar") return disp>0?rev/disp:0;
+        if(k==="rev")    return rev;
+        if(k==="los")    return res.length>0?notti/res.length:0;
+        return 0;
+      });
+      return acc;
+    },{});
+  },[allRes]);
+
+  // ─── HEATMAP DoW × Mese ──────────────────────────────────────────
+  const heatData = useMemo(()=>{
+    const DOW=["Lun","Mar","Mer","Gio","Ven","Sab","Dom"];
+    const MESI_12=[];
+    const base=new Date("2026-02-26");
+    for(let i=5;i>=0;i--){const d=new Date(base);d.setMonth(d.getMonth()-i);MESI_12.push(d.toISOString().slice(0,7));}
+    const grid=DOW.map(()=>MESI_12.map(()=>0));
+    const cnt =DOW.map(()=>MESI_12.map(()=>0));
+    allRes.filter(r=>r.status!=="cancelled").forEach(r=>{
+      if(!r.checkIn) return;
+      const d=new Date(r.checkIn+"T12:00:00");
+      const dow=(d.getDay()+6)%7; // 0=lun
+      const mkey=r.checkIn.slice(0,7);
+      const mi=MESI_12.indexOf(mkey);
+      if(mi>=0){grid[dow][mi]+=(r.notti||1);cnt[dow][mi]++;}
+    });
+    const flatRooms=ROOMS.length;
+    const maxVal=Math.max(1,...grid.flat());
+    return{
+      rows:DOW,
+      cols:MESI_12.map(k=>{const d=new Date(k+"-15");return d.toLocaleDateString("it-IT",{month:"short"}).toUpperCase();}),
+      data:grid.map(row=>row.map(v=>v/maxVal)),
+      raw:grid,
+    };
+  },[allRes]);
+
+  // ─── PERFORMANCE PER TIPO CAMERA ─────────────────────────────────
+  const perfTipo = useMemo(()=>{
+    const tipi=[...new Set(ROOMS.map(r=>r.type))];
+    return tipi.map(tipo=>{
+      const res=resCur.filter(r=>r.roomType===tipo);
+      const nc=ROOMS.filter(r=>r.type===tipo).length;
+      const giorni=Math.max(1,Math.round((new Date(ranges.cur[1])-new Date(ranges.cur[0]))/86400000));
+      const disp=nc*giorni,notti=res.reduce((s,r)=>s+(r.notti||1),0);
+      const rev=res.reduce((s,r)=>s+((r.prezzo||90)*(r.notti||1)),0);
+      return{tipo,nc,res:res.length,occ:disp>0?Math.min(100,notti/disp*100):0,adr:notti>0?rev/notti:0,revpar:disp>0?rev/disp:0,rev};
+    }).sort((a,b)=>b.rev-a.rev);
+  },[resCur,ranges]);
+
+  // ─── TOP NAZIONALITÀ ─────────────────────────────────────────────
+  const topNaz = useMemo(()=>{
+    const map={};
+    resCur.forEach(r=>{const n=r.nazionalita||"IT";map[n]=(map[n]||0)+1;});
+    const NOMI={IT:"Italia",DE:"Germania",FR:"Francia",GB:"Gran Bretagna",AT:"Austria",CH:"Svizzera",NL:"Olanda",US:"USA",BE:"Belgio",PL:"Polonia",RU:"Russia",CN:"Cina",JP:"Giappone",ES:"Spagna"};
+    const FLAGS={IT:"🇮🇹",DE:"🇩🇪",FR:"🇫🇷",GB:"🇬🇧",AT:"🇦🇹",CH:"🇨🇭",NL:"🇳🇱",US:"🇺🇸",BE:"🇧🇪",PL:"🇵🇱",RU:"🇷🇺",CN:"🇨🇳",JP:"🇯🇵",ES:"🇪🇸"};
+    return Object.entries(map).map(([k,v])=>({k,nome:NOMI[k]||k,flag:FLAGS[k]||"🌍",val:v})).sort((a,b)=>b.val-a.val).slice(0,8);
+  },[resCur]);
+
+  // ─── BOOKING WINDOW ──────────────────────────────────────────────
+  const bookingWindow = useMemo(()=>[
+    {label:"Same day",check:n=>n===0},
+    {label:"1-7 gg",check:n=>n>=1&&n<=7},
+    {label:"8-14 gg",check:n=>n>=8&&n<=14},
+    {label:"15-30 gg",check:n=>n>=15&&n<=30},
+    {label:"31-60 gg",check:n=>n>=31&&n<=60},
+    {label:"61-90 gg",check:n=>n>=61&&n<=90},
+    {label:"90+ gg",check:n=>n>90},
+  ].map(f=>({...f,val:resCur.filter(r=>f.check(r.bookingWindow??0)).length})),[resCur]);
+
+  // ─── FORMATTERS ───────────────────────────────────────────────────
+  const fE  = n=>"€"+(n||0).toLocaleString("it-IT",{maximumFractionDigits:0});
+  const fP  = n=>(n||0).toFixed(1)+"%";
+  const fN  = n=>(n||0).toFixed(1);
+
+  // ─── TIPI CAMERA per filtro ───────────────────────────────────────
+  const tipiCamera = [...new Set(ROOMS.map(r=>r.type))];
+
+  // Heatmap color fn
+  const heatColor = (v)=>{
+    if(v===0) return {bg:BI.surface3,label:"0"};
+    const intensity=Math.min(1,v);
+    if(intensity<0.33) return {bg:`rgba(0,200,255,${0.15+intensity*0.5})`,label:fP(v*100)};
+    if(intensity<0.67) return {bg:`rgba(0,230,118,${0.25+intensity*0.4})`,label:fP(v*100)};
+    return {bg:`rgba(255,167,38,${0.35+intensity*0.45})`,label:fP(v*100)};
+  };
+
+  // ─── UI HELPERS ───────────────────────────────────────────────────
+  const KPICard = ({label,val,delta:d,spark,sparkColor,unit,icon})=>{
+    const dEl = d && d.pct!==null ? (
+      <span style={{fontSize:11,color:d.up?BI.green:BI.red,fontWeight:700,marginLeft:6}}>{d.fmt}</span>
+    ):null;
+    return (
+      <div style={{background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:10,padding:"14px 16px",display:"flex",flexDirection:"column",gap:6,position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",bottom:0,right:0,opacity:.35}}>
+          {spark && <SparkLine data={spark} color={sparkColor||BI.cyan} width={80} height={36}/>}
+        </div>
+        <div style={{fontSize:11,color:BI.text3,letterSpacing:.8,textTransform:"uppercase",fontWeight:600}}>{icon} {label}</div>
+        <div style={{fontSize:26,fontWeight:800,fontFamily:"'IBM Plex Mono',monospace",color:BI.text,letterSpacing:-1}}>
+          {val}{unit&&<span style={{fontSize:14,fontWeight:400,color:BI.text2,marginLeft:2}}>{unit}</span>}
+        </div>
+        {confronto && <div style={{fontSize:11,color:BI.text3}}>
+          vs periodo prec.{dEl}
+        </div>}
+      </div>
+    );
+  };
+
+  const sezNav=[
+    {k:"overview",icon:"◈",label:"Overview"},
+    {k:"revenue",icon:"◆",label:"Revenue"},
+    {k:"ospiti",icon:"◉",label:"Ospiti"},
+    {k:"camere",icon:"▣",label:"Camere"},
+    {k:"booking",icon:"◎",label:"Booking"},
+  ];
+
+  // ─── RENDER ───────────────────────────────────────────────────────
+  return (
+    <div style={{background:BI.bg,borderRadius:12,minHeight:"calc(100vh - 120px)",padding:20,fontFamily:"'IBM Plex Sans',monospace",color:BI.text}}>
+      <style>{`
+        .bi-tab:hover{background:${BI.surface2}!important;}
+        .bi-row:hover{background:${BI.surface2}!important;}
+        .bi-pill{display:inline-flex;align-items:center;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid;}
+        @keyframes biPulse{0%,100%{opacity:1}50%{opacity:.5}}
+      `}</style>
+
+      {/* ── TOPBAR ── */}
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,flexWrap:"wrap",gap:10}}>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <div style={{width:36,height:36,borderRadius:8,background:"linear-gradient(135deg,#00c8ff22,#00c8ff44)",border:`1px solid ${BI.cyan}44`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>📊</div>
+          <div>
+            <div style={{fontSize:16,fontWeight:800,color:BI.cyan,letterSpacing:.5}}>BUSINESS INTELLIGENCE</div>
+            <div style={{fontSize:11,color:BI.text3}}>{ranges.label} · {resCur.length} prenotazioni analizzate</div>
+          </div>
+        </div>
+
+        <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+          {/* Filtro tipo camera */}
+          <select value={filtroTipo} onChange={e=>setFiltroTipo(e.target.value)}
+            style={{background:BI.surface2,border:`1px solid ${BI.border2}`,color:BI.text2,padding:"6px 10px",borderRadius:6,fontSize:12,fontFamily:"'IBM Plex Sans',sans-serif",cursor:"pointer"}}>
+            <option value="tutti">Tutte le camere</option>
+            {tipiCamera.map(t=><option key={t} value={t}>{t}</option>)}
+          </select>
+
+          {/* Periodo */}
+          <div style={{display:"flex",background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:8,padding:3,gap:2}}>
+            {[["1m","1M"],["3m","3M"],["6m","6M"],["12m","12M"],["ytd","YTD"]].map(([k,l])=>(
+              <button key={k} onClick={()=>setPeriodo(k)} className="bi-tab" style={{
+                padding:"5px 12px",borderRadius:6,border:"none",cursor:"pointer",fontSize:12,fontWeight:700,
+                fontFamily:"'IBM Plex Mono',monospace",letterSpacing:.5,
+                background:periodo===k?"linear-gradient(135deg,#00c8ff22,#00c8ff11)":"transparent",
+                color:periodo===k?BI.cyan:BI.text3,
+                boxShadow:periodo===k?`0 0 8px ${BI.cyan}22`:"none",
+              }}>{l}</button>
+            ))}
+          </div>
+
+          {/* Toggle confronto */}
+          <button onClick={()=>setConfronto(v=>!v)} style={{
+            padding:"6px 12px",borderRadius:6,border:`1px solid ${confronto?BI.cyan+"44":BI.border}`,
+            background:confronto?BI.cyanDim:"transparent",color:confronto?BI.cyan:BI.text3,
+            fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"'IBM Plex Sans',sans-serif",
+          }}>
+            {confronto?"◈ VS PREV":"◯ VS PREV"}
+          </button>
+        </div>
+      </div>
+
+      {/* ── SEZIONI NAV ── */}
+      <div style={{display:"flex",gap:0,marginBottom:20,borderBottom:`1px solid ${BI.border}`}}>
+        {sezNav.map(s=>(
+          <button key={s.k} onClick={()=>setSezione(s.k)} className="bi-tab" style={{
+            padding:"8px 18px",border:"none",cursor:"pointer",background:"transparent",
+            color:sezione===s.k?BI.cyan:BI.text3,fontWeight:sezione===s.k?700:400,
+            fontSize:12,fontFamily:"'IBM Plex Sans',sans-serif",letterSpacing:.5,
+            borderBottom:`2px solid ${sezione===s.k?BI.cyan:"transparent"}`,
+            display:"flex",alignItems:"center",gap:6,marginBottom:-1,
+            transition:"all .15s",
+          }}>
+            <span style={{fontSize:14,color:sezione===s.k?BI.cyan:BI.text3}}>{s.icon}</span>{s.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ════════ OVERVIEW ════════ */}
+      {sezione==="overview"&&(
+        <div>
+          {/* KPI Row */}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:20}}>
+            <KPICard label="Occupancy"   val={fP(kpiCur.occ)}    delta={delta(kpiCur.occ,kpiPrev.occ)}    spark={sparklines.occ}    sparkColor={BI.cyan}   icon="◈"/>
+            <KPICard label="ADR"         val={fE(kpiCur.adr)}    delta={delta(kpiCur.adr,kpiPrev.adr)}    spark={sparklines.adr}    sparkColor={BI.green}  icon="◆"/>
+            <KPICard label="RevPAR"      val={fE(kpiCur.revpar)} delta={delta(kpiCur.revpar,kpiPrev.revpar)} spark={sparklines.revpar} sparkColor={BI.purple} icon="◉"/>
+            <KPICard label="LOS medio"   val={fN(kpiCur.los)}    delta={delta(kpiCur.los,kpiPrev.los)}     spark={sparklines.los}    sparkColor={BI.amber}  unit="notti" icon="▣"/>
+            <KPICard label="Revenue"     val={fE(kpiCur.rev)}    delta={delta(kpiCur.rev,kpiPrev.rev)}     spark={sparklines.rev}    sparkColor={BI.green}  icon="◎"/>
+          </div>
+
+          {/* Chart area: Revenue trend + OCC trend */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+            <div style={{background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:10,padding:16}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+                <div>
+                  <div style={{fontSize:13,fontWeight:700,color:BI.text}}>Revenue camere · 12 mesi</div>
+                  <div style={{fontSize:11,color:BI.text3}}>Confronto anno precedente</div>
+                </div>
+                <div style={{display:"flex",gap:12,fontSize:10,color:BI.text3}}>
+                  <span style={{display:"flex",alignItems:"center",gap:4}}><span style={{display:"inline-block",width:16,height:2,background:BI.green,borderRadius:1}}/> Anno corr.</span>
+                  <span style={{display:"flex",alignItems:"center",gap:4}}><span style={{display:"inline-block",width:16,height:2,background:BI.text3,borderRadius:1,borderTop:"2px dashed "+BI.text3}}/> Anno prec.</span>
+                </div>
+              </div>
+              <AreaChart data={trendMensile.map(m=>({label:m.label,v1:m.v1,v2:m.v2}))}
+                color={BI.green} color2={BI.text3} label1="Cur" label2="Prev"
+                yFmt={v=>v>0?Math.round(v/1000)+"k":"0"} width={380} height={160}/>
+            </div>
+
+            <div style={{background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:10,padding:16}}>
+              <div style={{marginBottom:12}}>
+                <div style={{fontSize:13,fontWeight:700,color:BI.text}}>Occupancy % · 12 mesi</div>
+                <div style={{fontSize:11,color:BI.text3}}>Con soglia obiettivo 75%</div>
+              </div>
+              <svg width={380} height={160} style={{overflow:"visible"}}>
+                {/* Target line 75% */}
+                <line x1={44} y1={44+132-(75/100*132)} x2={392} y2={44+132-(75/100*132)}
+                  stroke={BI.amber} strokeWidth="1" strokeDasharray="4,4" opacity=".5"/>
+                <text x={46} y={44+132-(75/100*132)-4} fontSize="9" fill={BI.amber} opacity=".7">75%</text>
+                {/* Bars */}
+                {trendMensile.map((m,i)=>{
+                  const barW=22,gap=8,x=44+i*(barW+gap);
+                  const h=Math.max(2,(m.occ/100)*132);
+                  const y=44+132-h;
+                  const color=m.occ>75?BI.cyan:m.occ>50?BI.purple:BI.red;
+                  return(
+                    <g key={i}>
+                      <rect x={x} y={y} width={barW} height={h} rx="2"
+                        fill={color} opacity=".8"/>
+                      <text x={x+barW/2} y={44+132+12} textAnchor="middle" fontSize="9" fill={BI.text3}>{m.label}</text>
+                    </g>
+                  );
+                })}
+                {/* Y axis */}
+                {[0,25,50,75,100].map(v=>(
+                  <g key={v}>
+                    <line x1={44} y1={44+132-(v/100*132)} x2={392} y2={44+132-(v/100*132)} stroke={BI.border} strokeWidth="1"/>
+                    <text x={38} y={44+132-(v/100*132)+4} textAnchor="end" fontSize="9" fill={BI.text3}>{v}%</text>
+                  </g>
+                ))}
+              </svg>
+            </div>
+          </div>
+
+          {/* Heatmap + Donut */}
+          <div style={{display:"grid",gridTemplateColumns:"1fr 280px",gap:14}}>
+            <div style={{background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:10,padding:16}}>
+              <div style={{fontSize:13,fontWeight:700,color:BI.text,marginBottom:4}}>Heatmap occupazione · Giorno settimana × Mese</div>
+              <div style={{fontSize:11,color:BI.text3,marginBottom:14}}>Intensità = notti vendute normalizzate</div>
+              <HeatMap data={heatData.data} rows={heatData.rows} cols={heatData.cols} colorFn={heatColor} cellW={38} cellH={24}/>
+              <div style={{display:"flex",gap:6,marginTop:12,alignItems:"center",fontSize:10,color:BI.text3}}>
+                <span>Bassa</span>
+                {[.1,.25,.4,.55,.7,.85,1].map((v,i)=><div key={i} style={{width:18,height:10,borderRadius:2,background:heatColor(v).bg}}/>)}
+                <span>Alta</span>
+              </div>
+            </div>
+
+            <div style={{background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:10,padding:16}}>
+              <div style={{fontSize:13,fontWeight:700,color:BI.text,marginBottom:4}}>Revenue mix</div>
+              <div style={{fontSize:11,color:BI.text3,marginBottom:12}}>Composizione periodo</div>
+              {(()=>{
+                const slices=[
+                  {label:"Camere",val:kpiCur.revCam,color:BI.cyan},
+                  {label:"Servizi",val:kpiCur.revSvc,color:BI.green},
+                ].filter(s=>s.val>0);
+                const tot=slices.reduce((s,v)=>s+v.val,0)||1;
+                return(
+                  <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:12}}>
+                    <DonutChart slices={slices} size={110}/>
+                    <div style={{width:"100%"}}>
+                      {slices.map((s,i)=>(
+                        <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"6px 0",borderTop:i>0?`1px solid ${BI.border}`:"none",fontSize:12}}>
+                          <div style={{display:"flex",alignItems:"center",gap:6}}>
+                            <div style={{width:8,height:8,borderRadius:"50%",background:s.color}}/>
+                            <span style={{color:BI.text2}}>{s.label}</span>
+                          </div>
+                          <div style={{textAlign:"right"}}>
+                            <div style={{fontWeight:700,fontFamily:"'IBM Plex Mono',monospace",fontSize:11,color:s.color}}>{fE(s.val)}</div>
+                            <div style={{fontSize:10,color:BI.text3}}>{(s.val/tot*100).toFixed(0)}%</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════ REVENUE ════════ */}
+      {sezione==="revenue"&&(
+        <div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
+            {[
+              {label:"Revenue Totale",val:fE(kpiCur.rev),dlt:delta(kpiCur.rev,kpiPrev.rev),color:BI.cyan,icon:"◈"},
+              {label:"Revenue Camere",val:fE(kpiCur.revCam),dlt:delta(kpiCur.revCam,kpiPrev.revCam),color:BI.green,icon:"◆"},
+              {label:"Revenue Servizi",val:fE(kpiCur.revSvc),dlt:delta(kpiCur.revSvc,kpiPrev.revSvc),color:BI.purple,icon:"◉"},
+              {label:"TRevPAR",val:fE(kpiCur.trevpar),dlt:delta(kpiCur.trevpar,kpiPrev.trevpar),color:BI.amber,icon:"▣"},
+            ].map((k,i)=>(
+              <div key={i} style={{background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:10,padding:16,borderTop:`2px solid ${k.color}44`}}>
+                <div style={{fontSize:11,color:BI.text3,marginBottom:6,letterSpacing:.8,textTransform:"uppercase"}}>{k.icon} {k.label}</div>
+                <div style={{fontSize:24,fontWeight:800,fontFamily:"'IBM Plex Mono',monospace",color:k.color}}>{k.val}</div>
+                {confronto&&k.dlt.pct!==null&&<div style={{fontSize:11,color:k.dlt.up?BI.green:BI.red,marginTop:4,fontWeight:700}}>{k.dlt.fmt} vs periodo prec.</div>}
+              </div>
+            ))}
+          </div>
+
+          {/* ADR + RevPAR per tipo camera */}
+          <div style={{background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:10,padding:16,marginBottom:14}}>
+            <div style={{fontSize:13,fontWeight:700,color:BI.text,marginBottom:16}}>Performance per tipo di camera</div>
+            <div style={{overflowX:"auto"}}>
+              <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+                <thead>
+                  <tr>
+                    {["Tipo","Camere","Soggiorni","Occupancy","ADR","RevPAR","Revenue"].map(h=>(
+                      <th key={h} style={{padding:"8px 12px",textAlign:"left",fontSize:10,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:BI.text3,borderBottom:`1px solid ${BI.border}`}}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {perfTipo.map((c,i)=>(
+                    <tr key={c.tipo} className="bi-row" style={{borderBottom:`1px solid ${BI.border}`,transition:"background .1s",cursor:"default"}}>
+                      <td style={{padding:"10px 12px",fontWeight:700,color:BI.series[i%BI.series.length]}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                          <div style={{width:6,height:6,borderRadius:"50%",background:BI.series[i%BI.series.length],boxShadow:`0 0 4px ${BI.series[i%BI.series.length]}`}}/>
+                          {c.tipo}
+                        </div>
+                      </td>
+                      <td style={{padding:"10px 12px",color:BI.text3}}>{c.nc}</td>
+                      <td style={{padding:"10px 12px"}}>{c.res}</td>
+                      <td style={{padding:"10px 12px"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                          <div style={{width:50,height:5,background:BI.surface3,borderRadius:3}}>
+                            <div style={{width:`${Math.min(100,c.occ)}%`,height:"100%",borderRadius:3,background:c.occ>75?BI.green:c.occ>50?BI.cyan:BI.red}}/>
+                          </div>
+                          <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:11,color:c.occ>75?BI.green:c.occ>50?BI.cyan:BI.red}}>{c.occ.toFixed(1)}%</span>
+                        </div>
+                      </td>
+                      <td style={{padding:"10px 12px",fontFamily:"'IBM Plex Mono',monospace",fontWeight:700}}>{fE(c.adr)}</td>
+                      <td style={{padding:"10px 12px",fontFamily:"'IBM Plex Mono',monospace",fontWeight:700,color:BI.cyan}}>{fE(c.revpar)}</td>
+                      <td style={{padding:"10px 12px",fontFamily:"'IBM Plex Mono',monospace",fontWeight:800,color:BI.green}}>{fE(c.rev)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════ OSPITI ════════ */}
+      {sezione==="ospiti"&&(
+        <div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
+            {[
+              {label:"Soggiorni",val:kpiCur.n,dlt:delta(kpiCur.n,kpiPrev.n),color:BI.cyan},
+              {label:"Ospiti totali",val:kpiCur.n>0?Math.round(kpiCur.n*1.8):0,color:BI.green},
+              {label:"LOS medio",val:fN(kpiCur.los)+" notti",dlt:delta(kpiCur.los,kpiPrev.los),color:BI.purple},
+              {label:"Mercati attivi",val:topNaz.length,color:BI.amber},
+            ].map((k,i)=>(
+              <div key={i} style={{background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:10,padding:16}}>
+                <div style={{fontSize:11,color:BI.text3,marginBottom:6,letterSpacing:.8,textTransform:"uppercase"}}>{k.label}</div>
+                <div style={{fontSize:24,fontWeight:800,fontFamily:"'IBM Plex Mono',monospace",color:k.color}}>{k.val}</div>
+                {confronto&&k.dlt&&k.dlt.pct!==null&&<div style={{fontSize:11,color:k.dlt.up?BI.green:BI.red,marginTop:4,fontWeight:700}}>{k.dlt.fmt}</div>}
+              </div>
+            ))}
+          </div>
+
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+            {/* Top mercati */}
+            <div style={{background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:10,padding:16}}>
+              <div style={{fontSize:13,fontWeight:700,color:BI.text,marginBottom:16}}>Top mercati di provenienza</div>
+              {topNaz.map((n,i)=>{
+                const maxN=topNaz[0]?.val||1;
+                return(
+                  <div key={n.k} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                    <div style={{fontSize:16,width:22,flexShrink:0}}>{n.flag}</div>
+                    <div style={{width:100,fontSize:12,color:BI.text2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{n.nome}</div>
+                    <div style={{flex:1,background:BI.surface3,borderRadius:3,height:8}}>
+                      <div style={{width:`${(n.val/maxN)*100}%`,height:"100%",borderRadius:3,
+                        background:`linear-gradient(90deg,${BI.series[i%BI.series.length]},${BI.series[i%BI.series.length]}66)`,
+                        boxShadow:`0 0 6px ${BI.series[i%BI.series.length]}44`}}/>
+                    </div>
+                    <div style={{fontFamily:"'IBM Plex Mono',monospace",fontWeight:700,width:28,textAlign:"right",fontSize:12}}>{n.val}</div>
+                    <div style={{color:BI.text3,fontSize:10,width:30,textAlign:"right"}}>{resCur.length>0?(n.val/resCur.length*100).toFixed(0):0}%</div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* LOS distribution */}
+            <div style={{background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:10,padding:16}}>
+              <div style={{fontSize:13,fontWeight:700,color:BI.text,marginBottom:16}}>Distribuzione durata soggiorno (LOS)</div>
+              {[
+                {label:"1 notte",check:n=>n===1},
+                {label:"2 notti",check:n=>n===2},
+                {label:"3 notti",check:n=>n===3},
+                {label:"4–6 notti",check:n=>n>=4&&n<=6},
+                {label:"7+ notti",check:n=>n>=7},
+              ].map((f,i)=>{
+                const v=resCur.filter(r=>f.check(r.notti||1)).length;
+                const maxV=Math.max(...[1,2,3,4,7].map(n=>resCur.filter(r=>r.notti===n).length),1);
+                return(
+                  <div key={f.label} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                    <div style={{width:70,fontSize:12,color:BI.text2}}>{f.label}</div>
+                    <div style={{flex:1,background:BI.surface3,borderRadius:3,height:12,position:"relative"}}>
+                      <div style={{width:`${(v/Math.max(resCur.length||1,1))*100}%`,height:"100%",borderRadius:3,
+                        background:`linear-gradient(90deg,${BI.series[i]},${BI.series[i]}66)`}}/>
+                    </div>
+                    <div style={{fontFamily:"'IBM Plex Mono',monospace",fontWeight:700,fontSize:12,width:28,textAlign:"right"}}>{v}</div>
+                    <div style={{fontSize:10,color:BI.text3,width:30,textAlign:"right"}}>{resCur.length>0?(v/resCur.length*100).toFixed(0):0}%</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════ CAMERE ════════ */}
+      {sezione==="camere"&&(
+        <div>
+          {/* ADR Scatter-like: tipo vs ADR vs Occ */}
+          <div style={{background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:10,padding:16,marginBottom:14}}>
+            <div style={{fontSize:13,fontWeight:700,color:BI.text,marginBottom:4}}>ADR vs Occupancy — per tipo camera</div>
+            <div style={{fontSize:11,color:BI.text3,marginBottom:16}}>Ogni barra: ADR (altezza) e Occupancy (colore). Ampiezza = n° camere del tipo.</div>
+            <svg width="100%" height={200} viewBox="0 0 700 200" preserveAspectRatio="xMidYMid meet" style={{overflow:"visible"}}>
+              {perfTipo.map((c,i)=>{
+                const maxAdr=Math.max(...perfTipo.map(x=>x.adr),1);
+                const barW=Math.max(20,Math.min(60,c.nc*8));
+                const x=50+i*90;
+                const h=Math.max(4,(c.adr/maxAdr)*150);
+                const y=170-h;
+                const color=c.occ>75?BI.cyan:c.occ>50?BI.purple:BI.red;
+                return(
+                  <g key={c.tipo}>
+                    <defs>
+                      <linearGradient id={`bg${i}`} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={color} stopOpacity="0.9"/>
+                        <stop offset="100%" stopColor={color} stopOpacity="0.3"/>
+                      </linearGradient>
+                    </defs>
+                    <rect x={x} y={y} width={barW} height={h} rx="3" fill={`url(#bg${i})`}/>
+                    <text x={x+barW/2} y={168} textAnchor="middle" fontSize="10" fill={color} fontWeight="700">{fE(c.adr)}</text>
+                    <text x={x+barW/2} y={182} textAnchor="middle" fontSize="8" fill={BI.text3}>{c.tipo.split(" ")[0]}</text>
+                    <text x={x+barW/2} y={y-4} textAnchor="middle" fontSize="9" fill={BI.text3}>{c.occ.toFixed(0)}%</text>
+                  </g>
+                );
+              })}
+              {[0,.25,.5,.75,1].map((v,i)=>{
+                const maxAdr=Math.max(...perfTipo.map(x=>x.adr),1);
+                const y=170-(v*150);
+                return<g key={i}>
+                  <line x1={40} y1={y} x2={680} y2={y} stroke={BI.border} strokeWidth="1"/>
+                  <text x={34} y={y+4} textAnchor="end" fontSize="8" fill={BI.text3}>{fE(maxAdr*v)}</text>
+                </g>;
+              })}
+            </svg>
+          </div>
+
+          {/* Tabella dettagliata */}
+          <div style={{background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:10,padding:16}}>
+            <div style={{fontSize:13,fontWeight:700,color:BI.text,marginBottom:16}}>Revenue matrix · Tipo × KPI</div>
+            <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+              <thead>
+                <tr style={{borderBottom:`1px solid ${BI.border2}`}}>
+                  {["Tipo","N°","Soggiorni","Occ %","ADR","RevPAR","Revenue","Share %"].map(h=>(
+                    <th key={h} style={{padding:"8px 10px",textAlign:"left",fontSize:10,fontWeight:700,letterSpacing:1,textTransform:"uppercase",color:BI.text3}}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {perfTipo.map((c,i)=>{
+                  const totRev=perfTipo.reduce((s,x)=>s+x.rev,0)||1;
+                  return(
+                    <tr key={c.tipo} className="bi-row" style={{borderBottom:`1px solid ${BI.border}`,transition:"background .1s"}}>
+                      <td style={{padding:"10px",fontWeight:700,color:BI.series[i%BI.series.length],fontSize:12}}>{c.tipo}</td>
+                      <td style={{padding:"10px",color:BI.text3}}>{c.nc}</td>
+                      <td style={{padding:"10px"}}>{c.res}</td>
+                      <td style={{padding:"10px"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <div style={{width:40,height:4,background:BI.surface3,borderRadius:2}}>
+                            <div style={{width:`${Math.min(100,c.occ)}%`,height:"100%",borderRadius:2,background:c.occ>75?BI.green:c.occ>50?BI.cyan:BI.red}}/>
+                          </div>
+                          <span style={{fontSize:11,fontFamily:"'IBM Plex Mono',monospace",color:c.occ>75?BI.green:c.occ>50?BI.cyan:BI.red}}>{c.occ.toFixed(1)}%</span>
+                        </div>
+                      </td>
+                      <td style={{padding:"10px",fontFamily:"'IBM Plex Mono',monospace"}}>{fE(c.adr)}</td>
+                      <td style={{padding:"10px",fontFamily:"'IBM Plex Mono',monospace",color:BI.cyan}}>{fE(c.revpar)}</td>
+                      <td style={{padding:"10px",fontFamily:"'IBM Plex Mono',monospace",fontWeight:800,color:BI.green}}>{fE(c.rev)}</td>
+                      <td style={{padding:"10px"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <div style={{width:50,height:4,background:BI.surface3,borderRadius:2}}>
+                            <div style={{width:`${(c.rev/totRev)*100}%`,height:"100%",borderRadius:2,background:BI.purple}}/>
+                          </div>
+                          <span style={{fontSize:10,color:BI.text3}}>{(c.rev/totRev*100).toFixed(0)}%</span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ════════ BOOKING WINDOW ════════ */}
+      {sezione==="booking"&&(
+        <div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+            {/* Booking window distribution */}
+            <div style={{background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:10,padding:16}}>
+              <div style={{fontSize:13,fontWeight:700,color:BI.text,marginBottom:4}}>Finestra di prenotazione</div>
+              <div style={{fontSize:11,color:BI.text3,marginBottom:16}}>Giorni di anticipo tra prenotazione e check-in</div>
+              {bookingWindow.map((f,i)=>{
+                const maxV=Math.max(...bookingWindow.map(x=>x.val),1);
+                return(
+                  <div key={f.label} style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+                    <div style={{width:70,fontSize:12,color:BI.text2,flexShrink:0}}>{f.label}</div>
+                    <div style={{flex:1,background:BI.surface3,borderRadius:4,height:16,position:"relative"}}>
+                      <div style={{
+                        width:`${(f.val/maxV)*100}%`,height:"100%",borderRadius:4,
+                        background:`linear-gradient(90deg,${BI.series[i%BI.series.length]},${BI.series[i%BI.series.length]}55)`,
+                        boxShadow:`0 0 8px ${BI.series[i%BI.series.length]}33`,
+                        transition:"width .6s cubic-bezier(.4,0,.2,1)",
+                      }}/>
+                    </div>
+                    <div style={{fontFamily:"'IBM Plex Mono',monospace",fontWeight:700,fontSize:12,width:28,textAlign:"right",color:BI.series[i%BI.series.length]}}>{f.val}</div>
+                    <div style={{color:BI.text3,fontSize:10,width:34,textAlign:"right"}}>{resCur.length>0?(f.val/resCur.length*100).toFixed(0):0}%</div>
+                  </div>
+                );
+              })}
+              <div style={{marginTop:16,padding:"10px 12px",background:BI.surface2,borderRadius:6,fontSize:12,color:BI.text3}}>
+                <strong style={{color:BI.cyan}}>Finestra media:</strong> {resCur.length>0?Math.round(resCur.reduce((s,r)=>s+(r.bookingWindow??14),0)/resCur.length):0} giorni
+              </div>
+            </div>
+
+            {/* Trend ADR mensile */}
+            <div style={{background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:10,padding:16}}>
+              <div style={{fontSize:13,fontWeight:700,color:BI.text,marginBottom:4}}>ADR trend · 12 mesi</div>
+              <div style={{fontSize:11,color:BI.text3,marginBottom:12}}>Tariffa media giornaliera per mese</div>
+              <AreaChart
+                data={trendMensile.map(m=>({label:m.label,v1:m.adr,v2:0}))}
+                color={BI.amber} yFmt={v=>v>0?"€"+Math.round(v):"0"} width={380} height={160} label1="ADR"/>
+            </div>
+          </div>
+
+          {/* KPI comparativa cur vs prev */}
+          {confronto&&(
+            <div style={{background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:10,padding:16,marginTop:14}}>
+              <div style={{fontSize:13,fontWeight:700,color:BI.text,marginBottom:16}}>Confronto periodo corrente vs precedente</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:12}}>
+                {[
+                  {label:"Soggiorni",cur:kpiCur.n,prev:kpiPrev.n,fmt:v=>v},
+                  {label:"Occupancy",cur:kpiCur.occ,prev:kpiPrev.occ,fmt:v=>fP(v)},
+                  {label:"ADR",cur:kpiCur.adr,prev:kpiPrev.adr,fmt:fE},
+                  {label:"RevPAR",cur:kpiCur.revpar,prev:kpiPrev.revpar,fmt:fE},
+                  {label:"Revenue",cur:kpiCur.rev,prev:kpiPrev.rev,fmt:fE},
+                ].map((k,i)=>{
+                  const d=delta(k.cur,k.prev);
+                  return(
+                    <div key={i} style={{background:BI.surface2,borderRadius:8,padding:14,border:`1px solid ${BI.border}`}}>
+                      <div style={{fontSize:10,color:BI.text3,marginBottom:6,letterSpacing:.8,textTransform:"uppercase"}}>{k.label}</div>
+                      <div style={{fontSize:16,fontWeight:800,fontFamily:"'IBM Plex Mono',monospace",color:BI.text}}>{k.fmt(k.cur)}</div>
+                      <div style={{fontSize:11,color:BI.text3,marginTop:2}}>prev: {k.fmt(k.prev)}</div>
+                      {d.pct!==null&&<div style={{fontSize:12,fontWeight:700,color:d.up?BI.green:BI.red,marginTop:4}}>{d.fmt}</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Footer ── */}
+      <div style={{marginTop:20,padding:"8px 14px",borderRadius:6,border:`1px solid ${BI.border}`,
+        fontSize:10,color:BI.text3,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <span>KPI · Standard USALI · Dati dimostrativi integrati con dati PMS reali da Supabase</span>
+        <span style={{fontFamily:"'IBM Plex Mono',monospace",color:BI.text3}}>
+          {resCur.length} records · aggiornato ora
+          <span style={{display:"inline-block",width:6,height:6,borderRadius:"50%",background:BI.green,marginLeft:6,animation:"biPulse 2s infinite"}}/>
+        </span>
+      </div>
+    </div>
+  );
+}
