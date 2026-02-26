@@ -959,6 +959,100 @@ const CSS = `
   .pos-stat::before { content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:${C.gold}; }
 `;
 
+// ════════════════════════════════════════════
+// MICE & MEETING — DATI STATICI
+// ════════════════════════════════════════════
+
+const MEETING_ROOMS = [
+  { id:"MR1", nome:"Sala Adriatico",   capTeatro:80, capCabaret:48, capUShape:36, capBoardroom:20, capBanquet:60, mq:90,  prezzo:350, piano:1, features:["Proiettore 4K","Sistema audio","Lavagna smart","WiFi dedicato","Luce naturale"] },
+  { id:"MR2", nome:"Sala Laguna",      capTeatro:50, capCabaret:30, capUShape:24, capBoardroom:16, capBanquet:36, mq:60,  prezzo:220, piano:1, features:["Proiettore","Sistema audio","Lavagna bianca","WiFi dedicato"] },
+  { id:"MR3", nome:"Sala Chioggia",    capTeatro:30, capCabaret:18, capUShape:16, capBoardroom:12, capBanquet:24, mq:40,  prezzo:150, piano:2, features:["TV 75\"","Videoconferenza","WiFi dedicato","Luce naturale"] },
+  { id:"MR4", nome:"Executive Board",  capTeatro:16, capCabaret:0,  capUShape:0,  capBoardroom:14, capBanquet:0,  mq:28,  prezzo:120, piano:3, features:["TV 65\"","Videoconferenza HD","Poltroncine executive","Mini bar"] },
+  { id:"MR5", nome:"Terrazza Venezia", capTeatro:100,capCabaret:60, capUShape:0,  capBoardroom:0,  capBanquet:80, mq:200, prezzo:600, piano:5, features:["Vista laguna","Struttura tendato","Impianto audio/luci","Catering dedicato"] },
+];
+
+const MICE_ATTREZZATURE = [
+  { id:"AV1", cat:"Audio/Video",    nome:"Proiettore 4K Full HD",         prezzo:80,  um:"giorno", icon:"📽" },
+  { id:"AV2", cat:"Audio/Video",    nome:"Schermo motorizzato 200cm",      prezzo:30,  um:"giorno", icon:"🎞" },
+  { id:"AV3", cat:"Audio/Video",    nome:"Sistema audio professionale",    prezzo:120, um:"giorno", icon:"🔊" },
+  { id:"AV4", cat:"Audio/Video",    nome:"Microfono a gelato (x2)",        prezzo:40,  um:"giorno", icon:"🎤" },
+  { id:"AV5", cat:"Audio/Video",    nome:"Microfono lavalier wireless",    prezzo:35,  um:"giorno", icon:"🎙" },
+  { id:"VC1", cat:"Videoconferenza",nome:"Sistema VC HD (Zoom/Teams)",     prezzo:150, um:"giorno", icon:"📹" },
+  { id:"VC2", cat:"Videoconferenza",nome:"Camera PTZ 4K",                  prezzo:80,  um:"giorno", icon:"📸" },
+  { id:"IT1", cat:"IT",             nome:"Laptop presentazioni",           prezzo:50,  um:"giorno", icon:"💻" },
+  { id:"IT2", cat:"IT",             nome:"WiFi dedicato 100Mbps",          prezzo:60,  um:"giorno", icon:"📡" },
+  { id:"IT3", cat:"IT",             nome:"Switch HDMI 4 ingressi",         prezzo:25,  um:"giorno", icon:"🔌" },
+  { id:"AR1", cat:"Arredamento",    nome:"Allestimento a teatro",          prezzo:120, um:"evento", icon:"🪑" },
+  { id:"AR2", cat:"Arredamento",    nome:"Allestimento cabaret",           prezzo:150, um:"evento", icon:"🍽" },
+  { id:"AR3", cat:"Arredamento",    nome:"Allestimento U-shape",           prezzo:100, um:"evento", icon:"🔲" },
+  { id:"AR4", cat:"Arredamento",    nome:"Podio / Leggio",                 prezzo:30,  um:"evento", icon:"🎭" },
+  { id:"AR5", cat:"Arredamento",    nome:"Bancone registrazione",          prezzo:80,  um:"evento", icon:"📋" },
+  { id:"FL1", cat:"Floral/Deco",    nome:"Centrotavola floreale",          prezzo:45,  um:"pezzo",  icon:"🌸" },
+  { id:"FL2", cat:"Floral/Deco",    nome:"Composizione palco",             prezzo:120, um:"evento", icon:"💐" },
+  { id:"TR1", cat:"Traduzione",     nome:"Cabina traduzione simult. (x2)", prezzo:400, um:"giorno", icon:"🌐" },
+  { id:"TR2", cat:"Traduzione",     nome:"Ricevitore traduzione (cad.)",   prezzo:15,  um:"pezzo/g",icon:"🎧" },
+];
+
+const MICE_FB = [
+  { id:"FB01", cat:"Coffee Break", nome:"Coffee break standard",     prezzo:8,  um:"persona",     icon:"☕" },
+  { id:"FB02", cat:"Coffee Break", nome:"Coffee break premium",      prezzo:14, um:"persona",     icon:"🫖" },
+  { id:"FB03", cat:"Pranzo",       nome:"Pranzo buffet business",    prezzo:32, um:"persona",     icon:"🥗" },
+  { id:"FB04", cat:"Pranzo",       nome:"Pranzo seduto 3 portate",   prezzo:48, um:"persona",     icon:"🍽" },
+  { id:"FB05", cat:"Pranzo",       nome:"Pranzo gourmet 4 portate",  prezzo:68, um:"persona",     icon:"⭐" },
+  { id:"FB06", cat:"Cena",         nome:"Cena di gala 4 portate",    prezzo:85, um:"persona",     icon:"🥂" },
+  { id:"FB07", cat:"Cena",         nome:"Cena a tema veneziano",     prezzo:95, um:"persona",     icon:"🎭" },
+  { id:"FB08", cat:"Aperitivo",    nome:"Aperitivo finger food",     prezzo:18, um:"persona",     icon:"🍹" },
+  { id:"FB09", cat:"Aperitivo",    nome:"Aperitivo prosecco DOC",    prezzo:24, um:"persona",     icon:"🥂" },
+  { id:"FB10", cat:"Rinfresco",    nome:"Rinfresco base",            prezzo:12, um:"persona",     icon:"🧁" },
+  { id:"FB11", cat:"Rinfresco",    nome:"Torta aziendale personaliz.",prezzo:6, um:"persona",     icon:"🎂" },
+  { id:"FB12", cat:"Bevande",      nome:"Open bar analcolici",       prezzo:10, um:"persona/ora", icon:"🥤" },
+  { id:"FB13", cat:"Bevande",      nome:"Open bar completo",         prezzo:22, um:"persona/ora", icon:"🍾" },
+  { id:"FB14", cat:"Bevande",      nome:"Acqua e bevande tavolo",    prezzo:5,  um:"persona",     icon:"💧" },
+];
+
+const MICE_STATUS = {
+  preventivo: { label:"Preventivo",   bg:"#fff8e1", color:"#b45309", border:"#f6c90e" },
+  confermato: { label:"Confermato",   bg:"#e8f5e9", color:"#2e7d32", border:"#a8d5b5" },
+  acconto:    { label:"Acconto rice.",bg:"#e3f2fd", color:"#1565c0", border:"#90caf9" },
+  completato: { label:"Completato",   bg:"#f3e5f5", color:"#7b1fa2", border:"#ce93d8" },
+  annullato:  { label:"Annullato",    bg:"#fdecea", color:"#c0392b", border:"#ef9a9a" },
+};
+
+const SETUP_LABELS = { teatro:"Teatro", cabaret:"Cabaret", ushape:"U-Shape", boardroom:"Boardroom", banquet:"Banquet" };
+
+const emptyMiceEvent = () => ({
+  id:"EV"+Date.now().toString(36).toUpperCase().slice(-5),
+  status:"preventivo",
+  cliente:"", referente:"", email:"", telefono:"", azienda:"", piva:"",
+  nomeEvento:"", tipoEvento:"", data:"", oraInizio:"09:00", oraFine:"18:00",
+  partecipanti:20, linguaEvento:"it",
+  salaId:"", setup:"teatro",
+  attrezzature:[], fb:[],
+  noteInterne:"", noteCliente:"", scontoPerc:0,
+  createdAt:new Date().toISOString(), updatedAt:new Date().toISOString(),
+});
+
+const DEMO_MICE = [
+  { id:"EV001", status:"confermato", cliente:"TechCorp S.r.l.", referente:"Luca Neri", email:"luca.neri@techcorp.it", telefono:"+39 02 1234567", azienda:"TechCorp S.r.l.", piva:"IT12345678901",
+    nomeEvento:"Riunione Consiglio CDA", tipoEvento:"Board Meeting", data:"2026-03-12", oraInizio:"09:00", oraFine:"18:00", partecipanti:14, linguaEvento:"it",
+    salaId:"MR4", setup:"boardroom", attrezzature:[{id:"VC1",qty:1},{id:"IT1",qty:1},{id:"IT2",qty:1}],
+    fb:[{id:"FB01",qty:1,persone:14},{id:"FB03",qty:1,persone:14},{id:"FB08",qty:1,persone:14}],
+    noteInterne:"Cliente VIP — servizio premium", noteCliente:"", scontoPerc:10,
+    createdAt:"2026-02-01T10:00:00.000Z", updatedAt:"2026-02-10T14:00:00.000Z" },
+  { id:"EV002", status:"preventivo", cliente:"Farmaceutica Veneta S.p.A.", referente:"Sara Moretti", email:"s.moretti@farmaveneta.it", telefono:"+39 041 9876543", azienda:"Farmaceutica Veneta S.p.A.", piva:"IT09876543210",
+    nomeEvento:"Convegno Scientifico 2026", tipoEvento:"Convegno", data:"2026-04-18", oraInizio:"08:30", oraFine:"19:00", partecipanti:75, linguaEvento:"it",
+    salaId:"MR1", setup:"teatro", attrezzature:[{id:"AV1",qty:1},{id:"AV2",qty:1},{id:"AV3",qty:1},{id:"AV4",qty:2},{id:"VC1",qty:1},{id:"AR4",qty:1}],
+    fb:[{id:"FB01",qty:2,persone:75},{id:"FB04",qty:1,persone:75},{id:"FB08",qty:1,persone:75}],
+    noteInterne:"Richiesta traduzione simultanea se confermano", noteCliente:"Possibile estensione al giorno successivo", scontoPerc:5,
+    createdAt:"2026-02-15T09:00:00.000Z", updatedAt:"2026-02-15T09:00:00.000Z" },
+  { id:"EV003", status:"completato", cliente:"Hotel Partners Group", referente:"Marco Rossi", email:"m.rossi@hpg.it", telefono:"+39 06 5554433", azienda:"Hotel Partners Group", piva:"IT44556677890",
+    nomeEvento:"Cena di Gala — Awards Night", tipoEvento:"Gala Dinner", data:"2026-02-14", oraInizio:"19:30", oraFine:"23:59", partecipanti:80, linguaEvento:"en",
+    salaId:"MR5", setup:"banquet", attrezzature:[{id:"AV3",qty:1},{id:"AR5",qty:1},{id:"FL1",qty:8},{id:"FL2",qty:1}],
+    fb:[{id:"FB06",qty:1,persone:80},{id:"FB13",qty:2,persone:80},{id:"FB11",qty:1,persone:80}],
+    noteInterne:"Completato con successo", noteCliente:"", scontoPerc:0,
+    createdAt:"2026-01-10T11:00:00.000Z", updatedAt:"2026-02-15T08:00:00.000Z" },
+];
+
 // - COMPONENTE PRINCIPALE -
 
 const PAGE_ICONS = {
@@ -974,10 +1068,11 @@ const PAGE_ICONS = {
   "ISTAT Veneto":      "📊",
   "API & Integrazioni":"⚡",
   "Ristorante POS":    "🍽",
+  "MICE & Meeting":    "🎯",
 };
 const PAGE_GROUPS = [
   { label:"Front Office",   pages:["Dashboard","Prenotazioni","Anagrafica","Check-In/Out","Disponibilità"] },
-  { label:"Gestione",       pages:["Camere","Prezzi & Revenue","Cassa"] },
+  { label:"Gestione",       pages:["Camere","Prezzi & Revenue","Cassa","MICE & Meeting"] },
   { label:"Reportistica",   pages:["Pubblica Sicurezza","ISTAT Veneto"] },
   { label:"Integrazioni",   pages:["API & Integrazioni","Ristorante POS"] },
 ];
@@ -1030,6 +1125,16 @@ export default function HotelPMS() {
   const [precomandaForm, setPrecomandaForm] = useState({ servizio:"pranzo", data: new Date().toISOString().slice(0,10), note:"" });
   const [posContoModal, setPosContoModal] = useState(null);   // tavolo per checkout pos
   const [posCassaMethod, setPosCassaMethod] = useState("camera"); // camera | carta | contanti
+  // - MICE & Meeting state -
+  const [miceEvents, setMiceEvents]         = useState(DEMO_MICE);
+  const [miceTab, setMiceTab]               = useState("lista");      // lista | sale | config
+  const [miceForm, setMiceForm]             = useState(null);         // evento in editing (null = lista)
+  const [miceFormTab, setMiceFormTab]       = useState("cliente");    // cliente | sala | attrezzature | fb | preventivo
+  const [miceSearch, setMiceSearch]         = useState("");
+  const [miceFilterStatus, setMiceFilterStatus] = useState("all");
+  const [micePreviewEv, setMicePreviewEv]   = useState(null);         // modal preventivo PDF
+  const [meetingRooms, setMeetingRooms]     = useState(MEETING_ROOMS.map(r=>({...r})));
+  const [miceConfigRoom, setMiceConfigRoom] = useState(null);         // sala in editing config
   // - Supabase sync state -
   const [dbStatus, setDbStatus]   = useState("connecting"); // connecting | ok | error | offline
   const [dbError, setDbError]     = useState(null);
@@ -1411,6 +1516,49 @@ Rispondi in italiano, in modo conciso e professionale.`;
       + (res.roomServiceItems||[]).reduce((s,x) => s+x.price, 0);
   };
   const calcPaid  = (res) => (res.payments||[]).reduce((s,p) => s+p.amount, 0);
+
+  // ─── MICE Calcoli ───
+  const calcMiceSala = (ev) => {
+    const sala = meetingRooms.find(r => r.id === ev.salaId);
+    return sala ? sala.prezzo : 0;
+  };
+  const calcMiceAttr = (ev) => {
+    return (ev.attrezzature||[]).reduce((sum, item) => {
+      const a = MICE_ATTREZZATURE.find(x => x.id === item.id);
+      return sum + (a ? a.prezzo * (item.qty||1) : 0);
+    }, 0);
+  };
+  const calcMiceFB = (ev) => {
+    return (ev.fb||[]).reduce((sum, item) => {
+      const f = MICE_FB.find(x => x.id === item.id);
+      if (!f) return sum;
+      const qty = item.qty || 1;
+      const pers = item.persone || ev.partecipanti || 1;
+      // Moltiplicatori: se um contiene "persona" moltiplica per persone, altrimenti per qty
+      return sum + (f.um.includes("persona") ? f.prezzo * pers * qty : f.prezzo * qty);
+    }, 0);
+  };
+  const calcMiceSubtotal = (ev) => calcMiceSala(ev) + calcMiceAttr(ev) + calcMiceFB(ev);
+  const calcMiceSconto = (ev) => calcMiceSubtotal(ev) * ((ev.scontoPerc||0) / 100);
+  const calcMiceIva = (ev) => (calcMiceSubtotal(ev) - calcMiceSconto(ev)) * TAX_RATE;
+  const calcMiceTotal = (ev) => calcMiceSubtotal(ev) - calcMiceSconto(ev) + calcMiceIva(ev);
+
+  const saveMiceEvent = (ev) => {
+    const upd = { ...ev, updatedAt: new Date().toISOString() };
+    setMiceEvents(prev => prev.find(e => e.id === ev.id) ? prev.map(e => e.id===ev.id ? upd : e) : [...prev, upd]);
+    setMiceForm(null);
+    showToast("Evento salvato ✓");
+  };
+  const deleteMiceEvent = (id) => {
+    if (!window.confirm("Eliminare questo evento MICE?")) return;
+    setMiceEvents(prev => prev.filter(e => e.id !== id));
+    showToast("Evento eliminato");
+  };
+  const dupMiceEvent = (ev) => {
+    const dup = { ...ev, id:"EV"+Date.now().toString(36).toUpperCase().slice(-5), status:"preventivo", createdAt:new Date().toISOString() };
+    setMiceEvents(prev => [...prev, dup]);
+    showToast("Evento duplicato come nuovo preventivo");
+  };
 
   // - Ospiti -
 
@@ -5927,8 +6075,1785 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
           );
         })()}
 
+        {/*   MICE & MEETING   */}
+        {page==="MICE & Meeting" && <MICEModule />}
+
+        {/* ── MODAL PREVENTIVO MICE ── */}
+        {micePreviewEv && (() => {
+          const ev  = {...micePreviewEv, ...(miceForm?.id===micePreviewEv.id ? miceForm : {})};
+          const sala = meetingRooms.find(r=>r.id===ev.salaId);
+          const sub  = calcMiceSubtotal(ev);
+          const sc   = calcMiceSconto(ev);
+          const iva  = calcMiceIva(ev);
+          const tot  = calcMiceTotal(ev);
+          const fmtE = n => `€${(n||0).toLocaleString("it-IT",{minimumFractionDigits:2})}`;
+          const acconto = tot * ((ev.accontoPerc||30)/100);
+
+          const htmlPrev = `<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Preventivo ${ev.id}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Helvetica Neue',Arial,sans-serif;color:#1a2840;background:#fff;padding:0}
+.wrapper{max-width:800px;margin:0 auto;padding:0}
+.header{background:linear-gradient(135deg,#0a1929,#1565c0);padding:40px 48px 36px;color:#fff}
+.logo-row{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+.logo-g{width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,#1976d2,#c9a84c);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff}
+.logo-name h1{font-size:20px;font-weight:700;color:#fff}
+.logo-name p{font-size:10px;letter-spacing:3px;color:#90caf9;text-transform:uppercase;margin-top:2px}
+.prev-meta{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:8px}
+.meta-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:3px}
+.meta-val{font-size:15px;font-weight:700;color:#fff}
+.meta-val.gold{color:#e8c97a}
+.section{padding:28px 48px}
+.section-title{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#90a4ae;border-bottom:1px solid #e8edf3;padding-bottom:7px;margin-bottom:16px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
+.info-item .label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#90a4ae;margin-bottom:2px}
+.info-item .val{font-size:14px;font-weight:600;color:#1a2840}
+.room-box{background:linear-gradient(135deg,#f0f4ff,#fff);border:1.5px solid #1565c0;border-radius:10px;padding:18px 22px;display:flex;justify-content:space-between;align-items:center}
+.room-name{font-size:17px;font-weight:700;color:#0a1929}
+.room-sub{font-size:12px;color:#546e7a;margin-top:3px}
+.room-price{font-size:20px;font-weight:800;color:#1565c0}
+.chip{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:600;background:#e3f2fd;color:#1565c0;margin:2px}
+table{width:100%;border-collapse:collapse}
+th{padding:9px 14px;background:#f8fafc;text-align:left;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#90a4ae;border-bottom:2px solid #e8edf3}
+td{padding:9px 14px;border-bottom:1px solid #e8edf3;font-size:13px;color:#3a4f66}
+.total-row td{background:#0a1929;color:#fff;font-weight:700;font-size:15px;border:none}
+.conditions{background:#f8fafc;border-left:3px solid #1565c0;padding:16px 20px;border-radius:4px;font-size:12px;color:#546e7a;line-height:1.7}
+.footer{background:#0a1929;padding:24px 48px;text-align:center;color:rgba(255,255,255,.6);font-size:11px;line-height:1.8}
+.footer a{color:#64b5f6}
+@media print{body{padding:0}}
+</style></head><body>
+<div class="wrapper">
+<div class="header">
+  <div class="logo-row">
+    <div class="logo-g">G</div>
+    <div class="logo-name"><h1>Hotel Gasparini</h1><p>MICE &amp; Meeting · Chioggia, Venezia</p></div>
+  </div>
+  <div class="prev-meta">
+    <div><div class="meta-label">N° Preventivo</div><div class="meta-val gold">${ev.id}</div></div>
+    <div><div class="meta-label">Data emissione</div><div class="meta-val">${new Date().toLocaleDateString("it-IT",{day:"2-digit",month:"long",year:"numeric"})}</div></div>
+    <div style="margin-top:14px"><div class="meta-label">Valido fino al</div><div class="meta-val">${(()=>{const d=new Date();d.setDate(d.getDate()+(ev.validitaGiorni||15));return d.toLocaleDateString("it-IT",{day:"2-digit",month:"long",year:"numeric"})})()}</div></div>
+    <div style="margin-top:14px"><div class="meta-label">Stato</div><div class="meta-val" style="color:#e8c97a">${MICE_STATUS[ev.status]?.label||""}</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Cliente / Richiedente</div>
+  <div class="info-grid">
+    <div class="info-item"><div class="label">Azienda</div><div class="val">${ev.azienda||ev.cliente||"—"}</div></div>
+    <div class="info-item"><div class="label">P.IVA</div><div class="val">${ev.piva||"—"}</div></div>
+    <div class="info-item"><div class="label">Referente</div><div class="val">${ev.referente||"—"}${ev.ruolo?` · ${ev.ruolo}`:""}</div></div>
+    <div class="info-item"><div class="label">Contatti</div><div class="val">${ev.email||""} · ${ev.telefono||""}</div></div>
+  </div>
+</div>
+
+<div style="padding:0 48px">
+  <div class="section-title">Dettagli Evento</div>
+  <div class="info-grid" style="margin-bottom:16px">
+    <div class="info-item"><div class="label">Nome Evento</div><div class="val">${ev.nomeEvento||"—"}</div></div>
+    <div class="info-item"><div class="label">Tipo</div><div class="val">${ev.tipoEvento||"—"}</div></div>
+    <div class="info-item"><div class="label">Data</div><div class="val">${ev.data?new Date(ev.data+"T12:00:00").toLocaleDateString("it-IT",{weekday:"long",day:"2-digit",month:"long",year:"numeric"}):"—"}</div></div>
+    <div class="info-item"><div class="label">Orario</div><div class="val">${ev.oraInizio||"—"} – ${ev.oraFine||"—"}</div></div>
+    <div class="info-item"><div class="label">Partecipanti</div><div class="val">${ev.partecipanti}</div></div>
+    <div class="info-item"><div class="label">Setup Sala</div><div class="val">${SETUP_LABELS[ev.setup]||"—"}</div></div>
+  </div>
+  ${sala?`<div class="room-box">
+    <div><div class="room-name">🏛 ${sala.nome}</div><div class="room-sub">${sala.mq} m² · Piano ${sala.piano} · ${SETUP_LABELS[ev.setup]||""}: ${capForSetup(sala,ev.setup)} posti</div>
+    <div style="margin-top:8px">${(sala.features||[]).map(f=>`<span class="chip">✓ ${f}</span>`).join("")}</div></div>
+    <div style="text-align:right"><div class="room-price">${fmtE(sala.prezzo)}</div><div style="font-size:11px;color:#546e7a">/ giorno</div></div>
+  </div>`:""}
+</div>
+
+${ev.attrezzature?.length>0?`<div class="section">
+  <div class="section-title">Attrezzature e Allestimenti</div>
+  <table><thead><tr><th>Attrezzatura</th><th>Q.tà</th><th style="text-align:right">Prezzo unit.</th><th style="text-align:right">Totale</th></tr></thead><tbody>
+  ${ev.attrezzature.map(item=>{const a=MICE_ATTREZZATURE.find(x=>x.id===item.id);if(!a)return"";return`<tr><td>${a.icon} ${a.nome}</td><td>${item.qty||1}</td><td style="text-align:right">${fmtE(a.prezzo)} / ${a.um}</td><td style="text-align:right;font-weight:600">${fmtE(a.prezzo*(item.qty||1))}</td></tr>`;}).join("")}
+  </tbody></table></div>`:""}
+
+${ev.fb?.length>0?`<div class="section">
+  <div class="section-title">Food & Beverage</div>
+  <table><thead><tr><th>Servizio</th><th>Pers.</th><th>Q.tà</th><th style="text-align:right">Prezzo unit.</th><th style="text-align:right">Totale</th></tr></thead><tbody>
+  ${ev.fb.map(item=>{const f=MICE_FB.find(x=>x.id===item.id);if(!f)return"";const pers=item.persone||ev.partecipanti||1;const qty=item.qty||1;const tot=f.um.includes("persona")?f.prezzo*pers*qty:f.prezzo*qty;return`<tr><td>${f.icon} ${f.nome}</td><td>${f.um.includes("persona")?pers:"—"}</td><td>${qty}</td><td style="text-align:right">${fmtE(f.prezzo)} / ${f.um}</td><td style="text-align:right;font-weight:600">${fmtE(tot)}</td></tr>`;}).join("")}
+  </tbody></table></div>`:""}
+
+<div style="padding:0 48px 28px">
+  <div class="section-title">Riepilogo Economico</div>
+  <table>
+    <tbody>
+      <tr><td style="padding:8px 14px">Subtotale imponibile</td><td style="text-align:right;padding:8px 14px;font-weight:600">${fmtE(sub)}</td></tr>
+      ${ev.scontoPerc>0?`<tr style="color:#2e7d32"><td style="padding:8px 14px">Sconto ${ev.scontoPerc}%</td><td style="text-align:right;padding:8px 14px;font-weight:600">−${fmtE(sc)}</td></tr>`:""}
+      <tr><td style="padding:8px 14px">IVA 10%</td><td style="text-align:right;padding:8px 14px">${fmtE(iva)}</td></tr>
+      <tr class="total-row"><td style="padding:12px 14px;border-radius:0 0 0 6px">TOTALE IVA INCLUSA</td><td style="text-align:right;padding:12px 14px;font-size:18px;border-radius:0 0 6px 0">${fmtE(tot)}</td></tr>
+    </tbody>
+  </table>
+  <div style="margin-top:16px;padding:14px;background:#e8f5e9;border-radius:6px;font-size:13px;color:#2e7d32">
+    💳 Acconto richiesto (${ev.accontoPerc||30}%): <strong>${fmtE(acconto)}</strong> — Modalità: ${ev.pagamento||"Bonifico bancario"}
+  </div>
+</div>
+
+${ev.noteCliente?`<div style="padding:0 48px 28px"><div class="conditions">${ev.noteCliente}</div></div>`:""}
+
+<div style="padding:0 48px 28px">
+  <div class="section-title">Condizioni Generali</div>
+  <div class="conditions">
+    Il presente preventivo ha validità di ${ev.validitaGiorni||15} giorni dalla data di emissione. La conferma dell'evento deve pervenire in forma scritta (email o fax) entro tale termine, accompagnata dal versamento dell'acconto pari al ${ev.accontoPerc||30}% del totale. In caso di annullamento: oltre 30 gg: nessuna penale; 15–30 gg: 30% del totale; 7–15 gg: 50% del totale; meno di 7 gg: 100% del totale. I prezzi si intendono IVA inclusa al 10%. L'Hotel Gasparini si riserva di adeguare le tariffe in caso di variazioni significative del numero di partecipanti.
+  </div>
+</div>
+
+<div class="footer">
+  <strong style="color:#fff;font-size:14px">Hotel Gasparini ★★★ — MICE &amp; Meeting</strong><br/>
+  Corso del Popolo 1059 · 30015 Chioggia (VE) · Italia<br/>
+  📞 +39 041 400 000 · ✉ <a href="mailto:mice@hotelgasparini.it">mice@hotelgasparini.it</a> · <a href="https://www.hotelgasparini.it">www.hotelgasparini.it</a><br/>
+  P.IVA 01234567890 · REA VE-123456
+</div>
+</div></body></html>`;
+
+          const capForSetupLocal = (s,st) => ({ teatro:s?.capTeatro, cabaret:s?.capCabaret, ushape:s?.capUShape, boardroom:s?.capBoardroom, banquet:s?.capBanquet }[st]||0);
+          const copyHtml = () => navigator.clipboard.writeText(htmlPrev).then(()=>showToast("HTML preventivo copiato ✓")).catch(()=>showToast("Errore copia","error"));
+          const printPrev = () => { const w=window.open("","_blank"); w.document.write(htmlPrev); w.document.close(); w.focus(); w.print(); };
+          const downloadPrev = () => { const b=new Blob([htmlPrev],{type:"text/html"}); const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=`preventivo-mice-${ev.id}.html`; a.click(); showToast("File scaricato ✓"); };
+
+          return (
+            <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setMicePreviewEv(null)} style={{ zIndex:600 }}>
+              <div style={{ background:"#fff", borderRadius:12, width:"min(94vw,920px)", maxHeight:"92vh", display:"flex", flexDirection:"column", boxShadow:"0 24px 70px rgba(0,0,0,.28)", overflow:"hidden" }}>
+                <div style={{ padding:"16px 22px", borderBottom:`1px solid ${C.border}`, display:"flex", justifyContent:"space-between", alignItems:"center", flexShrink:0, background:C.navy }}>
+                  <div>
+                    <div style={{ fontSize:10, fontWeight:700, color:"#90b4d4", letterSpacing:2 }}>PREVENTIVO MICE</div>
+                    <div style={{ fontSize:17, fontWeight:700, color:"#fff" }}>{ev.id} · {ev.nomeEvento}</div>
+                  </div>
+                  <button onClick={()=>setMicePreviewEv(null)} style={{ background:"none", border:"none", fontSize:24, cursor:"pointer", color:"#90b4d4" }}>×</button>
+                </div>
+                <div style={{ flex:1, overflow:"hidden", background:"#e8edf3", padding:16 }}>
+                  <iframe srcDoc={htmlPrev} title="Preventivo MICE" style={{ width:"100%", height:"100%", border:"none", borderRadius:8, boxShadow:"0 4px 20px rgba(0,0,0,.15)", background:"#fff" }} sandbox="allow-same-origin" />
+                </div>
+                <div style={{ padding:"12px 22px", borderTop:`1px solid ${C.border}`, display:"flex", gap:8, justifyContent:"space-between", alignItems:"center", flexShrink:0, background:"#fafbfc" }}>
+                  <div style={{ fontSize:12, color:C.text3 }}>Preventivo responsive · pronto per stampa e invio</div>
+                  <div style={{ display:"flex", gap:8 }}>
+                    <button className="btn-secondary" style={{ fontSize:12 }} onClick={copyHtml}>📋 Copia HTML</button>
+                    <button className="btn-secondary" style={{ fontSize:12 }} onClick={downloadPrev}>⬇ Scarica</button>
+                    <button className="btn-secondary" style={{ fontSize:12 }} onClick={printPrev}>🖨 Stampa / PDF</button>
+                    <a href={`mailto:${ev.email}?subject=${encodeURIComponent("Preventivo MICE "+ev.id+" — Hotel Gasparini")}&body=${encodeURIComponent("Gentile "+ev.referente+",\n\nIn allegato il preventivo per l'evento "+ev.nomeEvento+" del "+ev.data+".\n\nHotel Gasparini MICE\n+39 041 400 000 · mice@hotelgasparini.it")}`}
+                      style={{ display:"inline-flex",alignItems:"center",gap:6,padding:"8px 18px",background:C.navy,border:`1px solid ${C.navy}`,borderRadius:6,fontSize:13,fontWeight:700,color:"#fff",textDecoration:"none" }}>
+                      📤 Invia a {ev.email||"cliente"}
+                    </a>
+                    <button className="btn-secondary" style={{ fontSize:12 }} onClick={()=>setMicePreviewEv(null)}>Chiudi</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
       </div>{/* fine main content */}
 
     </div>
   );
 }
+
+// ═══════════════════════════════════════════════════════
+// MICE MODULE — integrato in App.jsx
+// ═══════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════
+//  HOTEL GASPARINI PMS — MODULO MICE
+//  Meetings · Incentives · Conferences · Events
+//  Gestione sale, attrezzature, F&B e preventivi
+// ════════════════════════════════════════════════════════════════
+//
+//  INTEGRAZIONE NEL PMS PRINCIPALE:
+//  1. Copia questo file nella stessa cartella di App.jsx
+//  2. In App.jsx aggiungi import: import MICEModule from './MICE.jsx'
+//  3. Aggiungi "MICE" all'array PAGES in App.jsx
+//  4. Nel router di pagina aggiungi: case "MICE": return <MICEModule />
+//
+// ════════════════════════════════════════════════════════════════
+
+
+// ─── PALETTE (speculare a App.jsx) ──────────────────────────────
+const C = {
+  bg: "#f0f3f7", surface: "#ffffff", surface2: "#f5f7fa",
+  border: "#dde3ec", border2: "#c4cdd9",
+  text: "#1a2535", text2: "#4a5568", text3: "#8896a8",
+  blue: "#0f62fe", blueL: "#e8f0ff", blueLb: "#b3ccff",
+  navy: "#1565c0", navyL: "#e3f0ff",
+  green: "#1b7a4a", greenL: "#e6f7ee", greenLb: "#6fcf97",
+  red: "#c62828", redL: "#fdecea", redLb: "#ef9a9a",
+  amber: "#e65100", amberL: "#fff3e0", amberLb: "#ffcc80",
+  purple: "#5c35cc", purpleL: "#ede9fe",
+  teal: "#00695c", tealL: "#e0f2f1",
+  sidebar: "#0a1929",
+};
+
+// ─── DATI SALE MEETING ──────────────────────────────────────────
+const SALE_DEFAULT = [
+  {
+    id: "S1", nome: "Sala Chioggia", piano: 1, mq: 80,
+    capienze: { theatre: 80, classroom: 50, uShape: 30, boardroom: 20, cabaret: 40, banquet: 60 },
+    tariffe: { mezza: 380, intera: 680, settimanale: 2800 },
+    dotazioni: ["Schermo motorizzato 200\"","Proiettore 5000 lm","Sistema audio","WiFi dedicato","Climatizzazione","Luce naturale","Accesso disabili"],
+    note: "Sala principale con affaccio sul canal vena. Divisibile in 2 ambienti da 40 mq.",
+    attiva: true, colore: "#1565c0",
+  },
+  {
+    id: "S2", nome: "Sala Laguna", piano: 2, mq: 60,
+    capienze: { theatre: 60, classroom: 36, uShape: 22, boardroom: 16, cabaret: 30, banquet: 40 },
+    tariffe: { mezza: 290, intera: 520, settimanale: 2100 },
+    dotazioni: ["Schermo motorizzato 180\"","Proiettore 4000 lm","Sistema audio","WiFi dedicato","Climatizzazione","Luce naturale"],
+    note: "Vista panoramica sulla laguna. Ideale per presentazioni e workshop.",
+    attiva: true, colore: "#1b7a4a",
+  },
+  {
+    id: "S3", nome: "Board Room", piano: 3, mq: 40,
+    capienze: { theatre: 0, classroom: 0, uShape: 0, boardroom: 14, cabaret: 0, banquet: 0 },
+    tariffe: { mezza: 220, intera: 380, settimanale: 1500 },
+    dotazioni: ["Monitor 86\" 4K","Videoconferenza Logitech","Telefono conference","WiFi dedicato","Climatizzazione","Blackout totale"],
+    note: "Sala CdA con tavolo in noce massello per 14 persone. Solo configurazione boardroom.",
+    attiva: true, colore: "#5c35cc",
+  },
+  {
+    id: "S4", nome: "Sala Venezia", piano: 4, mq: 50,
+    capienze: { theatre: 50, classroom: 30, uShape: 20, boardroom: 14, cabaret: 24, banquet: 36 },
+    tariffe: { mezza: 260, intera: 450, settimanale: 1800 },
+    dotazioni: ["Schermo motorizzato 180\"","Proiettore laser","Sistema audio","WiFi dedicato","Climatizzazione"],
+    note: "Sala versatile al 4° piano. Ideale per training e team building.",
+    attiva: true, colore: "#e65100",
+  },
+  {
+    id: "S5", nome: "Terrazza Adriatico", piano: 5, mq: 120,
+    capienze: { theatre: 0, classroom: 0, uShape: 0, boardroom: 0, cabaret: 60, banquet: 80 },
+    tariffe: { mezza: 500, intera: 900, settimanale: 0 },
+    dotazioni: ["Sistema audio outdoor","Tende da sole motorizzate","Riscaldamento esterno","Vista panoramica 360°","Illuminazione scenografica"],
+    note: "Terrazza panoramica esclusiva. Disponibile solo per eventi e cene di gala (maggio–settembre).",
+    attiva: true, colore: "#00695c",
+  },
+];
+
+// ─── CATALOGO ATTREZZATURE ──────────────────────────────────────
+const ATTREZZATURE = [
+  // Audio/Video
+  { id:"AV01", cat:"Audio/Video", nome:"Proiettore aggiuntivo 5000 lm",     prezzo:120, um:"giorno" },
+  { id:"AV02", cat:"Audio/Video", nome:"Schermo aggiuntivo 200\"",           prezzo:60,  um:"giorno" },
+  { id:"AV03", cat:"Audio/Video", nome:"Monitor LED 75\" su carrello",       prezzo:80,  um:"giorno" },
+  { id:"AV04", cat:"Audio/Video", nome:"Sistema videoconferenza Teams/Zoom", prezzo:150, um:"giorno" },
+  { id:"AV05", cat:"Audio/Video", nome:"Microfono palmare wireless",         prezzo:30,  um:"giorno" },
+  { id:"AV06", cat:"Audio/Video", nome:"Microfono lavalier wireless",        prezzo:40,  um:"giorno" },
+  { id:"AV07", cat:"Audio/Video", nome:"Impianto audio portatile",           prezzo:90,  um:"giorno" },
+  { id:"AV08", cat:"Audio/Video", nome:"Puntatore laser + telecomando",      prezzo:15,  um:"giorno" },
+  // Arredi
+  { id:"AR01", cat:"Arredi",      nome:"Flip chart con blocco da 50 fogli",  prezzo:25,  um:"giorno" },
+  { id:"AR02", cat:"Arredi",      nome:"Lavagna bianca 120×90 cm",           prezzo:20,  um:"giorno" },
+  { id:"AR03", cat:"Arredi",      nome:"Leggìo professionale",               prezzo:15,  um:"giorno" },
+  { id:"AR04", cat:"Arredi",      nome:"Separé/pannello divisorio 2m",       prezzo:35,  um:"cad" },
+  { id:"AR05", cat:"Arredi",      nome:"Tavolo rotondo aggiuntivo",          prezzo:30,  um:"cad" },
+  { id:"AR06", cat:"Arredi",      nome:"Sedia aggiuntiva",                   prezzo:8,   um:"cad" },
+  { id:"AR07", cat:"Arredi",      nome:"Pedana/palco 2×1 m",                 prezzo:80,  um:"elemento" },
+  // Allestimento
+  { id:"AL01", cat:"Allestimento",nome:"Decorazioni floreali da tavolo",     prezzo:45,  um:"tavolo" },
+  { id:"AL02", cat:"Allestimento",nome:"Allestimento welcome desk",          prezzo:120, um:"evento" },
+  { id:"AL03", cat:"Allestimento",nome:"Segnaletica direzionale (set 5 pz)", prezzo:60,  um:"evento" },
+  { id:"AL04", cat:"Allestimento",nome:"Totem segnaposto personalizzato",    prezzo:40,  um:"cad" },
+  { id:"AL05", cat:"Allestimento",nome:"Backdrop telonato 3×2 m",            prezzo:200, um:"evento" },
+  // Servizi
+  { id:"SV01", cat:"Servizi",     nome:"Hostess/steward",                    prezzo:180, um:"persona/giorno" },
+  { id:"SV02", cat:"Servizi",     nome:"Tecnico AV dedicato",                prezzo:220, um:"giorno" },
+  { id:"SV03", cat:"Servizi",     nome:"Traduzione simultanea (cabina+2 cuffie)", prezzo:380, um:"giorno" },
+  { id:"SV04", cat:"Servizi",     nome:"Servizio guardaroba",                prezzo:80,  um:"giorno" },
+  { id:"SV05", cat:"Servizi",     nome:"Parcheggio riservato",               prezzo:15,  um:"posto/giorno" },
+  { id:"SV06", cat:"Servizi",     nome:"Connessione Internet dedicata 1Gbps",prezzo:120, um:"giorno" },
+];
+
+// ─── MENU F&B ───────────────────────────────────────────────────
+const FB_PACKAGES = [
+  // Coffee Break
+  { id:"CB01", cat:"Coffee Break",    nome:"Coffee Break Classico",        prezzo:8,   um:"persona", desc:"Caffè, tè, succhi, acqua, pasticceria secca" },
+  { id:"CB02", cat:"Coffee Break",    nome:"Coffee Break Gourmet",         prezzo:14,  um:"persona", desc:"Coffee break classico + frutta fresca, dolci artigianali locali" },
+  { id:"CB03", cat:"Coffee Break",    nome:"Coffee Break Salato",          prezzo:12,  um:"persona", desc:"Caffè, succhi, mini tramezzini, focaccine, pizzette" },
+  // Pranzo
+  { id:"PZ01", cat:"Pranzo",          nome:"Lunch Box da lavoro",          prezzo:22,  um:"persona", desc:"Panino gourmet, frutta, dolce, acqua — servito in sala" },
+  { id:"PZ02", cat:"Pranzo",          nome:"Pranzo di Lavoro (buffet)",    prezzo:38,  um:"persona", desc:"Buffet freddo/caldo, dolce, acqua e bevande analcoliche" },
+  { id:"PZ03", cat:"Pranzo",          nome:"Pranzo Seduto 3 portate",      prezzo:55,  um:"persona", desc:"Menu fisso 3 portate con vino e acqua inclusi" },
+  { id:"PZ04", cat:"Pranzo",          nome:"Pranzo Seduto 4 portate",      prezzo:72,  um:"persona", desc:"Menu gourmet 4 portate con vini abbinati inclusi" },
+  // Aperitivo
+  { id:"AP01", cat:"Aperitivo",       nome:"Aperitivo di Benvenuto",       prezzo:18,  um:"persona", desc:"Prosecco/succhi, finger food, stuzzichini locali" },
+  { id:"AP02", cat:"Aperitivo",       nome:"Aperitivo Lagunare",           prezzo:28,  um:"persona", desc:"Bollicine, cicchetti veneziani, frittura di paranza" },
+  // Cena
+  { id:"CE01", cat:"Cena",            nome:"Cena di Gala 4 portate",       prezzo:85,  um:"persona", desc:"Menu di pesce adriatico, vini selezionati, dessert" },
+  { id:"CE02", cat:"Cena",            nome:"Cena di Gala 5 portate",       prezzo:110, um:"persona", desc:"Menu gourmet completo con abbinamento vini premium" },
+  { id:"CE03", cat:"Cena",            nome:"Cena Tematica Veneziana",      prezzo:95,  um:"persona", desc:"Ricette della tradizione veneziana, vini DOC, live music" },
+  // Bevande
+  { id:"BV01", cat:"Bevande",         nome:"Open Bar (3h)",                prezzo:25,  um:"persona", desc:"Vino, birra, analcolici, acqua a volontà per 3 ore" },
+  { id:"BV02", cat:"Bevande",         nome:"Open Bar Premium (3h)",        prezzo:40,  um:"persona", desc:"Cocktail, vini premium, bollicine, analcolici — 3 ore" },
+  { id:"BV03", cat:"Bevande",         nome:"Welcome drink",                prezzo:10,  um:"persona", desc:"Prosecco DOC o succo al momento dell'arrivo" },
+  // Pausa Pranzo
+  { id:"PP01", cat:"Spuntino",        nome:"Spuntino pomeridiano",         prezzo:10,  um:"persona", desc:"Caffè, tè, macedonie, dolcetti" },
+];
+
+// ─── STATI PREVENTIVO ───────────────────────────────────────────
+const STATI = {
+  bozza:      { label:"Bozza",       bg:"#f0f3f7", text:"#607080", border:"#c4cdd9" },
+  inviato:    { label:"Inviato",     bg:"#e8f0ff", text:"#0f62fe", border:"#b3ccff" },
+  confermato: { label:"Confermato",  bg:"#e6f7ee", text:"#1b7a4a", border:"#6fcf97" },
+  declinato:  { label:"Declinato",   bg:"#fdecea", text:"#c62828", border:"#ef9a9a" },
+  annullato:  { label:"Annullato",   bg:"#fff3e0", text:"#e65100", border:"#ffcc80" },
+  completato: { label:"Completato",  bg:"#ede9fe", text:"#5c35cc", border:"#c4b5fd" },
+};
+
+const LAYOUT_LABELS = {
+  theatre:"Theatre","classroom":"Classroom","uShape":"U-Shape",
+  boardroom:"Boardroom","cabaret":"Cabaret","banquet":"Banquet",
+};
+const LAYOUT_ICONS = {
+  theatre:"🎭","classroom":"📚","uShape":"🔷","boardroom":"💼","cabaret":"🍽️","banquet":"🥂",
+};
+
+// ─── HELPERS ────────────────────────────────────────────────────
+const genMICEId = () => "MICE" + Date.now().toString().slice(-6);
+const fmtEur  = (n) => "€" + (Number(n)||0).toLocaleString("it-IT", {minimumFractionDigits:2, maximumFractionDigits:2});
+const fmtDate = (d) => d ? new Date(d + "T12:00:00").toLocaleDateString("it-IT",{day:"2-digit",month:"short",year:"numeric"}) : "—";
+const fmtDateShort = (d) => d ? new Date(d + "T12:00:00").toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit"}) : "—";
+const todayStr = () => new Date().toISOString().split("T")[0];
+const diffDays = (d1,d2) => Math.max(0,Math.round((new Date(d2)-new Date(d1))/86400000));
+
+// ─── DATI DEMO ───────────────────────────────────────────────────
+const DEMO_PREV = [
+  {
+    id:"MICE001", stato:"confermato",
+    cliente:{ nome:"Dott.", cognome:"Marco Ferretti", azienda:"Ferretti Group S.p.A.", email:"m.ferretti@ferrettigroup.com", tel:"+39 041 512 3456", piva:"01234567890" },
+    evento:{ titolo:"Board Meeting Q1 2025", tipo:"meeting", dataInizio:"2025-03-15", dataFine:"2025-03-15", oraInizio:"09:00", oraFine:"18:00", partecipanti:12 },
+    sala:{ id:"S3", layout:"boardroom", allestimento:"Standard" },
+    attrezzature:[{ id:"AV04", qty:1 },{ id:"AV05", qty:2 }],
+    fb:[{ id:"CB01", qty:12, momento:"Mattina" },{ id:"PZ02", qty:12, momento:"Pranzo" },{ id:"CB01", qty:12, momento:"Pomeriggio" }],
+    note:"Riservatezza richiesta. Nessun personale esterno durante le sessioni.",
+    creatoIl:"2025-02-10", inviatoIl:"2025-02-10", confermatoIl:"2025-02-12",
+    sconto:5,
+  },
+  {
+    id:"MICE002", stato:"inviato",
+    cliente:{ nome:"", cognome:"Lucia Barzotto", azienda:"Consorzio Vini DOC Colli Euganei", email:"l.barzotto@cvdce.it", tel:"+39 049 873 2100", piva:"98765432100" },
+    evento:{ titolo:"Convegno Annuale Produttori", tipo:"conference", dataInizio:"2025-04-10", dataFine:"2025-04-11", oraInizio:"09:30", oraFine:"17:30", partecipanti:65 },
+    sala:{ id:"S1", layout:"theatre", allestimento:"Premium" },
+    attrezzature:[{ id:"AV01", qty:1 },{ id:"AV05", qty:3 },{ id:"SV01", qty:2 },{ id:"SV02", qty:1 }],
+    fb:[{ id:"CB02", qty:65, momento:"Mattina" },{ id:"PZ02", qty:65, momento:"Pranzo" },{ id:"AP02", qty:65, momento:"Sera" },{ id:"CE01", qty:65, momento:"Cena" }],
+    note:"Richiesta area espositiva per 8 produttori nel corridoio antistante.",
+    creatoIl:"2025-02-20", inviatoIl:"2025-02-22", confermatoIl:null,
+    sconto:8,
+  },
+  {
+    id:"MICE003", stato:"bozza",
+    cliente:{ nome:"Ing.", cognome:"Sara Nobile", azienda:"NovaConstruct S.r.l.", email:"s.nobile@novaconstruct.it", tel:"+39 049 660 7890", piva:"45678901234" },
+    evento:{ titolo:"Training Sicurezza Cantiere", tipo:"training", dataInizio:"2025-03-28", dataFine:"2025-03-29", oraInizio:"08:30", oraFine:"17:00", partecipanti:30 },
+    sala:{ id:"S4", layout:"classroom", allestimento:"Standard" },
+    attrezzature:[{ id:"AR01", qty:2 },{ id:"AV08", qty:1 }],
+    fb:[{ id:"CB01", qty:30, momento:"Mattina" },{ id:"PZ01", qty:30, momento:"Pranzo" }],
+    note:"",
+    creatoIl:"2025-02-24", inviatoIl:null, confermatoIl:null,
+    sconto:0,
+  },
+];
+
+// ════════════════════════════════════════════════════════════════
+//  COMPONENTE PRINCIPALE
+// ════════════════════════════════════════════════════════════════
+function MICEModule() {
+  const [view, setView]           = useState("dashboard");   // dashboard | lista | form | dettaglio | sale | config
+  const [preventivi, setPreventivi] = useState(DEMO_PREV);
+  const [sale, setSale]           = useState(SALE_DEFAULT);
+  const [selected, setSelected]   = useState(null);          // preventivo attivo
+  const [formData, setFormData]   = useState(null);          // form nuovo/edit
+  const [filterStato, setFilterStato] = useState("tutti");
+  const [searchQ, setSearchQ]     = useState("");
+  const [toast, setToast]         = useState(null);
+  const [activeTab, setActiveTab] = useState("preventivo");  // tab form
+
+  // ─── TOAST ───
+  const showToast = useCallback((msg, type="ok") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3200);
+  }, []);
+
+  // ─── CALC TOTALE PREVENTIVO ───
+  const calcTotale = useCallback((prev, saleList) => {
+    if (!prev) return { sala:0, attr:0, fb:0, sub:0, sconto:0, iva:0, totale:0 };
+    const salaObj  = saleList.find(s => s.id === prev.sala?.id);
+    const giorni   = Math.max(1, diffDays(prev.evento?.dataInizio, prev.evento?.dataFine) + 1);
+
+    // Costo sala
+    const tariffa = prev.sala?.allestimento === "Giornata intera" ? "intera" : "mezza";
+    const costSala = (salaObj?.tariffe[tariffa] || 0) * giorni;
+
+    // Attrezzature
+    const costAttr = (prev.attrezzature||[]).reduce((s,a) => {
+      const item = ATTREZZATURE.find(x => x.id === a.id);
+      return s + (item?.prezzo||0) * (a.qty||1) * giorni;
+    }, 0);
+
+    // F&B
+    const costFb = (prev.fb||[]).reduce((s,f) => {
+      const item = FB_PACKAGES.find(x => x.id === f.id);
+      return s + (item?.prezzo||0) * (f.qty||1);
+    }, 0);
+
+    const sub      = costSala + costAttr + costFb;
+    const scontVal = sub * ((prev.sconto||0)/100);
+    const imponib  = sub - scontVal;
+    const iva      = imponib * 0.10;
+
+    return { sala:costSala, attr:costAttr, fb:costFb, sub, sconto:scontVal, iva, totale:imponib+iva };
+  }, []);
+
+  // ─── LISTA FILTRATA ───
+  const listFiltrata = useMemo(() => {
+    return preventivi.filter(p => {
+      const matchStato = filterStato === "tutti" || p.stato === filterStato;
+      const q = searchQ.toLowerCase();
+      const matchQ = !q || p.id.toLowerCase().includes(q)
+        || p.cliente?.azienda?.toLowerCase().includes(q)
+        || p.cliente?.cognome?.toLowerCase().includes(q)
+        || p.evento?.titolo?.toLowerCase().includes(q);
+      return matchStato && matchQ;
+    });
+  }, [preventivi, filterStato, searchQ]);
+
+  // ─── NUOVO PREVENTIVO ───
+  const nuovoPreventivo = () => {
+    setFormData({
+      id: genMICEId(), stato:"bozza",
+      cliente:{ nome:"", cognome:"", azienda:"", email:"", tel:"", piva:"" },
+      evento:{ titolo:"", tipo:"meeting", dataInizio:"", dataFine:"", oraInizio:"09:00", oraFine:"18:00", partecipanti:10 },
+      sala:{ id:"S1", layout:"boardroom", allestimento:"Mezza giornata" },
+      attrezzature:[], fb:[],
+      note:"", sconto:0,
+      creatoIl: todayStr(), inviatoIl:null, confermatoIl:null,
+    });
+    setActiveTab("preventivo");
+    setView("form");
+  };
+
+  const editPreventivo = (prev) => {
+    setFormData({ ...JSON.parse(JSON.stringify(prev)) });
+    setActiveTab("preventivo");
+    setView("form");
+  };
+
+  const salvaPreventivo = (data) => {
+    setPreventivi(prev => {
+      const idx = prev.findIndex(p => p.id === data.id);
+      if (idx >= 0) { const a = [...prev]; a[idx]=data; return a; }
+      return [data, ...prev];
+    });
+    showToast(`Preventivo ${data.id} salvato`, "ok");
+    setView("lista");
+  };
+
+  const cambiaStato = (id, stato) => {
+    setPreventivi(prev => prev.map(p => {
+      if (p.id !== id) return p;
+      const up = { ...p, stato };
+      if (stato === "inviato" && !p.inviatoIl) up.inviatoIl = todayStr();
+      if (stato === "confermato" && !p.confermatoIl) up.confermatoIl = todayStr();
+      return up;
+    }));
+    showToast(`Stato aggiornato: ${STATI[stato].label}`,"ok");
+  };
+
+  const eliminaPreventivo = (id) => {
+    setPreventivi(prev => prev.filter(p => p.id !== id));
+    showToast("Preventivo eliminato","warn");
+    if (view === "dettaglio") setView("lista");
+  };
+
+  // ─── SALVA CONFIGURAZIONE SALE ───
+  const salvaSala = (salaAggiornata) => {
+    setSale(prev => prev.map(s => s.id === salaAggiornata.id ? salaAggiornata : s));
+    showToast(`Sala ${salaAggiornata.nome} aggiornata`,"ok");
+  };
+
+  // ─── RENDER ─────────────────────────────────────────────────
+  return (
+    <div style={{ fontFamily:"'IBM Plex Sans', system-ui, sans-serif", background:C.bg, minHeight:"100%", color:C.text }}>
+
+      {/* Topbar MICE */}
+      <div style={{ background:C.surface, borderBottom:`1px solid ${C.border}`, padding:"0 24px", display:"flex", alignItems:"center", gap:16, height:56 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <div style={{ width:32, height:32, borderRadius:8, background:"linear-gradient(135deg,#5c35cc,#0f62fe)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>🎪</div>
+          <div>
+            <div style={{ fontSize:15, fontWeight:700, color:C.text }}>MICE Manager</div>
+            <div style={{ fontSize:10, letterSpacing:2, textTransform:"uppercase", color:C.text3 }}>Meetings · Incentives · Conferences · Events</div>
+          </div>
+        </div>
+        <div style={{ flex:1 }} />
+        {/* Nav pillole */}
+        {[
+          { k:"dashboard", icon:"📊", label:"Dashboard" },
+          { k:"lista",     icon:"📋", label:"Preventivi" },
+          { k:"sale",      icon:"🏛️", label:"Sale" },
+        ].map(n => (
+          <button key={n.k} onClick={() => setView(n.k)} style={{
+            padding:"6px 14px", borderRadius:6, border:"none", cursor:"pointer",
+            fontFamily:"'IBM Plex Sans',sans-serif", fontSize:13, fontWeight:500,
+            background: view===n.k ? C.blueL : "transparent",
+            color: view===n.k ? C.blue : C.text2,
+            display:"flex", alignItems:"center", gap:6,
+          }}>
+            <span>{n.icon}</span>{n.label}
+          </button>
+        ))}
+        <button onClick={nuovoPreventivo} style={{
+          display:"flex", alignItems:"center", gap:6,
+          padding:"8px 16px", borderRadius:6, border:"none", cursor:"pointer",
+          background:C.blue, color:"#fff", fontWeight:600, fontSize:13,
+          fontFamily:"'IBM Plex Sans',sans-serif",
+        }}>+ Nuovo Preventivo</button>
+      </div>
+
+      {/* BODY */}
+      <div style={{ padding:24 }}>
+        {view === "dashboard"  && <Dashboard preventivi={preventivi} sale={sale} calcTotale={calcTotale} onNew={nuovoPreventivo} onView={p=>{setSelected(p);setView("dettaglio");}} />}
+        {view === "lista"      && <ListaPreventivi preventivi={listFiltrata} sale={sale} calcTotale={calcTotale} filterStato={filterStato} setFilterStato={setFilterStato} searchQ={searchQ} setSearchQ={setSearchQ} onNew={nuovoPreventivo} onEdit={editPreventivo} onView={p=>{setSelected(p);setView("dettaglio");}} onStato={cambiaStato} onDelete={eliminaPreventivo} />}
+        {view === "form"       && formData && <FormPreventivo data={formData} setData={setFormData} sale={sale} calcTotale={calcTotale} activeTab={activeTab} setActiveTab={setActiveTab} onSave={salvaPreventivo} onCancel={() => setView("lista")} />}
+        {view === "dettaglio"  && selected && <DettaglioPreventivo prev={selected} sale={sale} calcTotale={calcTotale} onEdit={() => editPreventivo(selected)} onStato={cambiaStato} onDelete={eliminaPreventivo} onBack={() => setView("lista")} />}
+        {view === "sale"       && <GestioneSale sale={sale} preventivi={preventivi} onSalva={salvaSala} />}
+      </div>
+
+      {/* Toast */}
+      {toast && (
+        <div style={{
+          position:"fixed", bottom:24, right:24, zIndex:9999,
+          background: toast.type==="ok" ? C.green : toast.type==="warn" ? C.amber : C.red,
+          color:"#fff", borderRadius:8, padding:"12px 20px", fontSize:13, fontWeight:500,
+          boxShadow:"0 4px 20px rgba(0,0,0,.2)",
+          animation:"slideInRight .3s ease",
+        }}>
+          {toast.type==="ok" ? "✓" : "⚠"} {toast.msg}
+        </div>
+      )}
+      <style>{`@keyframes slideInRight{from{transform:translateX(60px);opacity:0}to{transform:translateX(0);opacity:1}}`}</style>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════════════════════════════════
+function Dashboard({ preventivi, sale, calcTotale, onNew, onView }) {
+  const stats = useMemo(() => {
+    const totali    = preventivi.length;
+    const confermati = preventivi.filter(p=>p.stato==="confermato").length;
+    const inviati    = preventivi.filter(p=>p.stato==="inviato").length;
+    const bozze      = preventivi.filter(p=>p.stato==="bozza").length;
+    const revenue    = preventivi.filter(p=>p.stato==="confermato").reduce((s,p) => s + calcTotale(p,sale).totale, 0);
+    const pipeline   = preventivi.filter(p=>["inviato","bozza"].includes(p.stato)).reduce((s,p) => s + calcTotale(p,sale).totale, 0);
+    return { totali, confermati, inviati, bozze, revenue, pipeline };
+  }, [preventivi, sale, calcTotale]);
+
+  // Prossimi 30 gg per calendario sale
+  const today = new Date();
+  const mese  = Array.from({length:30}, (_,i) => { const d=new Date(today); d.setDate(today.getDate()+i); return d.toISOString().split("T")[0]; });
+
+  return (
+    <div>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
+        <div>
+          <h2 style={{ fontSize:22, fontWeight:700, margin:0 }}>Dashboard MICE</h2>
+          <p style={{ fontSize:12, color:C.text3, marginTop:3 }}>Panoramica sale, preventivi e revenue</p>
+        </div>
+        <button onClick={onNew} style={{ padding:"9px 18px", borderRadius:6, border:"none", cursor:"pointer", background:C.blue, color:"#fff", fontWeight:600, fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>
+          + Nuovo Preventivo
+        </button>
+      </div>
+
+      {/* KPI Cards */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:12, marginBottom:24 }}>
+        {[
+          { label:"Preventivi totali", val:stats.totali,    bg:C.surface, accent:C.text, icon:"📋" },
+          { label:"Bozze",             val:stats.bozze,     bg:C.surface, accent:C.text3,icon:"✏️" },
+          { label:"Inviati",           val:stats.inviati,   bg:C.blueL,  accent:C.blue,  icon:"📤" },
+          { label:"Confermati",        val:stats.confermati,bg:C.greenL, accent:C.green, icon:"✅" },
+          { label:"Revenue confermata",val:fmtEur(stats.revenue),   bg:"linear-gradient(135deg,#1b7a4a,#2ecc71)", accent:"#fff", icon:"💰", light:true },
+          { label:"Pipeline attiva",   val:fmtEur(stats.pipeline),  bg:"linear-gradient(135deg,#5c35cc,#818cf8)", accent:"#fff", icon:"📈", light:true },
+        ].map((k,i) => (
+          <div key={i} style={{ background:k.bg, borderRadius:10, padding:"16px", border: k.light?0:`1px solid ${C.border}`, boxShadow: k.light?"0 4px 16px rgba(0,0,0,.12)":"none" }}>
+            <div style={{ fontSize:18, marginBottom:6 }}>{k.icon}</div>
+            <div style={{ fontSize:22, fontWeight:700, color:k.light?"#fff":k.accent }}>{k.val}</div>
+            <div style={{ fontSize:11, color:k.light?"rgba(255,255,255,.75)":C.text3, marginTop:2 }}>{k.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:20 }}>
+        {/* Occupazione sale prossimi 14 gg */}
+        <div style={{ background:C.surface, borderRadius:10, border:`1px solid ${C.border}`, overflow:"hidden" }}>
+          <div style={{ padding:"14px 18px", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", gap:8 }}>
+            <span style={{ fontSize:15 }}>🏛️</span>
+            <span style={{ fontSize:14, fontWeight:700 }}>Occupazione Sale — prossimi 14 giorni</span>
+          </div>
+          <div style={{ padding:"12px 18px", overflowX:"auto" }}>
+            <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
+              <thead>
+                <tr>
+                  <th style={{ textAlign:"left", padding:"4px 8px", color:C.text3, fontWeight:600, whiteSpace:"nowrap", width:100 }}>Sala</th>
+                  {mese.slice(0,14).map(d => (
+                    <th key={d} style={{ textAlign:"center", padding:"4px 4px", color:C.text3, fontWeight:500, fontSize:10, minWidth:28 }}>
+                      {new Date(d+"T12:00:00").toLocaleDateString("it-IT",{day:"2-digit",month:"2-digit"}).slice(0,5)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {sale.filter(s=>s.attiva).map(sala => (
+                  <tr key={sala.id}>
+                    <td style={{ padding:"5px 8px", fontWeight:600, fontSize:12, color:sala.colore, whiteSpace:"nowrap" }}>
+                      {sala.nome.split(" ").slice(-1)[0]}
+                    </td>
+                    {mese.slice(0,14).map(d => {
+                      const occ = preventivi.filter(p =>
+                        p.sala?.id === sala.id &&
+                        ["confermato","inviato"].includes(p.stato) &&
+                        p.evento?.dataInizio <= d && p.evento?.dataFine >= d
+                      );
+                      return (
+                        <td key={d} style={{ textAlign:"center", padding:"3px" }}>
+                          <div style={{
+                            width:24, height:24, borderRadius:4, margin:"0 auto",
+                            background: occ.length>0 ? (occ[0].stato==="confermato" ? C.greenL : C.blueL) : C.surface2,
+                            border: `1px solid ${occ.length>0 ? (occ[0].stato==="confermato" ? C.greenLb : C.blueLb) : C.border}`,
+                            display:"flex", alignItems:"center", justifyContent:"center", fontSize:10,
+                          }} title={occ.length>0 ? occ[0].evento?.titolo : "Libera"}>
+                            {occ.length>0 ? (occ[0].stato==="confermato"?"✓":"·") : ""}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ display:"flex", gap:12, marginTop:10, fontSize:10, color:C.text3 }}>
+              <span style={{ display:"flex", alignItems:"center", gap:4 }}><span style={{ width:12,height:12,borderRadius:2,background:C.greenL,border:`1px solid ${C.greenLb}`,display:"inline-block" }}/> Confermato</span>
+              <span style={{ display:"flex", alignItems:"center", gap:4 }}><span style={{ width:12,height:12,borderRadius:2,background:C.blueL,border:`1px solid ${C.blueLb}`,display:"inline-block" }}/> In attesa</span>
+              <span style={{ display:"flex", alignItems:"center", gap:4 }}><span style={{ width:12,height:12,borderRadius:2,background:C.surface2,border:`1px solid ${C.border}`,display:"inline-block" }}/> Libera</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Ultimi preventivi */}
+        <div style={{ background:C.surface, borderRadius:10, border:`1px solid ${C.border}`, overflow:"hidden" }}>
+          <div style={{ padding:"14px 18px", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", gap:8 }}>
+            <span style={{ fontSize:15 }}>📋</span>
+            <span style={{ fontSize:14, fontWeight:700 }}>Preventivi recenti</span>
+          </div>
+          <div>
+            {preventivi.slice(0,5).map((p, i) => {
+              const s = STATI[p.stato];
+              const tot = calcTotale(p, sale);
+              return (
+                <div key={p.id} onClick={() => onView(p)} style={{
+                  padding:"12px 18px", borderBottom: i<4 ? `1px solid ${C.border}` : "none",
+                  cursor:"pointer", transition:"background .15s",
+                  display:"flex", alignItems:"center", gap:12,
+                }}
+                onMouseEnter={e=>e.currentTarget.style.background=C.surface2}
+                onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontWeight:600, fontSize:13, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.evento?.titolo}</div>
+                    <div style={{ fontSize:11, color:C.text3 }}>{p.cliente?.azienda} · {fmtDate(p.evento?.dataInizio)}</div>
+                  </div>
+                  <div style={{ textAlign:"right", flexShrink:0 }}>
+                    <div style={{ fontSize:12, fontWeight:700 }}>{fmtEur(tot.totale)}</div>
+                    <div style={{ fontSize:10, background:s.bg, color:s.text, border:`1px solid ${s.border}`, borderRadius:20, padding:"1px 8px", marginTop:2 }}>{s.label}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Sale overview */}
+      <div style={{ marginTop:20 }}>
+        <h3 style={{ fontSize:15, fontWeight:700, marginBottom:12 }}>Sale Meeting</h3>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:12 }}>
+          {sale.map(s => {
+            const occOggi = preventivi.filter(p => p.sala?.id===s.id && ["confermato","inviato"].includes(p.stato) && p.evento?.dataInizio <= todayStr() && p.evento?.dataFine >= todayStr());
+            return (
+              <div key={s.id} style={{ background:C.surface, borderRadius:10, border:`1px solid ${C.border}`, overflow:"hidden" }}>
+                <div style={{ height:6, background:s.colore }} />
+                <div style={{ padding:"14px" }}>
+                  <div style={{ fontSize:13, fontWeight:700, marginBottom:2, color:s.colore }}>{s.nome}</div>
+                  <div style={{ fontSize:11, color:C.text3, marginBottom:10 }}>Piano {s.piano} · {s.mq} mq</div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:4, fontSize:10, marginBottom:10 }}>
+                    {Object.entries(s.capienze).filter(([,v])=>v>0).slice(0,4).map(([k,v]) => (
+                      <div key={k} style={{ color:C.text3 }}>{LAYOUT_ICONS[k]} {v}px</div>
+                    ))}
+                  </div>
+                  <div style={{ fontSize:11, fontWeight:600, color: occOggi.length>0?C.amber:C.green }}>
+                    {occOggi.length>0 ? "● Occupata oggi" : "● Libera oggi"}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════
+//  LISTA PREVENTIVI
+// ════════════════════════════════════════════════════════════════
+function ListaPreventivi({ preventivi, sale, calcTotale, filterStato, setFilterStato, searchQ, setSearchQ, onNew, onEdit, onView, onStato, onDelete }) {
+  return (
+    <div>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
+        <div>
+          <h2 style={{ fontSize:22, fontWeight:700, margin:0 }}>Preventivi MICE</h2>
+          <p style={{ fontSize:12, color:C.text3 }}>{preventivi.length} preventivo{preventivi.length!==1?"i":""} trovato{preventivi.length!==1?"i":""}</p>
+        </div>
+        <button onClick={onNew} style={{ padding:"9px 18px", borderRadius:6, border:"none", cursor:"pointer", background:C.blue, color:"#fff", fontWeight:600, fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>
+          + Nuovo Preventivo
+        </button>
+      </div>
+
+      {/* Filtri */}
+      <div style={{ display:"flex", gap:10, marginBottom:16, alignItems:"center", flexWrap:"wrap" }}>
+        <input value={searchQ} onChange={e=>setSearchQ(e.target.value)} placeholder="🔍 Cerca cliente, evento, ID…" style={{ padding:"8px 12px", borderRadius:6, border:`1px solid ${C.border}`, fontSize:13, width:260, fontFamily:"'IBM Plex Sans',sans-serif", outline:"none" }}/>
+        {["tutti","bozza","inviato","confermato","declinato","annullato","completato"].map(s => (
+          <button key={s} onClick={()=>setFilterStato(s)} style={{
+            padding:"6px 12px", borderRadius:20, border:`1px solid ${filterStato===s?C.blue:C.border}`,
+            background: filterStato===s?C.blueL:"transparent", color: filterStato===s?C.blue:C.text3,
+            fontSize:12, fontWeight:filterStato===s?700:400, cursor:"pointer", fontFamily:"'IBM Plex Sans',sans-serif",
+          }}>
+            {s==="tutti" ? "Tutti" : STATI[s]?.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Tabella */}
+      <div style={{ background:C.surface, borderRadius:10, border:`1px solid ${C.border}`, overflow:"hidden" }}>
+        <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+          <thead>
+            <tr style={{ background:C.surface2, borderBottom:`1px solid ${C.border}` }}>
+              {["ID","Cliente / Azienda","Evento","Date","Sala","Partec.","Totale IVA incl.","Stato","Azioni"].map(h=>(
+                <th key={h} style={{ padding:"10px 14px", textAlign:"left", fontSize:11, fontWeight:700, letterSpacing:.5, textTransform:"uppercase", color:C.text3, whiteSpace:"nowrap" }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {preventivi.length === 0 && (
+              <tr><td colSpan={9} style={{ padding:"40px", textAlign:"center", color:C.text3, fontSize:14 }}>Nessun preventivo trovato</td></tr>
+            )}
+            {preventivi.map((p, i) => {
+              const sala = sale.find(s=>s.id===p.sala?.id);
+              const st   = STATI[p.stato];
+              const tot  = calcTotale(p, sale);
+              return (
+                <tr key={p.id} style={{ borderBottom:`1px solid ${C.border}`, cursor:"pointer", transition:"background .1s" }}
+                  onMouseEnter={e=>e.currentTarget.style.background=C.surface2}
+                  onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+                  <td style={{ padding:"10px 14px", fontWeight:700, fontSize:12, color:C.blue }} onClick={()=>onView(p)}>{p.id}</td>
+                  <td style={{ padding:"10px 14px" }} onClick={()=>onView(p)}>
+                    <div style={{ fontWeight:600 }}>{p.cliente?.azienda}</div>
+                    <div style={{ fontSize:11, color:C.text3 }}>{p.cliente?.nome} {p.cliente?.cognome}</div>
+                  </td>
+                  <td style={{ padding:"10px 14px", maxWidth:180 }} onClick={()=>onView(p)}>
+                    <div style={{ fontWeight:500, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.evento?.titolo}</div>
+                    <div style={{ fontSize:11, color:C.text3 }}>{p.evento?.tipo}</div>
+                  </td>
+                  <td style={{ padding:"10px 14px", whiteSpace:"nowrap", fontSize:12 }} onClick={()=>onView(p)}>
+                    {fmtDateShort(p.evento?.dataInizio)}
+                    {p.evento?.dataFine && p.evento.dataFine !== p.evento.dataInizio ? ` → ${fmtDateShort(p.evento.dataFine)}` : ""}
+                  </td>
+                  <td style={{ padding:"10px 14px" }} onClick={()=>onView(p)}>
+                    {sala ? <span style={{ display:"inline-flex", alignItems:"center", gap:4, fontSize:12 }}>
+                      <span style={{ width:8,height:8,borderRadius:"50%",background:sala.colore,display:"inline-block",flexShrink:0 }}/>
+                      {sala.nome}
+                    </span> : "—"}
+                  </td>
+                  <td style={{ padding:"10px 14px", textAlign:"center", fontSize:12 }} onClick={()=>onView(p)}>{p.evento?.partecipanti}</td>
+                  <td style={{ padding:"10px 14px", fontWeight:700, fontSize:13 }} onClick={()=>onView(p)}>{fmtEur(tot.totale)}</td>
+                  <td style={{ padding:"10px 14px" }}>
+                    <span style={{ display:"inline-block", padding:"3px 10px", borderRadius:20, fontSize:11, fontWeight:600, background:st.bg, color:st.text, border:`1px solid ${st.border}` }}>{st.label}</span>
+                  </td>
+                  <td style={{ padding:"10px 10px" }}>
+                    <div style={{ display:"flex", gap:4 }}>
+                      <button onClick={()=>onView(p)} title="Dettaglio" style={btnSmall}><span>👁</span></button>
+                      <button onClick={()=>onEdit(p)} title="Modifica" style={btnSmall}><span>✏️</span></button>
+                      <select value={p.stato} onChange={e=>onStato(p.id,e.target.value)} onClick={e=>e.stopPropagation()} style={{ fontSize:11, padding:"3px 6px", borderRadius:4, border:`1px solid ${C.border}`, cursor:"pointer", fontFamily:"'IBM Plex Sans',sans-serif" }}>
+                        {Object.entries(STATI).map(([k,v])=>(<option key={k} value={k}>{v.label}</option>))}
+                      </select>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+const btnSmall = { padding:"5px 8px", borderRadius:5, border:`1px solid ${C.border}`, background:C.surface, cursor:"pointer", fontSize:13, display:"flex",alignItems:"center" };
+
+// ════════════════════════════════════════════════════════════════
+//  FORM PREVENTIVO (multi-tab)
+// ════════════════════════════════════════════════════════════════
+function FormPreventivo({ data, setData, sale, calcTotale, activeTab, setActiveTab, onSave, onCancel }) {
+  const upd = (path, val) => {
+    setData(prev => {
+      const clone = JSON.parse(JSON.stringify(prev));
+      const parts = path.split(".");
+      let obj = clone;
+      for (let i=0;i<parts.length-1;i++) obj = obj[parts[i]];
+      obj[parts[parts.length-1]] = val;
+      return clone;
+    });
+  };
+
+  const tot = calcTotale(data, sale);
+  const salaObj = sale.find(s=>s.id===data.sala?.id);
+
+  const tabs = [
+    { k:"preventivo", label:"1 · Cliente & Evento", icon:"👤" },
+    { k:"sala",       label:"2 · Sala & Allestimento", icon:"🏛️" },
+    { k:"attr",       label:"3 · Attrezzature", icon:"🖥️" },
+    { k:"fb",         label:"4 · F&B", icon:"🍽️" },
+    { k:"riepilogo",  label:"5 · Riepilogo & Sconto", icon:"💶" },
+  ];
+
+  return (
+    <div>
+      {/* Header */}
+      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
+        <button onClick={onCancel} style={{ padding:"7px 14px", borderRadius:6, border:`1px solid ${C.border}`, background:C.surface, cursor:"pointer", fontFamily:"'IBM Plex Sans',sans-serif", fontSize:13 }}>← Indietro</button>
+        <div>
+          <h2 style={{ margin:0, fontSize:20, fontWeight:700 }}>{data.id ? `Preventivo ${data.id}` : "Nuovo Preventivo"}</h2>
+          <div style={{ fontSize:12, color:C.text3 }}>Creato il {fmtDate(data.creatoIl)}</div>
+        </div>
+        <div style={{ flex:1 }} />
+        {/* Mini totale */}
+        <div style={{ textAlign:"right" }}>
+          <div style={{ fontSize:11, color:C.text3 }}>Totale IVA incl.</div>
+          <div style={{ fontSize:20, fontWeight:800, color:C.blue }}>{fmtEur(tot.totale)}</div>
+        </div>
+        <button onClick={() => onSave(data)} style={{ padding:"9px 20px", borderRadius:6, border:"none", background:C.blue, color:"#fff", cursor:"pointer", fontWeight:700, fontSize:14, fontFamily:"'IBM Plex Sans',sans-serif" }}>
+          💾 Salva Preventivo
+        </button>
+      </div>
+
+      {/* Tab nav */}
+      <div style={{ display:"flex", gap:0, marginBottom:20, background:C.surface, borderRadius:8, border:`1px solid ${C.border}`, overflow:"hidden" }}>
+        {tabs.map(t => (
+          <button key={t.k} onClick={()=>setActiveTab(t.k)} style={{
+            flex:1, padding:"11px 12px", border:"none", borderRight:`1px solid ${C.border}`,
+            background: activeTab===t.k ? C.blue : C.surface, cursor:"pointer",
+            color: activeTab===t.k ? "#fff" : C.text2,
+            fontWeight: activeTab===t.k ? 700 : 400, fontSize:12,
+            fontFamily:"'IBM Plex Sans',sans-serif",
+            display:"flex", alignItems:"center", justifyContent:"center", gap:6,
+            transition:"all .15s",
+          }}>
+            <span>{t.icon}</span>
+            <span style={{ display:"block" }}>{t.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* TAB CONTENT */}
+      <div style={{ background:C.surface, borderRadius:10, border:`1px solid ${C.border}`, padding:24 }}>
+
+        {/* ── TAB 1: CLIENTE & EVENTO ── */}
+        {activeTab === "preventivo" && (
+          <div>
+            <SectionHeader icon="🏢" title="Dati Azienda / Cliente" />
+            <div style={grid2}>
+              <Field label="Ragione Sociale / Azienda *">
+                <input style={inp} value={data.cliente?.azienda||""} onChange={e=>upd("cliente.azienda",e.target.value)} placeholder="Nome azienda"/>
+              </Field>
+              <Field label="P.IVA">
+                <input style={inp} value={data.cliente?.piva||""} onChange={e=>upd("cliente.piva",e.target.value)} placeholder="01234567890"/>
+              </Field>
+              <Field label="Referente — Titolo">
+                <input style={inp} value={data.cliente?.nome||""} onChange={e=>upd("cliente.nome",e.target.value)} placeholder="Dott. / Ing. / Sig.ra"/>
+              </Field>
+              <Field label="Referente — Cognome e Nome">
+                <input style={inp} value={data.cliente?.cognome||""} onChange={e=>upd("cliente.cognome",e.target.value)} placeholder="Mario Rossi"/>
+              </Field>
+              <Field label="Email">
+                <input style={inp} type="email" value={data.cliente?.email||""} onChange={e=>upd("cliente.email",e.target.value)} placeholder="m.rossi@azienda.it"/>
+              </Field>
+              <Field label="Telefono">
+                <input style={inp} value={data.cliente?.tel||""} onChange={e=>upd("cliente.tel",e.target.value)} placeholder="+39 02 1234567"/>
+              </Field>
+            </div>
+
+            <SectionHeader icon="🎯" title="Dettagli Evento" mt={24} />
+            <div style={grid2}>
+              <Field label="Titolo Evento *" style={{ gridColumn:"1/-1" }}>
+                <input style={inp} value={data.evento?.titolo||""} onChange={e=>upd("evento.titolo",e.target.value)} placeholder="Nome dell'evento o meeting"/>
+              </Field>
+              <Field label="Tipologia">
+                <select style={inp} value={data.evento?.tipo||"meeting"} onChange={e=>upd("evento.tipo",e.target.value)}>
+                  {["meeting","conference","training","incentive","gala","workshop","product-launch","team-building","altro"].map(t=>(
+                    <option key={t} value={t}>{t.charAt(0).toUpperCase()+t.slice(1).replace("-"," ")}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="N° Partecipanti">
+                <input style={inp} type="number" min={1} max={500} value={data.evento?.partecipanti||10} onChange={e=>upd("evento.partecipanti",parseInt(e.target.value)||1)}/>
+              </Field>
+              <Field label="Data Inizio *">
+                <input style={inp} type="date" value={data.evento?.dataInizio||""} onChange={e=>upd("evento.dataInizio",e.target.value)}/>
+              </Field>
+              <Field label="Data Fine">
+                <input style={inp} type="date" value={data.evento?.dataFine||""} onChange={e=>upd("evento.dataFine",e.target.value)}/>
+              </Field>
+              <Field label="Ora Inizio">
+                <input style={inp} type="time" value={data.evento?.oraInizio||"09:00"} onChange={e=>upd("evento.oraInizio",e.target.value)}/>
+              </Field>
+              <Field label="Ora Fine">
+                <input style={inp} type="time" value={data.evento?.oraFine||"18:00"} onChange={e=>upd("evento.oraFine",e.target.value)}/>
+              </Field>
+            </div>
+
+            <Field label="Note interne / Richieste speciali" mt={16}>
+              <textarea style={{...inp, height:80, resize:"vertical"}} value={data.note||""} onChange={e=>upd("note",e.target.value)} placeholder="Richieste particolari, riservatezza, accessibilità, parking…"/>
+            </Field>
+
+            <div style={{ marginTop:20, display:"flex", justifyContent:"flex-end" }}>
+              <button onClick={()=>setActiveTab("sala")} style={btnNext}>Avanti: Sala & Allestimento →</button>
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB 2: SALA ── */}
+        {activeTab === "sala" && (
+          <div>
+            <SectionHeader icon="🏛️" title="Selezione Sala" />
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:24 }}>
+              {sale.filter(s=>s.attiva).map(s => {
+                const isSelected = data.sala?.id === s.id;
+                const capMax = Math.max(...Object.values(s.capienze));
+                return (
+                  <div key={s.id} onClick={()=>upd("sala.id",s.id)} style={{
+                    border:`2px solid ${isSelected?s.colore:C.border}`,
+                    borderRadius:10, padding:16, cursor:"pointer",
+                    background: isSelected ? `${s.colore}10` : C.surface,
+                    transition:"all .15s",
+                  }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
+                      <div style={{ width:12, height:12, borderRadius:"50%", background:s.colore, flexShrink:0 }}/>
+                      <div style={{ fontWeight:700, fontSize:14, color:s.colore }}>{s.nome}</div>
+                    </div>
+                    <div style={{ fontSize:12, color:C.text3, marginBottom:8 }}>Piano {s.piano} · {s.mq} mq · fino a {capMax}px</div>
+                    <div style={{ fontSize:11, color:C.text2, lineHeight:1.5 }}>{s.note?.slice(0,80)}{s.note?.length>80?"…":""}</div>
+                    <div style={{ marginTop:8, fontSize:12, fontWeight:700, color:s.colore }}>
+                      da {fmtEur(s.tariffe.mezza)}/mezza giornata
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {salaObj && (
+              <div>
+                <SectionHeader icon="🪑" title="Configurazione Layout" mt={8} />
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:10, marginBottom:20 }}>
+                  {Object.entries(salaObj.capienze).map(([layout, cap]) => {
+                    if (!cap) return null;
+                    const isActive = data.sala?.layout === layout;
+                    return (
+                      <div key={layout} onClick={()=>upd("sala.layout",layout)} style={{
+                        border:`2px solid ${isActive?C.blue:C.border}`,
+                        borderRadius:8, padding:"12px 10px", textAlign:"center", cursor:"pointer",
+                        background: isActive ? C.blueL : C.surface, transition:"all .15s",
+                      }}>
+                        <div style={{ fontSize:22, marginBottom:4 }}>{LAYOUT_ICONS[layout]}</div>
+                        <div style={{ fontSize:12, fontWeight:600, color:isActive?C.blue:C.text }}>{LAYOUT_LABELS[layout]}</div>
+                        <div style={{ fontSize:11, color:C.text3 }}>{cap} px max</div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <SectionHeader icon="⏱️" title="Durata / Tariffa" mt={8} />
+                <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:20 }}>
+                  {[
+                    { k:"Mezza giornata", label:`Mezza giornata — ${fmtEur(salaObj.tariffe.mezza)}/giorno` },
+                    { k:"Giornata intera", label:`Giornata intera — ${fmtEur(salaObj.tariffe.intera)}/giorno` },
+                    ...(salaObj.tariffe.settimanale>0?[{ k:"Settimana", label:`Settimanale — ${fmtEur(salaObj.tariffe.settimanale)}` }]:[]),
+                  ].map(opt => (
+                    <button key={opt.k} onClick={()=>upd("sala.allestimento",opt.k)} style={{
+                      padding:"10px 18px", borderRadius:8, border:`2px solid ${data.sala?.allestimento===opt.k?C.blue:C.border}`,
+                      background: data.sala?.allestimento===opt.k?C.blueL:C.surface,
+                      color: data.sala?.allestimento===opt.k?C.blue:C.text, fontWeight:600,
+                      cursor:"pointer", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif",
+                    }}>{opt.label}</button>
+                  ))}
+                </div>
+
+                {/* Dotazioni incluse */}
+                <div style={{ background:C.surface2, borderRadius:8, padding:14 }}>
+                  <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:C.text3, marginBottom:8 }}>Dotazioni incluse nella sala</div>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                    {salaObj.dotazioni.map(d => (
+                      <span key={d} style={{ padding:"4px 10px", borderRadius:20, background:C.surface, border:`1px solid ${C.border}`, fontSize:12, color:C.text2 }}>✓ {d}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div style={{ marginTop:20, display:"flex", justifyContent:"space-between" }}>
+              <button onClick={()=>setActiveTab("preventivo")} style={btnBack}>← Cliente & Evento</button>
+              <button onClick={()=>setActiveTab("attr")} style={btnNext}>Avanti: Attrezzature →</button>
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB 3: ATTREZZATURE ── */}
+        {activeTab === "attr" && (
+          <div>
+            <SectionHeader icon="🖥️" title="Attrezzature Aggiuntive" />
+            <p style={{ fontSize:13, color:C.text3, marginBottom:16 }}>Le dotazioni base della sala sono incluse. Seleziona attrezzature aggiuntive:</p>
+
+            {["Audio/Video","Arredi","Allestimento","Servizi"].map(cat => {
+              const items = ATTREZZATURE.filter(a=>a.cat===cat);
+              return (
+                <div key={cat} style={{ marginBottom:20 }}>
+                  <div style={{ fontSize:12, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:C.text3, borderBottom:`1px solid ${C.border}`, paddingBottom:6, marginBottom:10 }}>{cat}</div>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:8 }}>
+                    {items.map(item => {
+                      const sel = data.attrezzature?.find(a=>a.id===item.id);
+                      return (
+                        <div key={item.id} style={{
+                          display:"flex", alignItems:"center", gap:10, padding:"10px 12px",
+                          border:`1.5px solid ${sel?C.blue:C.border}`, borderRadius:8,
+                          background: sel?C.blueL:C.surface, cursor:"pointer", transition:"all .15s",
+                        }} onClick={()=>{
+                          setData(prev=>{
+                            const clone = JSON.parse(JSON.stringify(prev));
+                            const idx = clone.attrezzature.findIndex(a=>a.id===item.id);
+                            if (idx>=0) clone.attrezzature.splice(idx,1);
+                            else clone.attrezzature.push({id:item.id,qty:1});
+                            return clone;
+                          });
+                        }}>
+                          <div style={{ width:20,height:20,borderRadius:4,border:`2px solid ${sel?C.blue:C.border}`,background:sel?C.blue:C.surface,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+                            {sel && <span style={{ color:"#fff",fontSize:12,fontWeight:700 }}>✓</span>}
+                          </div>
+                          <div style={{ flex:1, minWidth:0 }}>
+                            <div style={{ fontSize:13, fontWeight:500, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{item.nome}</div>
+                            <div style={{ fontSize:11, color:C.text3 }}>{fmtEur(item.prezzo)} / {item.um}</div>
+                          </div>
+                          {sel && (
+                            <div style={{ display:"flex", alignItems:"center", gap:4 }} onClick={e=>e.stopPropagation()}>
+                              <button onClick={()=>{setData(prev=>{const c=JSON.parse(JSON.stringify(prev));const a=c.attrezzature.find(a=>a.id===item.id);if(a&&a.qty>1)a.qty--;return c;})}} style={{ width:22,height:22,borderRadius:4,border:`1px solid ${C.border}`,background:C.surface,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13 }}>−</button>
+                              <span style={{ fontSize:13,fontWeight:700,minWidth:20,textAlign:"center" }}>{sel.qty}</span>
+                              <button onClick={()=>{setData(prev=>{const c=JSON.parse(JSON.stringify(prev));const a=c.attrezzature.find(a=>a.id===item.id);if(a)a.qty++;return c;})}} style={{ width:22,height:22,borderRadius:4,border:`1px solid ${C.border}`,background:C.surface,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13 }}>+</button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+
+            <div style={{ marginTop:20, display:"flex", justifyContent:"space-between" }}>
+              <button onClick={()=>setActiveTab("sala")} style={btnBack}>← Sala</button>
+              <button onClick={()=>setActiveTab("fb")} style={btnNext}>Avanti: F&B →</button>
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB 4: F&B ── */}
+        {activeTab === "fb" && (
+          <div>
+            <SectionHeader icon="🍽️" title="Food & Beverage" />
+            <p style={{ fontSize:13, color:C.text3, marginBottom:16 }}>Seleziona e configura i servizi F&B per l'evento:</p>
+
+            {["Coffee Break","Pranzo","Aperitivo","Cena","Bevande","Spuntino"].map(cat => {
+              const items = FB_PACKAGES.filter(f=>f.cat===cat);
+              return (
+                <div key={cat} style={{ marginBottom:20 }}>
+                  <div style={{ fontSize:12, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:C.text3, borderBottom:`1px solid ${C.border}`, paddingBottom:6, marginBottom:10 }}>{cat}</div>
+                  <div style={{ display:"grid", gap:8 }}>
+                    {items.map(item => {
+                      const sels = data.fb?.filter(f=>f.id===item.id) || [];
+                      return (
+                        <div key={item.id} style={{ border:`1.5px solid ${C.border}`, borderRadius:8, overflow:"hidden" }}>
+                          <div style={{ padding:"10px 14px", display:"flex", alignItems:"center", gap:12, background: sels.length>0?C.blueL:C.surface }}>
+                            <div style={{ flex:1 }}>
+                              <div style={{ fontWeight:600, fontSize:13 }}>{item.nome}</div>
+                              <div style={{ fontSize:11, color:C.text3 }}>{item.desc}</div>
+                            </div>
+                            <div style={{ fontWeight:700, fontSize:13, color:C.blue, whiteSpace:"nowrap" }}>{fmtEur(item.prezzo)} / {item.um}</div>
+                            <button onClick={()=>{
+                              setData(prev=>{
+                                const c=JSON.parse(JSON.stringify(prev));
+                                c.fb.push({ id:item.id, qty:data.evento?.partecipanti||10, momento:"Mattina" });
+                                return c;
+                              });
+                            }} style={{ padding:"6px 12px", borderRadius:6, border:"none", background:C.blue, color:"#fff", cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'IBM Plex Sans',sans-serif" }}>
+                              + Aggiungi
+                            </button>
+                          </div>
+
+                          {/* Righe FB selezionate */}
+                          {sels.map((sel, si) => {
+                            const globalIdx = data.fb?.findIndex((f,i)=>f.id===item.id && data.fb.slice(0,i+1).filter(x=>x.id===item.id).length === si+1);
+                            return (
+                              <div key={si} style={{ padding:"8px 14px", background:"#f8f9fc", borderTop:`1px solid ${C.border}`, display:"flex", alignItems:"center", gap:10 }}>
+                                <div style={{ fontSize:11, color:C.text3 }}>Momento:</div>
+                                <select value={sel.momento||"Mattina"} onChange={e=>{
+                                  setData(prev=>{const c=JSON.parse(JSON.stringify(prev));c.fb[globalIdx].momento=e.target.value;return c;});
+                                }} style={{ fontSize:12, padding:"4px 8px", borderRadius:4, border:`1px solid ${C.border}`, fontFamily:"'IBM Plex Sans',sans-serif" }}>
+                                  {["Mattina","Pranzo","Pomeriggio","Sera","Cena","Welcome"].map(m=><option key={m}>{m}</option>)}
+                                </select>
+                                <div style={{ fontSize:11, color:C.text3 }}>Persone:</div>
+                                <input type="number" min={1} value={sel.qty} onChange={e=>{
+                                  setData(prev=>{const c=JSON.parse(JSON.stringify(prev));c.fb[globalIdx].qty=parseInt(e.target.value)||1;return c;});
+                                }} style={{ width:60, padding:"4px 8px", borderRadius:4, border:`1px solid ${C.border}`, fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}/>
+                                <span style={{ fontSize:12, color:C.text3 }}>= {fmtEur(item.prezzo * sel.qty)}</span>
+                                <button onClick={()=>{
+                                  setData(prev=>{const c=JSON.parse(JSON.stringify(prev));c.fb.splice(globalIdx,1);return c;});
+                                }} style={{ marginLeft:"auto", background:"none", border:"none", color:C.red, cursor:"pointer", fontSize:16 }}>×</button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+
+            <div style={{ marginTop:20, display:"flex", justifyContent:"space-between" }}>
+              <button onClick={()=>setActiveTab("attr")} style={btnBack}>← Attrezzature</button>
+              <button onClick={()=>setActiveTab("riepilogo")} style={btnNext}>Avanti: Riepilogo →</button>
+            </div>
+          </div>
+        )}
+
+        {/* ── TAB 5: RIEPILOGO ── */}
+        {activeTab === "riepilogo" && (
+          <RiepilogoTab data={data} setData={setData} sale={sale} calcTotale={calcTotale} onBack={()=>setActiveTab("fb")} onSave={()=>onSave(data)} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── RIEPILOGO TAB ───────────────────────────────────────────────
+function RiepilogoTab({ data, setData, sale, calcTotale, onBack, onSave }) {
+  const tot      = calcTotale(data, sale);
+  const salaObj  = sale.find(s=>s.id===data.sala?.id);
+  const giorni   = Math.max(1, diffDays(data.evento?.dataInizio, data.evento?.dataFine) + 1);
+
+  const Row = ({ label, val, bold, color, sep }) => (
+    <div style={{ display:"flex", justifyContent:"space-between", padding:"9px 0", borderTop: sep?`1px solid ${C.border}`:"none", fontWeight:bold?700:400, color:color||C.text }}>
+      <span>{label}</span><span>{val}</span>
+    </div>
+  );
+
+  return (
+    <div>
+      <SectionHeader icon="💶" title="Riepilogo Preventivo" />
+
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 360px", gap:24 }}>
+        {/* Dettaglio voci */}
+        <div>
+          {/* Cliente / Evento */}
+          <div style={{ background:C.surface2, borderRadius:8, padding:16, marginBottom:16, fontSize:13 }}>
+            <div style={{ fontWeight:700, fontSize:14, marginBottom:8, color:C.text }}>📋 {data.evento?.titolo || "(senza titolo)"}</div>
+            <div style={{ color:C.text2 }}><b>{data.cliente?.azienda}</b> · {data.cliente?.nome} {data.cliente?.cognome}</div>
+            <div style={{ color:C.text3, marginTop:4 }}>{fmtDate(data.evento?.dataInizio)}{data.evento?.dataFine&&data.evento.dataFine!==data.evento.dataInizio?` → ${fmtDate(data.evento.dataFine)}`:""} · {data.evento?.partecipanti} partecipanti</div>
+          </div>
+
+          {/* Sala */}
+          <div style={{ background:C.surface2, borderRadius:8, padding:14, marginBottom:12 }}>
+            <div style={{ fontWeight:700, fontSize:12, letterSpacing:.5, textTransform:"uppercase", color:C.text3, marginBottom:8 }}>🏛️ Sala Meeting</div>
+            <div style={{ display:"flex", justifyContent:"space-between", fontSize:13 }}>
+              <span>{salaObj?.nome} — {LAYOUT_LABELS[data.sala?.layout]}, {data.sala?.allestimento}</span>
+              <span style={{ fontWeight:700 }}>{fmtEur(tot.sala)}</span>
+            </div>
+            <div style={{ fontSize:11, color:C.text3 }}>
+              {giorni} giorno{giorni>1?"i":""} × {fmtEur(salaObj?.tariffe[data.sala?.allestimento==="Giornata intera"?"intera":"mezza"] || 0)}
+            </div>
+          </div>
+
+          {/* Attrezzature */}
+          {data.attrezzature?.length>0 && (
+            <div style={{ background:C.surface2, borderRadius:8, padding:14, marginBottom:12 }}>
+              <div style={{ fontWeight:700, fontSize:12, letterSpacing:.5, textTransform:"uppercase", color:C.text3, marginBottom:8 }}>🖥️ Attrezzature ({data.attrezzature.length})</div>
+              {data.attrezzature.map(a=>{
+                const item=ATTREZZATURE.find(x=>x.id===a.id);
+                return item ? (
+                  <div key={a.id} style={{ display:"flex", justifyContent:"space-between", fontSize:13, padding:"3px 0" }}>
+                    <span>{item.nome} × {a.qty}</span>
+                    <span style={{ fontWeight:600 }}>{fmtEur(item.prezzo*a.qty*giorni)}</span>
+                  </div>
+                ):null;
+              })}
+              <div style={{ textAlign:"right", fontSize:12, color:C.text3, marginTop:6 }}>Subtotale: {fmtEur(tot.attr)}</div>
+            </div>
+          )}
+
+          {/* F&B */}
+          {data.fb?.length>0 && (
+            <div style={{ background:C.surface2, borderRadius:8, padding:14, marginBottom:12 }}>
+              <div style={{ fontWeight:700, fontSize:12, letterSpacing:.5, textTransform:"uppercase", color:C.text3, marginBottom:8 }}>🍽️ Food & Beverage ({data.fb.length})</div>
+              {data.fb.map((f,i)=>{
+                const item=FB_PACKAGES.find(x=>x.id===f.id);
+                return item ? (
+                  <div key={i} style={{ display:"flex", justifyContent:"space-between", fontSize:13, padding:"3px 0" }}>
+                    <span>{item.nome} · {f.momento} × {f.qty}px</span>
+                    <span style={{ fontWeight:600 }}>{fmtEur(item.prezzo*f.qty)}</span>
+                  </div>
+                ):null;
+              })}
+              <div style={{ textAlign:"right", fontSize:12, color:C.text3, marginTop:6 }}>Subtotale: {fmtEur(tot.fb)}</div>
+            </div>
+          )}
+        </div>
+
+        {/* Box totali + sconto */}
+        <div>
+          <div style={{ background:C.surface, border:`1.5px solid ${C.border}`, borderRadius:10, padding:20, position:"sticky", top:20 }}>
+            <div style={{ fontSize:13, fontWeight:700, letterSpacing:.5, textTransform:"uppercase", color:C.text3, marginBottom:12 }}>Totale Preventivo</div>
+
+            <Row label="Sala meeting" val={fmtEur(tot.sala)} />
+            <Row label="Attrezzature" val={fmtEur(tot.attr)} />
+            <Row label="F&B totale" val={fmtEur(tot.fb)} />
+            <Row label="Subtotale" val={fmtEur(tot.sub)} bold sep />
+
+            {/* Sconto */}
+            <div style={{ padding:"12px 0", borderTop:`1px solid ${C.border}` }}>
+              <div style={{ fontSize:12, color:C.text3, marginBottom:6 }}>Sconto (%)</div>
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <input type="number" min={0} max={50} step={0.5} value={data.sconto||0}
+                  onChange={e=>setData(prev=>({...prev,sconto:parseFloat(e.target.value)||0}))}
+                  style={{ width:70, padding:"6px 10px", borderRadius:6, border:`1.5px solid ${C.border}`, fontSize:14, fontWeight:700, textAlign:"center", fontFamily:"'IBM Plex Sans',sans-serif" }}/>
+                <span style={{ fontSize:13, color:C.red, fontWeight:600 }}>− {fmtEur(tot.sconto)}</span>
+              </div>
+            </div>
+
+            <div style={{ height:1, background:C.border, margin:"4px 0" }}/>
+            <Row label="Imponibile netto" val={fmtEur(tot.sub - tot.sconto)} sep />
+            <Row label="IVA 10%" val={fmtEur(tot.iva)} />
+
+            <div style={{ background:"linear-gradient(135deg,#0a1929,#1565c0)", borderRadius:8, padding:"14px 16px", marginTop:12, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <span style={{ color:"rgba(255,255,255,.7)", fontSize:14, fontWeight:600 }}>TOTALE IVA incl.</span>
+              <span style={{ color:"#fff", fontSize:22, fontWeight:800, fontFamily:"monospace" }}>{fmtEur(tot.totale)}</span>
+            </div>
+
+            <button onClick={onSave} style={{ ...btnNext, width:"100%", justifyContent:"center", marginTop:14, padding:"12px", fontSize:14 }}>
+              💾 Salva Preventivo
+            </button>
+            <button onClick={()=>printPreventivo(data, sale, calcTotale)} style={{ ...btnBack, width:"100%", justifyContent:"center", marginTop:8, padding:"11px", fontSize:13 }}>
+              🖨️ Anteprima di stampa
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ marginTop:20 }}>
+        <button onClick={onBack} style={btnBack}>← F&B</button>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════
+//  DETTAGLIO PREVENTIVO
+// ════════════════════════════════════════════════════════════════
+function DettaglioPreventivo({ prev, sale, calcTotale, onEdit, onStato, onDelete, onBack }) {
+  const [confDel, setConfDel] = useState(false);
+  const tot      = calcTotale(prev, sale);
+  const salaObj  = sale.find(s=>s.id===prev.sala?.id);
+  const st       = STATI[prev.stato];
+  const giorni   = Math.max(1, diffDays(prev.evento?.dataInizio, prev.evento?.dataFine)+1);
+
+  return (
+    <div>
+      {/* Header */}
+      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
+        <button onClick={onBack} style={{ padding:"7px 14px", borderRadius:6, border:`1px solid ${C.border}`, background:C.surface, cursor:"pointer", fontFamily:"'IBM Plex Sans',sans-serif", fontSize:13 }}>← Lista</button>
+        <div>
+          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+            <h2 style={{ margin:0, fontSize:20, fontWeight:800 }}>{prev.id}</h2>
+            <span style={{ padding:"4px 12px", borderRadius:20, fontSize:12, fontWeight:700, background:st.bg, color:st.text, border:`1px solid ${st.border}` }}>{st.label}</span>
+          </div>
+          <div style={{ fontSize:12, color:C.text3 }}>Creato {fmtDate(prev.creatoIl)}{prev.inviatoIl?` · Inviato ${fmtDate(prev.inviatoIl)}`:""}{prev.confermatoIl?` · Confermato ${fmtDate(prev.confermatoIl)}`:""}</div>
+        </div>
+        <div style={{ flex:1 }}/>
+        <div style={{ display:"flex", gap:8 }}>
+          {prev.stato === "bozza"   && <CtaBtn color={C.blue} onClick={()=>onStato(prev.id,"inviato")}>📤 Segna come Inviato</CtaBtn>}
+          {prev.stato === "inviato" && <CtaBtn color={C.green} onClick={()=>onStato(prev.id,"confermato")}>✅ Conferma</CtaBtn>}
+          {prev.stato === "inviato" && <CtaBtn color={C.red} outline onClick={()=>onStato(prev.id,"declinato")}>✗ Declinato</CtaBtn>}
+          {prev.stato === "confermato" && <CtaBtn color={C.purple} onClick={()=>onStato(prev.id,"completato")}>🏁 Segna Completato</CtaBtn>}
+          <button onClick={onEdit} style={{ padding:"8px 16px", borderRadius:6, border:`1px solid ${C.border}`, background:C.surface, cursor:"pointer", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>✏️ Modifica</button>
+          <button onClick={()=>printPreventivo(prev, sale, calcTotale)} style={{ padding:"8px 16px", borderRadius:6, border:`1px solid ${C.border}`, background:C.surface, cursor:"pointer", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>🖨️ Stampa</button>
+          {!confDel && <button onClick={()=>setConfDel(true)} style={{ padding:"8px 14px", borderRadius:6, border:`1px solid ${C.redL}`, background:C.redL, color:C.red, cursor:"pointer", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>🗑</button>}
+          {confDel && <><button onClick={()=>onDelete(prev.id)} style={{ padding:"8px 14px", borderRadius:6, border:`none`, background:C.red, color:"#fff", cursor:"pointer", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif", fontWeight:700 }}>Elimina</button><button onClick={()=>setConfDel(false)} style={{ padding:"8px 12px", borderRadius:6, border:`1px solid ${C.border}`, background:C.surface, cursor:"pointer" }}>Annulla</button></>}
+        </div>
+      </div>
+
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 340px", gap:20 }}>
+        {/* Main */}
+        <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+          {/* Evento */}
+          <InfoCard icon="🎯" title={prev.evento?.titolo || "(senza titolo)"} subtitle={`${prev.evento?.tipo} · ${prev.evento?.partecipanti} partecipanti`}>
+            <InfoGrid items={[
+              { k:"Data inizio", v:fmtDate(prev.evento?.dataInizio) },
+              { k:"Data fine",   v:fmtDate(prev.evento?.dataFine)||"—" },
+              { k:"Ora inizio",  v:prev.evento?.oraInizio },
+              { k:"Ora fine",    v:prev.evento?.oraFine },
+              { k:"Durata",      v:`${giorni} giorno${giorni>1?"i":""}` },
+            ]}/>
+            {prev.note && <div style={{ marginTop:10, background:C.amberL, border:`1px solid ${C.amberLb}`, borderRadius:6, padding:"8px 12px", fontSize:12, color:C.amber }}>📌 {prev.note}</div>}
+          </InfoCard>
+
+          {/* Cliente */}
+          <InfoCard icon="🏢" title={prev.cliente?.azienda||"—"} subtitle={`${prev.cliente?.nome} ${prev.cliente?.cognome}`.trim()}>
+            <InfoGrid items={[
+              { k:"Email",  v:<a href={`mailto:${prev.cliente?.email}`} style={{color:C.blue}}>{prev.cliente?.email}</a> },
+              { k:"Tel",    v:prev.cliente?.tel },
+              { k:"P.IVA",  v:prev.cliente?.piva||"—" },
+            ]}/>
+          </InfoCard>
+
+          {/* Sala */}
+          {salaObj && (
+            <InfoCard icon="🏛️" title={salaObj.nome} subtitle={`Piano ${salaObj.piano} · ${salaObj.mq} mq`}>
+              <InfoGrid items={[
+                { k:"Layout",     v:LAYOUT_LABELS[prev.sala?.layout]||"—" },
+                { k:"Tariffa",    v:prev.sala?.allestimento||"—" },
+                { k:"Costo sala", v:fmtEur(tot.sala) },
+              ]}/>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:5, marginTop:10 }}>
+                {salaObj.dotazioni.map(d=><span key={d} style={{ fontSize:11, padding:"3px 8px", borderRadius:20, background:C.surface2, border:`1px solid ${C.border}`, color:C.text2 }}>✓ {d}</span>)}
+              </div>
+            </InfoCard>
+          )}
+
+          {/* Attrezzature */}
+          {prev.attrezzature?.length>0 && (
+            <InfoCard icon="🖥️" title="Attrezzature" subtitle={`${prev.attrezzature.length} voce${prev.attrezzature.length>1?"i":""}`}>
+              {prev.attrezzature.map(a=>{
+                const item=ATTREZZATURE.find(x=>x.id===a.id);
+                return item?<div key={a.id} style={{ display:"flex", justifyContent:"space-between", padding:"5px 0", borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
+                  <span>{item.nome} <span style={{color:C.text3}}>× {a.qty}</span></span>
+                  <span style={{fontWeight:600}}>{fmtEur(item.prezzo*a.qty*giorni)}</span>
+                </div>:null;
+              })}
+            </InfoCard>
+          )}
+
+          {/* F&B */}
+          {prev.fb?.length>0 && (
+            <InfoCard icon="🍽️" title="Food & Beverage" subtitle={`${prev.fb.length} servizi`}>
+              {prev.fb.map((f,i)=>{
+                const item=FB_PACKAGES.find(x=>x.id===f.id);
+                return item?<div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"5px 0", borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
+                  <span>{item.nome} <span style={{color:C.text3}}>· {f.momento} · {f.qty}px</span></span>
+                  <span style={{fontWeight:600}}>{fmtEur(item.prezzo*f.qty)}</span>
+                </div>:null;
+              })}
+            </InfoCard>
+          )}
+        </div>
+
+        {/* Sidebar totali */}
+        <div>
+          <div style={{ background:C.surface, border:`1.5px solid ${C.border}`, borderRadius:10, padding:20, position:"sticky", top:20 }}>
+            <div style={{ fontSize:12, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:C.text3, marginBottom:14 }}>Riepilogo Economico</div>
+            {[
+              { label:"Sala meeting", val:tot.sala },
+              { label:"Attrezzature", val:tot.attr },
+              { label:"Food & Beverage", val:tot.fb },
+            ].map(r=>(
+              <div key={r.label} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
+                <span style={{color:C.text2}}>{r.label}</span><span style={{fontWeight:600}}>{fmtEur(r.val)}</span>
+              </div>
+            ))}
+            <div style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:`1px solid ${C.border}`, fontSize:13, fontWeight:600 }}>
+              <span>Subtotale</span><span>{fmtEur(tot.sub)}</span>
+            </div>
+            {prev.sconto>0 && <div style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:`1px solid ${C.border}`, fontSize:13, color:C.red }}>
+              <span>Sconto {prev.sconto}%</span><span>− {fmtEur(tot.sconto)}</span>
+            </div>}
+            <div style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:`1px solid ${C.border}`, fontSize:13 }}>
+              <span style={{color:C.text2}}>IVA 10%</span><span>{fmtEur(tot.iva)}</span>
+            </div>
+            <div style={{ background:"linear-gradient(135deg,#0a1929,#1565c0)", borderRadius:8, padding:"14px 16px", marginTop:12, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <span style={{ color:"rgba(255,255,255,.7)", fontSize:13 }}>TOTALE IVA incl.</span>
+              <span style={{ color:"#fff", fontSize:20, fontWeight:800 }}>{fmtEur(tot.totale)}</span>
+            </div>
+
+            <div style={{ marginTop:14 }}>
+              <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:C.text3, marginBottom:8 }}>Cambia stato</div>
+              <select value={prev.stato} onChange={e=>onStato(prev.id,e.target.value)} style={{ width:"100%", padding:"9px", borderRadius:6, border:`1.5px solid ${C.border}`, fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>
+                {Object.entries(STATI).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════
+//  GESTIONE SALE
+// ════════════════════════════════════════════════════════════════
+function GestioneSale({ sale, preventivi, onSalva }) {
+  const [editing, setEditing]   = useState(null);
+  const [editData, setEditData] = useState(null);
+
+  const startEdit = (sala) => {
+    setEditing(sala.id);
+    setEditData(JSON.parse(JSON.stringify(sala)));
+  };
+
+  const saveEdit = () => {
+    onSalva(editData);
+    setEditing(null);
+  };
+
+  const upd = (path, val) => {
+    setEditData(prev => {
+      const c = JSON.parse(JSON.stringify(prev));
+      const parts = path.split(".");
+      let obj = c;
+      for (let i=0;i<parts.length-1;i++) obj=obj[parts[i]];
+      obj[parts[parts.length-1]] = val;
+      return c;
+    });
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom:20 }}>
+        <h2 style={{ fontSize:22, fontWeight:700 }}>Configurazione Sale Meeting</h2>
+        <p style={{ fontSize:13, color:C.text3 }}>5 sale configurabili. Modifica capienze, tariffe e dotazioni.</p>
+      </div>
+
+      <div style={{ display:"grid", gap:16 }}>
+        {sale.map(sala => {
+          const occTotali = preventivi.filter(p=>p.sala?.id===sala.id&&p.stato==="confermato").length;
+          const isEditing = editing === sala.id;
+          const sd = isEditing ? editData : sala;
+
+          return (
+            <div key={sala.id} style={{ background:C.surface, borderRadius:12, border:`1px solid ${C.border}`, overflow:"hidden" }}>
+              {/* Header sala */}
+              <div style={{ borderLeft:`5px solid ${sala.colore}`, padding:"14px 20px", display:"flex", alignItems:"center", gap:14, borderBottom: isEditing?`1px solid ${C.border}`:"none" }}>
+                <div style={{ flex:1 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                    <span style={{ fontSize:18, fontWeight:800, color:sala.colore }}>{sala.nome}</span>
+                    <span style={{ fontSize:11, color:C.text3 }}>Piano {sala.piano} · {sala.mq} mq</span>
+                    <span style={{ fontSize:11, background:sala.attiva?C.greenL:C.redL, color:sala.attiva?C.green:C.red, border:`1px solid ${sala.attiva?C.greenLb:C.redLb}`, borderRadius:20, padding:"2px 8px" }}>
+                      {sala.attiva?"● Attiva":"● Inattiva"}
+                    </span>
+                  </div>
+                  <div style={{ fontSize:12, color:C.text3, marginTop:2 }}>{occTotali} eventi confermati in totale</div>
+                </div>
+                <div style={{ display:"flex", gap:8 }}>
+                  {!isEditing && <button onClick={()=>startEdit(sala)} style={{ padding:"7px 14px", borderRadius:6, border:`1px solid ${C.border}`, background:C.surface, cursor:"pointer", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>✏️ Modifica</button>}
+                  {isEditing && <>
+                    <button onClick={saveEdit} style={{ padding:"7px 16px", borderRadius:6, border:"none", background:C.blue, color:"#fff", cursor:"pointer", fontWeight:700, fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>💾 Salva</button>
+                    <button onClick={()=>setEditing(null)} style={{ padding:"7px 14px", borderRadius:6, border:`1px solid ${C.border}`, background:C.surface, cursor:"pointer", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>Annulla</button>
+                  </>}
+                </div>
+              </div>
+
+              {/* Vista sintetica (non edit) */}
+              {!isEditing && (
+                <div style={{ padding:"14px 20px", display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:16 }}>
+                  <div>
+                    <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:C.text3, marginBottom:6 }}>Capienze</div>
+                    {Object.entries(sala.capienze).map(([k,v])=>v>0?<div key={k} style={{fontSize:12,color:C.text2,marginBottom:2}}>{LAYOUT_ICONS[k]} {LAYOUT_LABELS[k]}: <b>{v}</b>px</div>:null)}
+                  </div>
+                  <div>
+                    <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:C.text3, marginBottom:6 }}>Tariffe</div>
+                    <div style={{fontSize:12,color:C.text2,marginBottom:2}}>½ giornata: <b>{fmtEur(sala.tariffe.mezza)}</b></div>
+                    <div style={{fontSize:12,color:C.text2,marginBottom:2}}>Giornata: <b>{fmtEur(sala.tariffe.intera)}</b></div>
+                    {sala.tariffe.settimanale>0&&<div style={{fontSize:12,color:C.text2}}>Settimana: <b>{fmtEur(sala.tariffe.settimanale)}</b></div>}
+                  </div>
+                  <div style={{ gridColumn:"3/5" }}>
+                    <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:C.text3, marginBottom:6 }}>Dotazioni</div>
+                    <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>
+                      {sala.dotazioni.map(d=><span key={d} style={{fontSize:11,padding:"2px 8px",borderRadius:20,background:C.surface2,border:`1px solid ${C.border}`,color:C.text2}}>✓ {d}</span>)}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* FORM MODIFICA */}
+              {isEditing && (
+                <div style={{ padding:20 }}>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:16, marginBottom:20 }}>
+                    <Field label="Nome Sala">
+                      <input style={inp} value={sd.nome} onChange={e=>upd("nome",e.target.value)}/>
+                    </Field>
+                    <Field label="Piano">
+                      <input style={inp} type="number" min={1} max={10} value={sd.piano} onChange={e=>upd("piano",parseInt(e.target.value)||1)}/>
+                    </Field>
+                    <Field label="Superficie (mq)">
+                      <input style={inp} type="number" min={10} value={sd.mq} onChange={e=>upd("mq",parseInt(e.target.value)||10)}/>
+                    </Field>
+                  </div>
+
+                  <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:C.text3, marginBottom:10, borderBottom:`1px solid ${C.border}`, paddingBottom:6 }}>Capienze per layout</div>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:10, marginBottom:20 }}>
+                    {Object.entries(sd.capienze).map(([k,v])=>(
+                      <Field key={k} label={`${LAYOUT_ICONS[k]} ${LAYOUT_LABELS[k]}`}>
+                        <input style={{...inp,textAlign:"center"}} type="number" min={0} value={v} onChange={e=>upd(`capienze.${k}`,parseInt(e.target.value)||0)}/>
+                      </Field>
+                    ))}
+                  </div>
+
+                  <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, textTransform:"uppercase", color:C.text3, marginBottom:10, borderBottom:`1px solid ${C.border}`, paddingBottom:6 }}>Tariffe (€/periodo)</div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginBottom:20 }}>
+                    <Field label="Mezza Giornata (€)">
+                      <input style={inp} type="number" min={0} value={sd.tariffe.mezza} onChange={e=>upd("tariffe.mezza",parseFloat(e.target.value)||0)}/>
+                    </Field>
+                    <Field label="Giornata Intera (€)">
+                      <input style={inp} type="number" min={0} value={sd.tariffe.intera} onChange={e=>upd("tariffe.intera",parseFloat(e.target.value)||0)}/>
+                    </Field>
+                    <Field label="Settimanale (€, 0=no)">
+                      <input style={inp} type="number" min={0} value={sd.tariffe.settimanale} onChange={e=>upd("tariffe.settimanale",parseFloat(e.target.value)||0)}/>
+                    </Field>
+                  </div>
+
+                  <Field label="Note (interne)">
+                    <textarea style={{...inp, height:60, resize:"vertical"}} value={sd.note} onChange={e=>upd("note",e.target.value)}/>
+                  </Field>
+
+                  <div style={{ marginTop:12, display:"flex", gap:8, alignItems:"center" }}>
+                    <label style={{ display:"flex", alignItems:"center", gap:8, cursor:"pointer", fontSize:13 }}>
+                      <input type="checkbox" checked={sd.attiva} onChange={e=>upd("attiva",e.target.checked)} style={{width:16,height:16,accentColor:C.blue}}/>
+                      Sala attiva (disponibile per prenotazione)
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════════
+//  PRINT / STAMPA PREVENTIVO
+// ════════════════════════════════════════════════════════════════
+function printPreventivo(prev, sale, calcTotale) {
+  const tot      = calcTotale(prev, sale);
+  const salaObj  = sale.find(s=>s.id===prev.sala?.id);
+  const giorni   = Math.max(1, diffDays(prev.evento?.dataInizio, prev.evento?.dataFine)+1);
+  const st       = STATI[prev.stato];
+
+  const righeAttr = (prev.attrezzature||[]).map(a=>{
+    const item=ATTREZZATURE.find(x=>x.id===a.id);
+    return item ? `<tr><td>${item.nome}</td><td style="text-align:center">${a.qty} × ${giorni}gg</td><td style="text-align:right;font-weight:600">€ ${(item.prezzo*a.qty*giorni).toFixed(2)}</td></tr>` : "";
+  }).join("");
+
+  const righeFb = (prev.fb||[]).map(f=>{
+    const item=FB_PACKAGES.find(x=>x.id===f.id);
+    return item ? `<tr><td>${item.nome} <span style="color:#888">· ${f.momento}</span></td><td style="text-align:center">${f.qty} px</td><td style="text-align:right;font-weight:600">€ ${(item.prezzo*f.qty).toFixed(2)}</td></tr>` : "";
+  }).join("");
+
+  const html = `<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"/>
+<title>Preventivo ${prev.id} — Hotel Gasparini MICE</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans',sans-serif;color:#1a2535;background:#fff;padding:0}
+  .page{max-width:800px;margin:0 auto;padding:40px}
+  .hdr{background:linear-gradient(135deg,#0a1929,#1565c0);color:#fff;padding:32px;border-radius:0 0 12px 12px;margin-bottom:32px}
+  .hdr h1{font-size:28px;font-weight:700;margin-bottom:4px}
+  .hdr-row{display:flex;justify-content:space-between;align-items:flex-start}
+  .badge{display:inline-block;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;background:rgba(255,255,255,.15);color:#fff;margin-top:8px}
+  .logo-area{text-align:right}
+  .logo-area h2{font-size:20px;font-weight:700;color:#fff}
+  .logo-area p{font-size:11px;color:rgba(255,255,255,.6);letter-spacing:2px;text-transform:uppercase}
+  h3{font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#607080;border-bottom:2px solid #dde3ec;padding-bottom:6px;margin:24px 0 12px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:8px}
+  .grid2 .lbl{color:#8896a8;font-size:11px}
+  .grid2 .val{font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{background:#f5f7fa;padding:8px 12px;text-align:left;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#8896a8}
+  td{padding:8px 12px;border-bottom:1px solid #dde3ec}
+  .total-box{background:linear-gradient(135deg,#0a1929,#1565c0);color:#fff;border-radius:10px;padding:20px 24px;margin-top:20px}
+  .total-row{display:flex;justify-content:space-between;padding:5px 0;font-size:14px}
+  .total-final{display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,.2);margin-top:8px;padding-top:10px;font-size:20px;font-weight:800}
+  .footer{margin-top:32px;text-align:center;font-size:11px;color:#8896a8;border-top:1px solid #dde3ec;padding-top:16px}
+  @media print{.page{padding:20px}.hdr{border-radius:0}}
+</style>
+</head><body>
+<div class="page">
+  <div class="hdr">
+    <div class="hdr-row">
+      <div>
+        <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;opacity:.6;margin-bottom:4px">PREVENTIVO MICE</div>
+        <h1>${prev.id}</h1>
+        <span class="badge">${st.label}</span>
+        <div style="font-size:12px;margin-top:8px;opacity:.7">Emesso il ${fmtDate(prev.creatoIl)}</div>
+      </div>
+      <div class="logo-area">
+        <h2>Hotel Gasparini ★★★</h2>
+        <p>Chioggia · Venezia</p>
+        <p style="margin-top:4px">Corso del Popolo 1059</p>
+        <p>info@hotelgasparini.it</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>Cliente & Azienda</h3>
+  <div class="grid2">
+    <div><div class="lbl">Azienda</div><div class="val">${prev.cliente?.azienda||"—"}</div></div>
+    <div><div class="lbl">Referente</div><div class="val">${prev.cliente?.nome||""} ${prev.cliente?.cognome||""}</div></div>
+    <div><div class="lbl">Email</div><div class="val">${prev.cliente?.email||"—"}</div></div>
+    <div><div class="lbl">Telefono</div><div class="val">${prev.cliente?.tel||"—"}</div></div>
+    <div><div class="lbl">P.IVA</div><div class="val">${prev.cliente?.piva||"—"}</div></div>
+  </div>
+
+  <h3>Dettagli Evento</h3>
+  <div class="grid2">
+    <div><div class="lbl">Evento</div><div class="val">${prev.evento?.titolo||"—"}</div></div>
+    <div><div class="lbl">Tipologia</div><div class="val">${prev.evento?.tipo||"—"}</div></div>
+    <div><div class="lbl">Data inizio</div><div class="val">${fmtDate(prev.evento?.dataInizio)}</div></div>
+    <div><div class="lbl">Data fine</div><div class="val">${fmtDate(prev.evento?.dataFine)||"—"}</div></div>
+    <div><div class="lbl">Orari</div><div class="val">${prev.evento?.oraInizio||"—"} → ${prev.evento?.oraFine||"—"}</div></div>
+    <div><div class="lbl">Partecipanti</div><div class="val">${prev.evento?.partecipanti||"—"}</div></div>
+  </div>
+  ${prev.note?`<div style="background:#fff3e0;border-left:3px solid #e65100;padding:10px 14px;border-radius:4px;font-size:13px;color:#7d3a00;margin-top:8px">📌 ${prev.note}</div>`:""}
+
+  <h3>Sala Meeting</h3>
+  <table>
+    <thead><tr><th>Sala</th><th>Layout</th><th>Durata</th><th>Tariffa/gg</th><th style="text-align:right">Totale</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>${salaObj?.nome||"—"}</strong></td>
+        <td>${LAYOUT_LABELS[prev.sala?.layout]||"—"}</td>
+        <td>${prev.sala?.allestimento||"—"} × ${giorni}gg</td>
+        <td>€ ${(salaObj?.tariffe[prev.sala?.allestimento==="Giornata intera"?"intera":"mezza"]||0).toFixed(2)}</td>
+        <td style="text-align:right;font-weight:700">€ ${tot.sala.toFixed(2)}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  ${righeAttr ? `<h3>Attrezzature</h3><table><thead><tr><th>Voce</th><th>Quantità</th><th style="text-align:right">Importo</th></tr></thead><tbody>${righeAttr}</tbody></table>` : ""}
+  ${righeFb ? `<h3>Food & Beverage</h3><table><thead><tr><th>Servizio</th><th>Persone</th><th style="text-align:right">Importo</th></tr></thead><tbody>${righeFb}</tbody></table>` : ""}
+
+  <div class="total-box">
+    <div class="total-row"><span>Sala meeting</span><span>€ ${tot.sala.toFixed(2)}</span></div>
+    <div class="total-row"><span>Attrezzature</span><span>€ ${tot.attr.toFixed(2)}</span></div>
+    <div class="total-row"><span>Food & Beverage</span><span>€ ${tot.fb.toFixed(2)}</span></div>
+    <div class="total-row"><span>Subtotale</span><span>€ ${tot.sub.toFixed(2)}</span></div>
+    ${prev.sconto>0?`<div class="total-row" style="color:#fca5a5"><span>Sconto ${prev.sconto}%</span><span>− € ${tot.sconto.toFixed(2)}</span></div>`:""}
+    <div class="total-row"><span>IVA 10%</span><span>€ ${tot.iva.toFixed(2)}</span></div>
+    <div class="total-final"><span>TOTALE IVA inclusa</span><span>€ ${tot.totale.toFixed(2)}</span></div>
+  </div>
+
+  <div class="footer">
+    <p>Hotel Gasparini S.r.l. · Corso del Popolo 1059, 30015 Chioggia (VE) · P.IVA 01234567890</p>
+    <p style="margin-top:4px">Preventivo valido 30 giorni dalla data di emissione. La prenotazione si perfeziona al ricevimento del deposito del 30%.</p>
+  </div>
+</div>
+<script>window.print()</script>
+</body></html>`;
+
+  const w = window.open("","_blank","width=900,height=700");
+  w.document.write(html);
+  w.document.close();
+}
+
+// ════════════════════════════════════════════════════════════════
+//  HELPER COMPONENTS
+// ════════════════════════════════════════════════════════════════
+function Field({ label, children, mt, style }) {
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:5, marginTop:mt||0, ...style }}>
+      <label style={{ fontSize:11, fontWeight:700, letterSpacing:.5, textTransform:"uppercase", color:C.text3 }}>{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function SectionHeader({ icon, title, subtitle, mt }) {
+  return (
+    <div style={{ marginTop:mt||0, marginBottom:16, paddingBottom:8, borderBottom:`2px solid ${C.border}`, display:"flex", alignItems:"center", gap:8 }}>
+      <span style={{ fontSize:18 }}>{icon}</span>
+      <div>
+        <div style={{ fontSize:15, fontWeight:700 }}>{title}</div>
+        {subtitle && <div style={{ fontSize:12, color:C.text3 }}>{subtitle}</div>}
+      </div>
+    </div>
+  );
+}
+
+function InfoCard({ icon, title, subtitle, children }) {
+  return (
+    <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:10, overflow:"hidden" }}>
+      <div style={{ padding:"12px 16px", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", gap:8, background:C.surface2 }}>
+        <span style={{ fontSize:15 }}>{icon}</span>
+        <div>
+          <div style={{ fontWeight:700, fontSize:14 }}>{title}</div>
+          {subtitle && <div style={{ fontSize:11, color:C.text3 }}>{subtitle}</div>}
+        </div>
+      </div>
+      <div style={{ padding:"14px 16px" }}>{children}</div>
+    </div>
+  );
+}
+
+function InfoGrid({ items }) {
+  return (
+    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(150px,1fr))", gap:10 }}>
+      {items.map(it=>(
+        <div key={it.k}>
+          <div style={{ fontSize:10, fontWeight:700, letterSpacing:.5, textTransform:"uppercase", color:C.text3, marginBottom:2 }}>{it.k}</div>
+          <div style={{ fontSize:13, fontWeight:600 }}>{it.v||"—"}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CtaBtn({ color, outline, onClick, children }) {
+  return (
+    <button onClick={onClick} style={{
+      padding:"8px 16px", borderRadius:6, cursor:"pointer", fontWeight:700, fontSize:13,
+      fontFamily:"'IBM Plex Sans',sans-serif",
+      border: outline?`1.5px solid ${color}`:"none",
+      background: outline?"transparent":color,
+      color: outline?color:"#fff",
+    }}>{children}</button>
+  );
+}
+
+// ─── STYLE CONSTANTS ─────────────────────────────────────────────
+const inp = {
+  border:`1.5px solid ${C.border}`, borderRadius:6, padding:"8px 12px",
+  fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif", color:C.text,
+  outline:"none", width:"100%", background:C.surface,
+};
+const grid2 = { display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 };
+const btnNext = {
+  display:"inline-flex", alignItems:"center", gap:6,
+  padding:"10px 20px", borderRadius:6, border:"none",
+  background:C.blue, color:"#fff", cursor:"pointer", fontWeight:700,
+  fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif",
+};
+const btnBack = {
+  display:"inline-flex", alignItems:"center", gap:6,
+  padding:"10px 18px", borderRadius:6, border:`1px solid ${C.border}`,
+  background:C.surface, color:C.text2, cursor:"pointer",
+  fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif",
+};
