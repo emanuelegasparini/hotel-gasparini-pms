@@ -202,7 +202,7 @@ const STATUS_CFG = {
   cancelled:    { bg: C.redL,   text: C.red,   border: C.redLb,   label: "Annullato" },
 };
 
-const PAGES = ["Dashboard","Prenotazioni","Anagrafica","Check-In/Out","Disponibilità","Camere","Prezzi & Revenue","Cassa","Pubblica Sicurezza","ISTAT Veneto","API & Integrazioni","Ristorante POS","Statistiche","Configurazione"];
+const PAGES = ["Dashboard","Prenotazioni","Anagrafica","Check-In/Out","Disponibilità","Camere","Prezzi & Revenue","Cassa","Pubblica Sicurezza","ISTAT Veneto","API & Integrazioni","Ristorante POS","Statistiche","Housekeeping","Configurazione"];
 
 // - HELPERS -
 
@@ -1133,7 +1133,7 @@ const PAGE_ICONS = {
 };
 const PAGE_GROUPS = [
   { label:"Front Office",   pages:["Dashboard","Prenotazioni","Anagrafica","Check-In/Out","Disponibilità"] },
-  { label:"Gestione",       pages:["Camere","Prezzi & Revenue","Cassa","MICE & Meeting"] },
+  { label:"Gestione",       pages:["Camere","Prezzi & Revenue","Cassa","MICE & Meeting","Housekeeping"] },
   { label:"Reportistica",   pages:["Pubblica Sicurezza","ISTAT Veneto","Statistiche"] },
   { label:"Integrazioni",   pages:["API & Integrazioni","Ristorante POS"] },
   { label:"Sistema",        pages:["Configurazione"] },
@@ -6252,6 +6252,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
         {/*   MICE & MEETING   */}
         {page==="MICE & Meeting" && <MICEModule reservations={reservations} setReservations={setReservations} guests={guests} />}
         {page==="Statistiche"   && <StatisticheModule reservations={reservations} guests={guests} rooms={rooms} />}
+        {page==="Housekeeping"   && <HousekeepingModule rooms={rooms} reservations={reservations} isMobile={isMobile} />}
         {page==="Configurazione" && <ConfigurazioneModule rooms={rooms} setRooms={setRooms} />}
 
         {/* ── MODAL PREVENTIVO MICE ── */}
@@ -10406,6 +10407,888 @@ function ConfigurazioneModule({ rooms=[], setRooms=()=>{} }) {
           <button onClick={() => salva()} style={btnPrimary}>💾 Salva tutte le modifiche</button>
         </div>
       </div>
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+//  MODULO HOUSEKEEPING — Gestione pulizie camere
+//  Hotel Gasparini PMS · Mobile-first · Real-time status
+// ═══════════════════════════════════════════════════════════════════
+
+const HK_KEY = "gasparini_hk_status";
+
+// ─── COSTANTI ───────────────────────────────────────────────────────
+const HK_STATUS = {
+  da_pulire:   { label:"Da pulire",     color:"#e65100", bg:"#fff3e0", border:"#ffcc80", emoji:"🟡" },
+  in_pulizia:  { label:"In pulizia",    color:"#0277bd", bg:"#e1f5fe", border:"#81d4fa", emoji:"🔵" },
+  pulita:      { label:"Pulita",        color:"#1b7a4a", bg:"#e6f7ee", border:"#6fcf97", emoji:"🟢" },
+  ispezionare: { label:"Ispezionare",   color:"#5c35cc", bg:"#ede7f6", border:"#b39ddb", emoji:"🟣" },
+  guasta:      { label:"Fuori servizio",color:"#c62828", bg:"#fdecea", border:"#ef9a9a", emoji:"🔴" },
+  dnd:         { label:"Non disturbare",color:"#546e7a", bg:"#eceff1", border:"#b0bec5", emoji:"⚫" },
+};
+
+const HK_CHECKLIST = [
+  { id:"letti",      label:"Letti rifatti",          icon:"🛏️" },
+  { id:"bagno",      label:"Bagno pulito",            icon:"🚿" },
+  { id:"biancheria", label:"Biancheria cambiata",     icon:"🧺" },
+  { id:"aspirato",   label:"Aspirato / spazzato",     icon:"🧹" },
+  { id:"superfici",  label:"Superfici pulite",        icon:"✨" },
+  { id:"minibar",    label:"Minibar rifornito",       icon:"🧴" },
+  { id:"amenities",  label:"Amenities complete",      icon:"🧼" },
+  { id:"finestre",   label:"Finestre pulite",         icon:"🪟" },
+  { id:"trash",      label:"Cestini svuotati",        icon:"🗑️" },
+  { id:"report",     label:"Foto/report inviato",     icon:"📸" },
+];
+
+const HK_STAFF = [
+  { id:"s1", nome:"Maria Rossi",      colore:"#1b7a4a" },
+  { id:"s2", nome:"Ana Pereira",      colore:"#0277bd" },
+  { id:"s3", nome:"Fatima Al-Hassan", colore:"#5c35cc" },
+  { id:"s4", nome:"Giulia Conti",     colore:"#c62828" },
+  { id:"s5", nome:"Elena Vukovic",    colore:"#e65100" },
+];
+
+// ─── INIT STATUS da ROOMS ───────────────────────────────────────────
+function initHkStatus(rooms) {
+  const stati = {};
+  rooms.forEach(r => {
+    stati[r.id] = {
+      status:     "da_pulire",
+      assignedTo: null,        // staff id
+      note:       "",
+      lastCleaned: null,
+      checklist:  {},          // { checklistId: bool }
+      priority:   "normale",   // normale | partenza | arrivo | urgente
+      updatedAt:  null,
+    };
+  });
+  return stati;
+}
+
+function caricaHk(rooms) {
+  try {
+    const raw = localStorage.getItem(HK_KEY);
+    if (!raw) return initHkStatus(rooms);
+    const stored = JSON.parse(raw);
+    // Merge: add new rooms if missing
+    const merged = initHkStatus(rooms);
+    Object.keys(stored).forEach(id => {
+      if (merged[id]) merged[id] = { ...merged[id], ...stored[id] };
+    });
+    return merged;
+  } catch { return initHkStatus(rooms); }
+}
+
+function salvaHk(stato) {
+  try { localStorage.setItem(HK_KEY, JSON.stringify(stato)); } catch {}
+}
+
+// ─── COMPONENTE PRINCIPALE ──────────────────────────────────────────
+function HousekeepingModule({ rooms = [], reservations = [], isMobile = false }) {
+  const [hk, setHk]             = useState(() => caricaHk(rooms));
+  const [pianoAttivo, setPiano]  = useState("tutti");
+  const [filtroStatus, setFiltroStatus] = useState("tutti");
+  const [filtroStaff, setFiltroStaff]   = useState("tutti");
+  const [vista, setVista]        = useState("griglia");   // griglia | lista | turno
+  const [cameraAperta, setCameraAperta] = useState(null); // id camera in modal dettaglio
+  const [toast, setToast]        = useState(null);
+  const [searchQ, setSearchQ]    = useState("");
+
+  // Salva ogni volta che hk cambia
+  useEffect(() => { salvaHk(hk); }, [hk]);
+
+  // ─── CALCOLA PRIORITÀ AUTO DA PRENOTAZIONI ─────────────────────
+  const oggi = useMemo(() => new Date().toISOString().slice(0, 10), []);
+
+  const prioritaAuto = useMemo(() => {
+    const map = {};
+    reservations.forEach(r => {
+      const isPartenza = r.checkOut === oggi && r.status === "checked-in";
+      const isArrivo   = r.checkIn  === oggi && r.status === "reserved";
+      const isUrgente  = r.checkIn  === oggi && r.status === "checked-in"; // early CI già in corso
+      if (isUrgente)  map[r.roomId] = "urgente";
+      else if (isPartenza && !map[r.roomId]) map[r.roomId] = "partenza";
+      else if (isArrivo   && !map[r.roomId]) map[r.roomId] = "arrivo";
+    });
+    return map;
+  }, [reservations, oggi]);
+
+  // ─── OSPITI ATTUALI PER CAMERA ─────────────────────────────────
+  const ospitePerCamera = useMemo(() => {
+    const map = {};
+    reservations.forEach(r => {
+      if (["checked-in", "reserved"].includes(r.status) &&
+          r.checkIn <= oggi && r.checkOut > oggi) {
+        map[r.roomId] = r;
+      }
+    });
+    return map;
+  }, [reservations, oggi]);
+
+  // ─── PIANI DISPONIBILI ─────────────────────────────────────────
+  const piani = useMemo(() => [...new Set(rooms.map(r => r.floor))].sort(), [rooms]);
+
+  // ─── CAMERE FILTRATE ───────────────────────────────────────────
+  const camereFiltrate = useMemo(() => {
+    return rooms.filter(r => {
+      const stato = hk[r.id] || {};
+      const priAuto = prioritaAuto[r.id] || "normale";
+      if (pianoAttivo !== "tutti" && r.floor !== parseInt(pianoAttivo)) return false;
+      if (filtroStatus !== "tutti" && stato.status !== filtroStatus) return false;
+      if (filtroStaff  !== "tutti" && stato.assignedTo !== filtroStaff) return false;
+      if (searchQ && !String(r.id).includes(searchQ) && !r.type.toLowerCase().includes(searchQ.toLowerCase())) return false;
+      return true;
+    }).map(r => ({
+      ...r,
+      stato:   hk[r.id] || {},
+      priAuto: prioritaAuto[r.id] || hk[r.id]?.priority || "normale",
+      ospite:  ospitePerCamera[r.id] || null,
+    }));
+  }, [rooms, hk, pianoAttivo, filtroStatus, filtroStaff, searchQ, prioritaAuto, ospitePerCamera]);
+
+  // ─── KPI ───────────────────────────────────────────────────────
+  const kpi = useMemo(() => {
+    const all = rooms.map(r => hk[r.id]?.status || "da_pulire");
+    return {
+      da_pulire:   all.filter(s => s === "da_pulire").length,
+      in_pulizia:  all.filter(s => s === "in_pulizia").length,
+      pulita:      all.filter(s => s === "pulita").length,
+      ispezionare: all.filter(s => s === "ispezionare").length,
+      guasta:      all.filter(s => s === "guasta").length,
+      dnd:         all.filter(s => s === "dnd").length,
+      urgenti:     Object.values(prioritaAuto).filter(p => p === "urgente" || p === "partenza" || p === "arrivo").length,
+    };
+  }, [rooms, hk, prioritaAuto]);
+
+  // ─── UPDATE HELPERS ────────────────────────────────────────────
+  const updStatus = useCallback((roomId, newStatus) => {
+    setHk(prev => ({
+      ...prev,
+      [roomId]: {
+        ...prev[roomId],
+        status: newStatus,
+        updatedAt: new Date().toISOString(),
+        lastCleaned: newStatus === "pulita" ? new Date().toISOString() : prev[roomId]?.lastCleaned,
+      }
+    }));
+    const st = HK_STATUS[newStatus];
+    showToast(`Camera ${roomId} → ${st.label} ${st.emoji}`);
+  }, []);
+
+  const updAssign = useCallback((roomId, staffId) => {
+    setHk(prev => ({
+      ...prev,
+      [roomId]: { ...prev[roomId], assignedTo: staffId, updatedAt: new Date().toISOString() }
+    }));
+  }, []);
+
+  const updNote = useCallback((roomId, note) => {
+    setHk(prev => ({ ...prev, [roomId]: { ...prev[roomId], note } }));
+  }, []);
+
+  const updChecklist = useCallback((roomId, itemId, val) => {
+    setHk(prev => ({
+      ...prev,
+      [roomId]: {
+        ...prev[roomId],
+        checklist: { ...prev[roomId]?.checklist, [itemId]: val }
+      }
+    }));
+  }, []);
+
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 2500);
+  };
+
+  // Reset turno
+  const resetTurno = () => {
+    setHk(prev => {
+      const next = { ...prev };
+      rooms.forEach(r => {
+        if (next[r.id]?.status === "pulita") {
+          next[r.id] = { ...next[r.id], status: "da_pulire", checklist: {}, lastCleaned: next[r.id].updatedAt };
+        }
+      });
+      return next;
+    });
+    showToast("Turno resettato — tutte le camere pulite → da pulire");
+  };
+
+  // ─── PALETTE ───────────────────────────────────────────────────
+  const H = {
+    bg: "#f4f6f9", surface: "#fff", border: "#e0e6ef", border2: "#c8d5e8",
+    text: "#1a2535", text2: "#4a5a6e", text3: "#8899aa",
+    blue: "#0f62fe", blueL: "#e8f0ff",
+    header: "#0a1929",
+  };
+
+  const priColori = {
+    urgente:  { bg:"#fdecea", text:"#c62828", border:"#ef9a9a", label:"URGENTE 🔴" },
+    partenza: { bg:"#fff3e0", text:"#e65100", border:"#ffcc80", label:"PARTENZA 🟡" },
+    arrivo:   { bg:"#e8f0ff", text:"#0f62fe", border:"#b3ccff", label:"ARRIVO 🔵"  },
+    normale:  { bg:"transparent", text: "#8899aa", border:"transparent", label:"" },
+  };
+
+  // Camera aperta per dettaglio
+  const camDetail = cameraAperta ? rooms.find(r => r.id === cameraAperta) : null;
+  const hkDetail  = camDetail ? (hk[cameraAperta] || {}) : {};
+
+  // ─── RENDER ────────────────────────────────────────────────────
+  return (
+    <div style={{ fontFamily:"'IBM Plex Sans',system-ui,sans-serif", color: H.text, minHeight:"100vh" }}>
+      <style>{`
+        .hk-card { transition: box-shadow .15s, transform .1s; cursor:pointer; }
+        .hk-card:hover { box-shadow: 0 4px 16px rgba(15,98,254,.12); transform: translateY(-1px); }
+        .hk-card:active { transform: scale(.98); }
+        .hk-btn { border:none; cursor:pointer; border-radius:6px; font-family:'IBM Plex Sans',sans-serif;
+          font-weight:600; font-size:12px; padding:7px 12px; transition:all .12s; white-space:nowrap;
+          touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+        .hk-btn:active { transform:scale(.95); }
+        .hk-status-btn { border-radius:8px; font-size:13px; padding:10px 0; width:100%;
+          border:none; cursor:pointer; font-family:'IBM Plex Sans',sans-serif; font-weight:700;
+          transition:all .12s; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+        .hk-status-btn:active { transform:scale(.97); }
+        .hk-check-row { display:flex; align-items:center; gap:10px; padding:8px 0;
+          border-bottom:1px solid #f0f3f7; cursor:pointer; user-select:none; }
+        .hk-check-row:last-child { border-bottom:none; }
+        .hk-tab { border:none; background:none; cursor:pointer; font-family:'IBM Plex Sans',sans-serif;
+          padding:8px 14px; border-radius:6px; font-size:13px; transition:all .12s; }
+        @keyframes hkToast { 0%{transform:translateY(20px);opacity:0} 10%{transform:translateY(0);opacity:1}
+          85%{opacity:1} 100%{opacity:0} }
+        @keyframes hkModalIn { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+        @keyframes hkPulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+      `}</style>
+
+      {/* ── HEADER ── */}
+      <div style={{ background: H.header, padding: isMobile?"14px 16px":"16px 24px",
+        display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:10 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+          <div style={{ fontSize:26 }}>🧹</div>
+          <div>
+            <div style={{ fontSize:isMobile?15:17, fontWeight:800, color:"#fff", letterSpacing:.3 }}>Housekeeping</div>
+            <div style={{ fontSize:11, color:"#90b4d4", marginTop:1 }}>
+              {oggi} · {rooms.length} camere · {kpi.urgenti > 0 && <span style={{ color:"#ffcc80" }}>{kpi.urgenti} priorità</span>}
+            </div>
+          </div>
+        </div>
+        <div style={{ display:"flex", gap:8 }}>
+          {["griglia","lista","turno"].map(v => (
+            <button key={v} className="hk-tab"
+              onClick={() => setVista(v)}
+              style={{ background: vista===v ? "#1565c0" : "rgba(255,255,255,.1)",
+                color: vista===v ? "#fff" : "#90b4d4", fontWeight: vista===v ? 700 : 400 }}>
+              {v === "griglia" ? "⊞ Griglia" : v === "lista" ? "≡ Lista" : "📋 Turno"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── KPI BAR ── */}
+      <div style={{ background:"#fff", borderBottom:`1px solid ${H.border}`,
+        overflowX:"auto", WebkitOverflowScrolling:"touch" }}>
+        <div style={{ display:"flex", minWidth: isMobile ? 520 : "auto", padding:"0 16px" }}>
+          {Object.entries(HK_STATUS).map(([k, s]) => (
+            <button key={k} onClick={() => setFiltroStatus(filtroStatus===k?"tutti":k)}
+              style={{ flex:1, padding:"12px 8px", border:"none", cursor:"pointer",
+                background: filtroStatus===k ? s.bg : "transparent",
+                borderBottom: filtroStatus===k ? `3px solid ${s.color}` : "3px solid transparent",
+                transition:"all .15s", textAlign:"center" }}>
+              <div style={{ fontSize: isMobile?18:22 }}>{s.emoji}</div>
+              <div style={{ fontSize:11, fontWeight:700, color: filtroStatus===k ? s.color : H.text3,
+                marginTop:2 }}>{kpi[k]??0}</div>
+              {!isMobile && <div style={{ fontSize:9, color:H.text3, letterSpacing:.3,
+                textTransform:"uppercase" }}>{s.label}</div>}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── FILTRI ── */}
+      <div style={{ background:"#fff", borderBottom:`1px solid ${H.border}`,
+        padding: isMobile?"10px 12px":"10px 20px", display:"flex", gap:8, flexWrap:"wrap",
+        alignItems:"center" }}>
+        {/* Ricerca */}
+        <input value={searchQ} onChange={e=>setSearchQ(e.target.value)}
+          placeholder="🔍 Cerca camera..." style={{
+            border:`1px solid ${H.border2}`, borderRadius:6, padding:"7px 10px",
+            fontSize:13, width:isMobile?130:160, fontFamily:"'IBM Plex Sans',sans-serif",
+            outline:"none", background:"#f9fbfd"
+          }}/>
+        {/* Piano */}
+        <div style={{ display:"flex", gap:4, flexWrap:"wrap" }}>
+          <button onClick={()=>setPiano("tutti")} className="hk-btn"
+            style={{ background:pianoAttivo==="tutti"?"#0f62fe":"#f0f3f7",
+              color:pianoAttivo==="tutti"?"#fff":H.text2, fontSize:12 }}>
+            Tutti
+          </button>
+          {piani.map(p => (
+            <button key={p} onClick={()=>setPiano(pianoAttivo===p?"tutti":String(p))} className="hk-btn"
+              style={{ background:pianoAttivo===String(p)?"#0f62fe":"#f0f3f7",
+                color:pianoAttivo===String(p)?"#fff":H.text2, fontSize:12 }}>
+              P{p}
+            </button>
+          ))}
+        </div>
+        {/* Staff filter */}
+        <select value={filtroStaff} onChange={e=>setFiltroStaff(e.target.value)}
+          style={{ border:`1px solid ${H.border2}`, borderRadius:6, padding:"7px 10px",
+            fontSize:12, fontFamily:"'IBM Plex Sans',sans-serif", background:"#f9fbfd", cursor:"pointer" }}>
+          <option value="tutti">👩 Tutto staff</option>
+          {HK_STAFF.map(s => <option key={s.id} value={s.id}>{s.nome}</option>)}
+        </select>
+        {/* Azioni rapide */}
+        <div style={{ marginLeft:"auto", display:"flex", gap:6 }}>
+          <button onClick={()=>{
+            setHk(prev=>{const n={...prev};camereFiltrate.forEach(r=>{n[r.id]={...n[r.id],status:"in_pulizia",updatedAt:new Date().toISOString()};});return n;});
+            showToast(`${camereFiltrate.length} camere → In pulizia`);
+          }} className="hk-btn" style={{ background:"#e1f5fe", color:"#0277bd" }}>
+            🔵 Avvia tutte
+          </button>
+          <button onClick={resetTurno} className="hk-btn"
+            style={{ background:"#f0f3f7", color:H.text2 }}>
+            ↺ Reset turno
+          </button>
+        </div>
+      </div>
+
+      {/* ── CONTENUTO ── */}
+      <div style={{ padding: isMobile?"12px 10px":"20px 24px" }}>
+
+        {/* ════ VISTA GRIGLIA ════ */}
+        {vista === "griglia" && (
+          <div style={{ display:"grid",
+            gridTemplateColumns: isMobile
+              ? "repeat(2, 1fr)"
+              : "repeat(auto-fill, minmax(200px, 1fr))",
+            gap: isMobile ? 8 : 12 }}>
+            {camereFiltrate.map(cam => {
+              const st  = HK_STATUS[cam.stato.status || "da_pulire"];
+              const pri = priColori[cam.priAuto || "normale"];
+              const staff = HK_STAFF.find(s => s.id === cam.stato.assignedTo);
+              const chkCount = Object.values(cam.stato.checklist || {}).filter(Boolean).length;
+
+              return (
+                <div key={cam.id} className="hk-card"
+                  onClick={() => setCameraAperta(cam.id)}
+                  style={{ background: H.surface, border:`1.5px solid ${st.border}`,
+                    borderRadius:10, overflow:"hidden",
+                    boxShadow:"0 1px 4px rgba(0,0,0,.06)" }}>
+                  {/* Header card */}
+                  <div style={{ background: st.bg, padding:isMobile?"8px 10px":"10px 14px",
+                    display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+                    <div>
+                      <div style={{ fontSize:isMobile?18:20, fontWeight:800, color: H.text,
+                        fontFamily:"'IBM Plex Mono',monospace" }}>{cam.id}</div>
+                      <div style={{ fontSize:9, color: H.text3, textTransform:"uppercase",
+                        letterSpacing:.5, marginTop:1 }}>{cam.type}</div>
+                    </div>
+                    <div style={{ fontSize:isMobile?20:22 }}>{st.emoji}</div>
+                  </div>
+                  {/* Body */}
+                  <div style={{ padding:isMobile?"8px 10px":"10px 14px" }}>
+                    {/* Priorità */}
+                    {cam.priAuto !== "normale" && (
+                      <div style={{ background:pri.bg, color:pri.text, border:`1px solid ${pri.border}`,
+                        borderRadius:4, padding:"3px 8px", fontSize:10, fontWeight:700,
+                        marginBottom:6, display:"inline-block" }}>
+                        {pri.label}
+                      </div>
+                    )}
+                    {/* Status */}
+                    <div style={{ fontSize:11, fontWeight:700, color:st.color, marginBottom:4 }}>
+                      {st.label}
+                    </div>
+                    {/* Ospite */}
+                    {cam.ospite && (
+                      <div style={{ fontSize:10, color:H.text3, marginBottom:4 }}>
+                        👤 {cam.ospite.guestName}
+                      </div>
+                    )}
+                    {/* Staff assegnato */}
+                    {staff ? (
+                      <div style={{ fontSize:10, display:"flex", alignItems:"center", gap:4, marginBottom:4 }}>
+                        <div style={{ width:7, height:7, borderRadius:"50%", background:staff.colore }}/>
+                        <span style={{ color:H.text2 }}>{staff.nome.split(" ")[0]}</span>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize:10, color:"#c62828", marginBottom:4 }}>⚠ Non assegnata</div>
+                    )}
+                    {/* Checklist progress */}
+                    {cam.stato.status === "in_pulizia" && (
+                      <div style={{ marginTop:4 }}>
+                        <div style={{ height:4, background:"#e0e6ef", borderRadius:2 }}>
+                          <div style={{ height:"100%", borderRadius:2,
+                            width:`${(chkCount/HK_CHECKLIST.length)*100}%`,
+                            background:"#1b7a4a", transition:"width .3s" }}/>
+                        </div>
+                        <div style={{ fontSize:9, color:H.text3, marginTop:2 }}>
+                          {chkCount}/{HK_CHECKLIST.length} voci
+                        </div>
+                      </div>
+                    )}
+                    {/* Nota */}
+                    {cam.stato.note && (
+                      <div style={{ fontSize:10, color:H.text3, marginTop:4, fontStyle:"italic",
+                        overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                        📝 {cam.stato.note}
+                      </div>
+                    )}
+                    {/* Ora aggiornamento */}
+                    {cam.stato.updatedAt && (
+                      <div style={{ fontSize:9, color:H.text3, marginTop:4 }}>
+                        🕐 {new Date(cam.stato.updatedAt).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}
+                      </div>
+                    )}
+                  </div>
+                  {/* Pulsanti veloci (solo in stati operativi) */}
+                  {cam.stato.status !== "dnd" && cam.stato.status !== "guasta" && (
+                    <div style={{ padding:"0 10px 10px", display:"flex", gap:4 }}
+                      onClick={e=>e.stopPropagation()}>
+                      {cam.stato.status === "da_pulire" && (
+                        <button onClick={()=>updStatus(cam.id,"in_pulizia")} className="hk-btn"
+                          style={{ flex:1, background:"#e1f5fe", color:"#0277bd", fontSize:11 }}>
+                          🔵 Avvia
+                        </button>
+                      )}
+                      {cam.stato.status === "in_pulizia" && (
+                        <>
+                          <button onClick={()=>updStatus(cam.id,"ispezionare")} className="hk-btn"
+                            style={{ flex:1, background:"#ede7f6", color:"#5c35cc", fontSize:11 }}>
+                            🟣 Ispezione
+                          </button>
+                          <button onClick={()=>updStatus(cam.id,"pulita")} className="hk-btn"
+                            style={{ flex:1, background:"#e6f7ee", color:"#1b7a4a", fontSize:11 }}>
+                            🟢 Pronta
+                          </button>
+                        </>
+                      )}
+                      {cam.stato.status === "ispezionare" && (
+                        <button onClick={()=>updStatus(cam.id,"pulita")} className="hk-btn"
+                          style={{ flex:1, background:"#e6f7ee", color:"#1b7a4a", fontSize:11 }}>
+                          ✓ Approvata
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {camereFiltrate.length === 0 && (
+              <div style={{ gridColumn:"1/-1", textAlign:"center", padding:60, color:H.text3 }}>
+                <div style={{ fontSize:40, marginBottom:12 }}>🏨</div>
+                <div style={{ fontSize:16, fontWeight:600 }}>Nessuna camera trovata</div>
+                <div style={{ fontSize:13, marginTop:6 }}>Modifica i filtri sopra</div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ════ VISTA LISTA ════ */}
+        {vista === "lista" && (
+          <div style={{ background:H.surface, border:`1px solid ${H.border}`, borderRadius:10, overflow:"hidden" }}>
+            {/* Header tabella */}
+            <div style={{ display:"grid",
+              gridTemplateColumns: isMobile?"60px 1fr 100px":"60px 1fr 140px 160px 120px 80px",
+              padding:"10px 16px", background:"#f0f3f7",
+              borderBottom:`1px solid ${H.border}`, gap:12, alignItems:"center" }}>
+              {["Cam.","Tipo / Ospite","Status","Assegnata","Agg.",""].map((h,i)=>(
+                <div key={i} style={{ fontSize:10, fontWeight:700, letterSpacing:.8,
+                  textTransform:"uppercase", color:H.text3 }}>{h}</div>
+              ))}
+            </div>
+            {camereFiltrate.map((cam, i) => {
+              const st = HK_STATUS[cam.stato.status || "da_pulire"];
+              const staff = HK_STAFF.find(s => s.id === cam.stato.assignedTo);
+              const pri = priColori[cam.priAuto || "normale"];
+              return (
+                <div key={cam.id} onClick={() => setCameraAperta(cam.id)}
+                  style={{ display:"grid",
+                    gridTemplateColumns: isMobile?"60px 1fr 100px":"60px 1fr 140px 160px 120px 80px",
+                    padding:"12px 16px", gap:12, alignItems:"center",
+                    borderBottom: i < camereFiltrate.length-1 ? `1px solid ${H.border}` : "none",
+                    background: i%2===0 ? "#fff" : "#fafbfc", cursor:"pointer",
+                    transition:"background .1s"
+                  }}
+                  onMouseEnter={e=>e.currentTarget.style.background="#f0f5ff"}
+                  onMouseLeave={e=>e.currentTarget.style.background=i%2===0?"#fff":"#fafbfc"}>
+                  {/* Numero */}
+                  <div style={{ fontWeight:800, fontSize:15, fontFamily:"'IBM Plex Mono',monospace" }}>
+                    {cam.id}
+                    {cam.priAuto !== "normale" && (
+                      <div style={{ fontSize:8, fontWeight:700, color:pri.text, letterSpacing:.5 }}>
+                        {pri.label.replace(/ 🔴|🟡|🔵/g,"")}
+                      </div>
+                    )}
+                  </div>
+                  {/* Tipo + ospite */}
+                  <div>
+                    <div style={{ fontSize:12, fontWeight:600, color:H.text }}>{cam.type}</div>
+                    {cam.ospite && <div style={{ fontSize:11, color:H.text3 }}>👤 {cam.ospite.guestName}</div>}
+                    {cam.stato.note && <div style={{ fontSize:10, color:H.text3, fontStyle:"italic" }}>📝 {cam.stato.note}</div>}
+                  </div>
+                  {/* Status */}
+                  <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+                    <span style={{ fontSize:14 }}>{st.emoji}</span>
+                    <span style={{ fontSize:11, fontWeight:700, color:st.color }}>{st.label}</span>
+                  </div>
+                  {/* Staff */}
+                  {!isMobile && (
+                    <div onClick={e=>e.stopPropagation()}>
+                      <select value={cam.stato.assignedTo||""} onChange={e=>updAssign(cam.id,e.target.value||null)}
+                        style={{ border:`1px solid ${H.border2}`, borderRadius:5, padding:"5px 8px",
+                          fontSize:11, fontFamily:"'IBM Plex Sans',sans-serif",
+                          background:"#f9fbfd", cursor:"pointer", width:"100%" }}>
+                        <option value="">— Non assegnata —</option>
+                        {HK_STAFF.map(s=><option key={s.id} value={s.id}>{s.nome}</option>)}
+                      </select>
+                    </div>
+                  )}
+                  {/* Ora */}
+                  {!isMobile && (
+                    <div style={{ fontSize:11, color:H.text3 }}>
+                      {cam.stato.updatedAt
+                        ? new Date(cam.stato.updatedAt).toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})
+                        : "—"}
+                    </div>
+                  )}
+                  {/* Quick btn */}
+                  <div onClick={e=>e.stopPropagation()}>
+                    {cam.stato.status === "da_pulire" && (
+                      <button onClick={()=>updStatus(cam.id,"in_pulizia")} className="hk-btn"
+                        style={{ background:"#e1f5fe", color:"#0277bd" }}>Avvia</button>
+                    )}
+                    {cam.stato.status === "in_pulizia" && (
+                      <button onClick={()=>updStatus(cam.id,"pulita")} className="hk-btn"
+                        style={{ background:"#e6f7ee", color:"#1b7a4a" }}>Pronta</button>
+                    )}
+                    {cam.stato.status === "ispezionare" && (
+                      <button onClick={()=>updStatus(cam.id,"pulita")} className="hk-btn"
+                        style={{ background:"#e6f7ee", color:"#1b7a4a" }}>✓</button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ════ VISTA TURNO ════ */}
+        {vista === "turno" && (
+          <div>
+            {/* Riepilogo turno */}
+            <div style={{ display:"grid",
+              gridTemplateColumns: isMobile?"1fr 1fr":"repeat(4, 1fr)", gap:12, marginBottom:20 }}>
+              {[
+                { label:"Da pulire",    val:kpi.da_pulire,   color:"#e65100", bg:"#fff3e0", icon:"🟡" },
+                { label:"In pulizia",   val:kpi.in_pulizia,  color:"#0277bd", bg:"#e1f5fe", icon:"🔵" },
+                { label:"Completate",   val:kpi.pulita,      color:"#1b7a4a", bg:"#e6f7ee", icon:"🟢" },
+                { label:"Problemi",     val:kpi.guasta+kpi.ispezionare, color:"#c62828", bg:"#fdecea", icon:"⚠️" },
+              ].map((k,i)=>(
+                <div key={i} style={{ background:k.bg, border:`1.5px solid ${H.border}`,
+                  borderRadius:10, padding:"14px 18px", textAlign:"center" }}>
+                  <div style={{ fontSize:28 }}>{k.icon}</div>
+                  <div style={{ fontSize:32, fontWeight:800, color:k.color,
+                    fontFamily:"'IBM Plex Mono',monospace" }}>{k.val}</div>
+                  <div style={{ fontSize:11, color:H.text3, textTransform:"uppercase",
+                    letterSpacing:.5, marginTop:2 }}>{k.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Progress turno */}
+            <div style={{ background:H.surface, border:`1px solid ${H.border}`, borderRadius:10,
+              padding:"16px 20px", marginBottom:20 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}>
+                <div style={{ fontSize:13, fontWeight:700 }}>Avanzamento turno</div>
+                <div style={{ fontSize:13, fontWeight:700, color:"#1b7a4a" }}>
+                  {Math.round(kpi.pulita/rooms.length*100)}%
+                </div>
+              </div>
+              <div style={{ height:12, background:"#e0e6ef", borderRadius:6, overflow:"hidden" }}>
+                <div style={{ height:"100%", background:"linear-gradient(90deg,#1b7a4a,#43a047)",
+                  width:`${kpi.pulita/rooms.length*100}%`, borderRadius:6, transition:"width .4s" }}/>
+              </div>
+              <div style={{ display:"flex", gap:4, marginTop:8 }}>
+                {["pulita","in_pulizia","ispezionare","guasta","dnd","da_pulire"].map(s=>{
+                  const pct = (kpi[s]||0)/rooms.length*100;
+                  return pct>0 ? (
+                    <div key={s} title={`${HK_STATUS[s].label}: ${kpi[s]}`}
+                      style={{ height:4, borderRadius:2, flex:pct,
+                        background:HK_STATUS[s].color, opacity:.7 }}/>
+                  ):null;
+                })}
+              </div>
+            </div>
+
+            {/* Staff performance */}
+            <div style={{ background:H.surface, border:`1px solid ${H.border}`, borderRadius:10,
+              padding:"16px 20px", marginBottom:20 }}>
+              <div style={{ fontSize:13, fontWeight:700, marginBottom:14 }}>Performance staff</div>
+              {HK_STAFF.map(s => {
+                const assegnate = rooms.filter(r => hk[r.id]?.assignedTo === s.id);
+                const completate = assegnate.filter(r => hk[r.id]?.status === "pulita");
+                const inCorso   = assegnate.filter(r => hk[r.id]?.status === "in_pulizia");
+                return (
+                  <div key={s.id} style={{ display:"flex", alignItems:"center", gap:12,
+                    padding:"10px 0", borderBottom:`1px solid ${H.border}` }}>
+                    <div style={{ width:32, height:32, borderRadius:"50%",
+                      background:s.colore, display:"flex", alignItems:"center",
+                      justifyContent:"center", fontSize:13, color:"#fff",
+                      fontWeight:700, flexShrink:0 }}>
+                      {s.nome.split(" ").map(n=>n[0]).join("").slice(0,2)}
+                    </div>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontSize:13, fontWeight:600, marginBottom:4 }}>{s.nome}</div>
+                      <div style={{ height:6, background:"#e0e6ef", borderRadius:3, overflow:"hidden" }}>
+                        <div style={{ height:"100%", background:s.colore, borderRadius:3,
+                          width:`${assegnate.length>0?(completate.length/assegnate.length*100):0}%`,
+                          transition:"width .4s" }}/>
+                      </div>
+                    </div>
+                    <div style={{ fontSize:11, color:H.text3, flexShrink:0, textAlign:"right" }}>
+                      <div style={{ fontWeight:700, color:"#1b7a4a" }}>{completate.length} ✓</div>
+                      {inCorso.length>0 && <div style={{ color:"#0277bd" }}>{inCorso.length} 🔵</div>}
+                      <div style={{ color:H.text3 }}>{assegnate.length} tot</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Camere priorità */}
+            {Object.keys(prioritaAuto).length > 0 && (
+              <div style={{ background:H.surface, border:`1px solid ${H.border}`, borderRadius:10,
+                padding:"16px 20px" }}>
+                <div style={{ fontSize:13, fontWeight:700, marginBottom:14 }}>
+                  🚨 Camere prioritarie ({Object.keys(prioritaAuto).length})
+                </div>
+                {rooms.filter(r=>prioritaAuto[r.id]).map(r=>{
+                  const pri = priColori[prioritaAuto[r.id]||"normale"];
+                  const st  = HK_STATUS[hk[r.id]?.status||"da_pulire"];
+                  const ospite = ospitePerCamera[r.id];
+                  return (
+                    <div key={r.id} onClick={()=>setCameraAperta(r.id)}
+                      style={{ display:"flex", alignItems:"center", gap:12,
+                        padding:"10px 12px", marginBottom:6, borderRadius:8,
+                        background:pri.bg, border:`1px solid ${pri.border}`,
+                        cursor:"pointer" }}>
+                      <div style={{ fontWeight:800, fontSize:16, color:H.text,
+                        fontFamily:"'IBM Plex Mono',monospace", width:40 }}>{r.id}</div>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:12, fontWeight:700, color:pri.text }}>{pri.label}</div>
+                        <div style={{ fontSize:11, color:H.text3 }}>{r.type}</div>
+                        {ospite && <div style={{ fontSize:11, color:H.text3 }}>👤 {ospite.guestName}</div>}
+                      </div>
+                      <div style={{ fontSize:13, fontWeight:700, color:st.color }}>
+                        {st.emoji} {st.label}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ══════════════════════════════════════
+           MODAL DETTAGLIO CAMERA
+      ══════════════════════════════════════ */}
+      {cameraAperta && camDetail && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(10,25,41,.65)",
+          zIndex:500, display:"flex", alignItems:"flex-end",
+          justifyContent:"center" }}
+          onClick={()=>setCameraAperta(null)}>
+          <div onClick={e=>e.stopPropagation()}
+            style={{ background:"#fff", borderRadius:"16px 16px 0 0",
+              width:"100%", maxWidth:520, maxHeight:"90vh",
+              overflowY:"auto", animation:"hkModalIn .25s ease",
+              boxShadow:"0 -8px 32px rgba(0,0,0,.2)" }}>
+
+            {/* Modal header */}
+            <div style={{ background: HK_STATUS[hkDetail.status||"da_pulire"].bg,
+              padding:"18px 20px", borderRadius:"16px 16px 0 0",
+              display:"flex", justifyContent:"space-between", alignItems:"center",
+              borderBottom:`1.5px solid ${HK_STATUS[hkDetail.status||"da_pulire"].border}` }}>
+              <div>
+                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                  <div style={{ fontSize:28, fontWeight:800,
+                    fontFamily:"'IBM Plex Mono',monospace" }}>{camDetail.id}</div>
+                  <div>
+                    <div style={{ fontSize:12, color:H.text2 }}>{camDetail.type}</div>
+                    <div style={{ fontSize:11, color:H.text3 }}>Piano {camDetail.floor} · {camDetail.capacity} ospiti</div>
+                  </div>
+                </div>
+              </div>
+              <button onClick={()=>setCameraAperta(null)}
+                style={{ background:"none", border:"none", fontSize:22, cursor:"pointer",
+                  color:H.text3, padding:4 }}>✕</button>
+            </div>
+
+            <div style={{ padding:"16px 20px" }}>
+              {/* Ospite attuale */}
+              {ospitePerCamera[cameraAperta] && (
+                <div style={{ background:"#f0f5ff", border:"1px solid #b3ccff",
+                  borderRadius:8, padding:"10px 14px", marginBottom:14,
+                  display:"flex", alignItems:"center", gap:10 }}>
+                  <span style={{ fontSize:18 }}>👤</span>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:700 }}>
+                      {ospitePerCamera[cameraAperta].guestName}
+                    </div>
+                    <div style={{ fontSize:11, color:H.text3 }}>
+                      {ospitePerCamera[cameraAperta].checkIn} → {ospitePerCamera[cameraAperta].checkOut}
+                      · {ospitePerCamera[cameraAperta].guests} ospiti
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Priorità */}
+              {(prioritaAuto[cameraAperta] || hkDetail.priority) !== "normale" && (
+                <div style={{ ...priColori[prioritaAuto[cameraAperta]||hkDetail.priority||"normale"],
+                  borderRadius:6, padding:"6px 12px", marginBottom:14,
+                  display:"inline-flex", alignItems:"center", gap:6,
+                  border:`1px solid ${priColori[prioritaAuto[cameraAperta]||hkDetail.priority||"normale"]?.border}`,
+                  background: priColori[prioritaAuto[cameraAperta]||hkDetail.priority||"normale"]?.bg }}>
+                  <span style={{ fontSize:12, fontWeight:700,
+                    color:priColori[prioritaAuto[cameraAperta]||hkDetail.priority||"normale"]?.text }}>
+                    {priColori[prioritaAuto[cameraAperta]||hkDetail.priority||"normale"]?.label}
+                  </span>
+                </div>
+              )}
+
+              {/* Cambio status — bottoni grandi */}
+              <div style={{ marginBottom:16 }}>
+                <div style={{ fontSize:10, fontWeight:700, letterSpacing:.8, textTransform:"uppercase",
+                  color:H.text3, marginBottom:8 }}>Stato camera</div>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+                  {Object.entries(HK_STATUS).map(([k,s])=>(
+                    <button key={k} className="hk-status-btn"
+                      onClick={()=>updStatus(cameraAperta,k)}
+                      style={{
+                        background: hkDetail.status===k ? s.color : s.bg,
+                        color: hkDetail.status===k ? "#fff" : s.color,
+                        border: `1.5px solid ${s.border}`,
+                        boxShadow: hkDetail.status===k ? `0 2px 8px ${s.color}44` : "none",
+                      }}>
+                      {s.emoji} {s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Assegna staff */}
+              <div style={{ marginBottom:16 }}>
+                <div style={{ fontSize:10, fontWeight:700, letterSpacing:.8, textTransform:"uppercase",
+                  color:H.text3, marginBottom:8 }}>Assegna addetta</div>
+                <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                  {HK_STAFF.map(s=>(
+                    <button key={s.id} onClick={()=>updAssign(cameraAperta, hkDetail.assignedTo===s.id ? null : s.id)}
+                      style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 14px",
+                        borderRadius:8, border:`1.5px solid ${hkDetail.assignedTo===s.id?s.colore:H.border}`,
+                        background: hkDetail.assignedTo===s.id ? `${s.colore}18` : "#f9fbfd",
+                        cursor:"pointer", fontFamily:"'IBM Plex Sans',sans-serif",
+                        transition:"all .12s" }}>
+                      <div style={{ width:28, height:28, borderRadius:"50%", background:s.colore,
+                        display:"flex", alignItems:"center", justifyContent:"center",
+                        fontSize:11, color:"#fff", fontWeight:700, flexShrink:0 }}>
+                        {s.nome.split(" ").map(n=>n[0]).join("").slice(0,2)}
+                      </div>
+                      <span style={{ fontSize:13, fontWeight: hkDetail.assignedTo===s.id?700:400,
+                        color: hkDetail.assignedTo===s.id?s.colore:H.text }}>{s.nome}</span>
+                      {hkDetail.assignedTo===s.id && <span style={{ marginLeft:"auto", color:s.colore }}>✓</span>}
+                    </button>
+                  ))}
+                  <button onClick={()=>updAssign(cameraAperta, null)}
+                    style={{ padding:"8px 14px", borderRadius:8, border:`1px solid ${H.border}`,
+                      background:"#f0f3f7", cursor:"pointer", fontSize:12, color:H.text3,
+                      fontFamily:"'IBM Plex Sans',sans-serif" }}>
+                    — Rimuovi assegnazione
+                  </button>
+                </div>
+              </div>
+
+              {/* Checklist */}
+              <div style={{ marginBottom:16 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+                  <div style={{ fontSize:10, fontWeight:700, letterSpacing:.8,
+                    textTransform:"uppercase", color:H.text3 }}>Checklist pulizie</div>
+                  <div style={{ fontSize:11, color:H.text3 }}>
+                    {Object.values(hkDetail.checklist||{}).filter(Boolean).length}/{HK_CHECKLIST.length}
+                  </div>
+                </div>
+                <div style={{ background:"#f9fbfd", border:`1px solid ${H.border}`,
+                  borderRadius:8, padding:"0 14px" }}>
+                  {HK_CHECKLIST.map((item)=>{
+                    const checked = hkDetail.checklist?.[item.id] || false;
+                    return (
+                      <div key={item.id} className="hk-check-row"
+                        onClick={()=>updChecklist(cameraAperta, item.id, !checked)}>
+                        <div style={{ width:22, height:22, borderRadius:5,
+                          border:`2px solid ${checked?"#1b7a4a":H.border2}`,
+                          background: checked?"#1b7a4a":"#fff",
+                          display:"flex", alignItems:"center", justifyContent:"center",
+                          flexShrink:0, transition:"all .12s" }}>
+                          {checked && <span style={{ color:"#fff", fontSize:13, lineHeight:1 }}>✓</span>}
+                        </div>
+                        <span style={{ fontSize:13 }}>{item.icon}</span>
+                        <span style={{ fontSize:13, color: checked?H.text3:H.text,
+                          textDecoration: checked?"line-through":"none",
+                          flex:1 }}>{item.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Completa tutto */}
+                <button onClick={()=>{
+                  const allChecked = Object.fromEntries(HK_CHECKLIST.map(i=>[i.id,true]));
+                  setHk(prev=>({...prev,[cameraAperta]:{...prev[cameraAperta],checklist:allChecked}}));
+                }} style={{ width:"100%", marginTop:8, padding:"8px", borderRadius:6,
+                  border:`1px solid ${H.border}`, background:"#f0f3f7",
+                  cursor:"pointer", fontSize:12, color:H.text2,
+                  fontFamily:"'IBM Plex Sans',sans-serif" }}>
+                  ✓ Segna tutto
+                </button>
+              </div>
+
+              {/* Note */}
+              <div style={{ marginBottom:20 }}>
+                <div style={{ fontSize:10, fontWeight:700, letterSpacing:.8,
+                  textTransform:"uppercase", color:H.text3, marginBottom:8 }}>Note</div>
+                <textarea value={hkDetail.note||""} onChange={e=>updNote(cameraAperta,e.target.value)}
+                  placeholder="Aggiungi una nota per questa camera..."
+                  rows={3} style={{ width:"100%", border:`1px solid ${H.border2}`,
+                    borderRadius:8, padding:"10px 12px", fontSize:13, resize:"vertical",
+                    fontFamily:"'IBM Plex Sans',sans-serif", outline:"none",
+                    background:"#f9fbfd" }}/>
+              </div>
+
+              {/* Ultima pulizia */}
+              {hkDetail.lastCleaned && (
+                <div style={{ fontSize:11, color:H.text3, textAlign:"center", paddingBottom:8 }}>
+                  Ultima pulizia: {new Date(hkDetail.lastCleaned).toLocaleString("it-IT",{
+                    day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── TOAST ── */}
+      {toast && (
+        <div style={{ position:"fixed", bottom: isMobile?72:24, left:"50%",
+          transform:"translateX(-50%)", background:"#1a2535", color:"#fff",
+          padding:"10px 20px", borderRadius:10, fontSize:13, fontWeight:600,
+          boxShadow:"0 4px 16px rgba(0,0,0,.25)", zIndex:600, whiteSpace:"nowrap",
+          animation:"hkToast 2.5s ease forwards", pointerEvents:"none" }}>
+          {toast}
+        </div>
+      )}
     </div>
   );
 }
