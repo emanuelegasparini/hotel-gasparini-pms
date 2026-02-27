@@ -202,7 +202,7 @@ const STATUS_CFG = {
   cancelled:    { bg: C.redL,   text: C.red,   border: C.redLb,   label: "Annullato" },
 };
 
-const PAGES = ["Dashboard","Prenotazioni","Anagrafica","Check-In/Out","Disponibilità","Camere","Prezzi & Revenue","Cassa","Pubblica Sicurezza","ISTAT Veneto","API & Integrazioni","Ristorante POS","Statistiche"];
+const PAGES = ["Dashboard","Prenotazioni","Anagrafica","Check-In/Out","Disponibilità","Camere","Prezzi & Revenue","Cassa","Pubblica Sicurezza","ISTAT Veneto","API & Integrazioni","Ristorante POS","Statistiche","Configurazione"];
 
 // - HELPERS -
 
@@ -1070,12 +1070,14 @@ const PAGE_ICONS = {
   "Ristorante POS":    "🍽",
   "MICE & Meeting":    "🎯",
   "Statistiche":       "📈",
+  "Configurazione":    "⚙️",
 };
 const PAGE_GROUPS = [
   { label:"Front Office",   pages:["Dashboard","Prenotazioni","Anagrafica","Check-In/Out","Disponibilità"] },
   { label:"Gestione",       pages:["Camere","Prezzi & Revenue","Cassa","MICE & Meeting"] },
   { label:"Reportistica",   pages:["Pubblica Sicurezza","ISTAT Veneto","Statistiche"] },
   { label:"Integrazioni",   pages:["API & Integrazioni","Ristorante POS"] },
+  { label:"Sistema",        pages:["Configurazione"] },
 ];
 
 
@@ -6079,6 +6081,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
         {/*   MICE & MEETING   */}
         {page==="MICE & Meeting" && <MICEModule reservations={reservations} setReservations={setReservations} guests={guests} />}
         {page==="Statistiche"   && <StatisticheModule reservations={reservations} guests={guests} rooms={rooms} />}
+        {page==="Configurazione" && <ConfigurazioneModule rooms={rooms} setRooms={setRooms} />}
 
         {/* ── MODAL PREVENTIVO MICE ── */}
         {micePreviewEv && (() => {
@@ -9167,6 +9170,1053 @@ function StatisticheModule({ reservations=[], guests=[], rooms=[] }) {
           {resCur.length} records · aggiornato ora
           <span style={{display:"inline-block",width:6,height:6,borderRadius:"50%",background:BI.green,marginLeft:6,animation:"biPulse 2s infinite"}}/>
         </span>
+      </div>
+    </div>
+  );
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+//  MODULO CONFIGURAZIONE — Backend Settings Panel
+//  Hotel Gasparini PMS · Persistenza in localStorage
+// ═══════════════════════════════════════════════════════════════════
+
+const CFG_KEY = "gasparini_pms_config";
+
+const CFG_DEFAULT = {
+  // Dati hotel
+  hotel: {
+    nome:         "Hotel Gasparini",
+    stelle:       3,
+    indirizzo:    "Lungomare Adriatico 42",
+    citta:        "Chioggia",
+    provincia:    "VE",
+    cap:          "30015",
+    paese:        "Italia",
+    piva:         "IT01234567890",
+    cf:           "01234567890",
+    codiceSdi:    "M5UXCR1",
+    codeAteco:    "55.10",
+    email:        "info@hotelgasparini.it",
+    pec:          "hotelgasparini@pec.it",
+    telefono:     "+39 041 123 4567",
+    sito:         "www.hotelgasparini.it",
+    logoUrl:      "",
+    descrizione:  "Hotel 3 stelle superior sul Lungomare Adriatico di Chioggia, a pochi km da Venezia.",
+  },
+  // Parametri operativi
+  operativo: {
+    checkInOra:   "14:00",
+    checkOutOra:  "11:00",
+    checkInEarly: "10:00",  // Early check-in (a pagamento)
+    checkOutLate: "15:00",  // Late check-out (a pagamento)
+    timezone:     "Europe/Rome",
+    lingua:       "it",
+    valuta:       "EUR",
+    formatoData:  "DD/MM/YYYY",
+    notteMinima:  1,
+    prenotazioneMaxAnticipo: 365, // giorni
+    overbooking:  false,
+    overbookingPct: 5,
+  },
+  // Tariffe e fiscalità
+  fiscale: {
+    ivaAlloggio:      10,   // %
+    ivaServizi:       22,   // %
+    ivaRistorante:    10,   // %
+    cityTax:          2.50, // € per persona per notte
+    cityTaxEsenzioni: "Under 14, disabili, residenti",
+    cityTaxMaxNotti:  5,
+    acconto:          30,   // % acconto prenotazione
+    penaleAnnullamento: 100, // % se annullo entro 24h
+    periodoGratuito:  7,    // giorni annullamento gratuito
+    roundingMode:     "math", // math | up | down
+  },
+  // Tipi camera (estende ROOMS)
+  roomTypes: [
+    { id:"standard",       label:"Standard",              prezzoBase:90,  capacita:2, descrizione:"Camera doppia standard", attiva:true },
+    { id:"standard-acc",   label:"Standard Accessibile",  prezzoBase:90,  capacita:2, descrizione:"Camera accessibile PMR", attiva:true },
+    { id:"superior",       label:"Superior",              prezzoBase:140, capacita:2, descrizione:"Camera superior con vista", attiva:true },
+    { id:"deluxe",         label:"Deluxe",                prezzoBase:190, capacita:2, descrizione:"Camera deluxe arredata", attiva:true },
+    { id:"junior-suite",   label:"Junior Suite",          prezzoBase:240, capacita:3, descrizione:"Junior suite con salottino", attiva:true },
+    { id:"suite",          label:"Suite",                 prezzoBase:300, capacita:4, descrizione:"Suite panoramica", attiva:true },
+    { id:"suite-laguna",   label:"Suite Vista Laguna",    prezzoBase:360, capacita:4, descrizione:"Suite con vista laguna", attiva:true },
+  ],
+  // Servizi
+  servizi: [
+    { id:"colazione",  label:"Colazione",          prezzo:18,  unita:"persona/notte", attivo:true },
+    { id:"parcheggio", label:"Parcheggio",          prezzo:20,  unita:"auto/notte",    attivo:true },
+    { id:"spa",        label:"Accesso SPA",         prezzo:45,  unita:"persona",       attivo:true },
+    { id:"transfer",   label:"Transfer Aeroporto",  prezzo:60,  unita:"corsa",         attivo:true },
+    { id:"minibar",    label:"Minibar Deluxe",      prezzo:35,  unita:"notte",         attivo:true },
+    { id:"laundry",    label:"Lavanderia",          prezzo:25,  unita:"servizio",      attivo:true },
+    { id:"culla",      label:"Culla neonato",       prezzo:15,  unita:"notte",         attivo:false },
+    { id:"latecheck",  label:"Late Check-out",      prezzo:40,  unita:"servizio",      attivo:true },
+    { id:"earlycheck", label:"Early Check-in",      prezzo:30,  unita:"servizio",      attivo:true },
+  ],
+  // Integrazioni
+  integrazioni: {
+    supabaseUrl:   "https://ecxpqxtqdakfmjokudwn.supabase.co",
+    supabaseKey:   "",
+    stripeKey:     "",
+    stripeWebhook: "",
+    anthropicKey:  "",
+    bookingComId:  "",
+    airbnbApiKey:  "",
+    channelMgrUrl: "",
+    smtpHost:      "",
+    smtpPort:      587,
+    smtpUser:      "",
+    smtpPass:      "",
+    smtpFrom:      "noreply@hotelgasparini.it",
+  },
+  // Utenti
+  utenti: [
+    { id:"u1", nome:"Marco",    cognome:"Rossi",    email:"m.rossi@hotelgasparini.it",    ruolo:"gm",          attivo:true,  ultimoAccesso:"2026-02-25" },
+    { id:"u2", nome:"Sara",     cognome:"Bianchi",  email:"s.bianchi@hotelgasparini.it",  ruolo:"receptionist",attivo:true,  ultimoAccesso:"2026-02-26" },
+    { id:"u3", nome:"Luigi",    cognome:"Verde",    email:"l.verde@hotelgasparini.it",    ruolo:"housekeeping",attivo:true,  ultimoAccesso:"2026-02-20" },
+    { id:"u4", nome:"Federica", cognome:"Neri",     email:"f.neri@hotelgasparini.it",     ruolo:"admin",       attivo:false, ultimoAccesso:"2026-01-10" },
+  ],
+};
+
+const RUOLI = {
+  gm:           { label:"General Manager",    colore:"#0f62fe", badge:"GM" },
+  admin:        { label:"Amministratore",      colore:"#5c35cc", badge:"ADM" },
+  receptionist: { label:"Receptionist",        colore:"#1b7a4a", badge:"REC" },
+  housekeeping: { label:"Housekeeping",        colore:"#e65100", badge:"HK"  },
+  ristorante:   { label:"Responsabile F&B",    colore:"#00695c", badge:"FB"  },
+  readonly:     { label:"Solo lettura",        colore:"#8896a8", badge:"RO"  },
+};
+
+// ─── HELPER: carica/salva config ───────────────────────────────────
+function caricaCfg() {
+  try {
+    const raw = localStorage.getItem(CFG_KEY);
+    if (!raw) return CFG_DEFAULT;
+    const stored = JSON.parse(raw);
+    // Deep merge con default (per nuovi campi)
+    return {
+      hotel:         { ...CFG_DEFAULT.hotel,        ...stored.hotel },
+      operativo:     { ...CFG_DEFAULT.operativo,    ...stored.operativo },
+      fiscale:       { ...CFG_DEFAULT.fiscale,      ...stored.fiscale },
+      roomTypes:     stored.roomTypes     || CFG_DEFAULT.roomTypes,
+      servizi:       stored.servizi       || CFG_DEFAULT.servizi,
+      integrazioni:  { ...CFG_DEFAULT.integrazioni, ...stored.integrazioni },
+      utenti:        stored.utenti        || CFG_DEFAULT.utenti,
+    };
+  } catch { return CFG_DEFAULT; }
+}
+
+function salvaCfg(cfg) {
+  try { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); return true; }
+  catch { return false; }
+}
+
+// ─── MODULO PRINCIPALE ──────────────────────────────────────────────
+function ConfigurazioneModule({ rooms=[], setRooms=()=>{} }) {
+  const [cfg, setCfg]       = useState(caricaCfg);
+  const [sezione, setSezione] = useState("hotel");
+  const [saved, setSaved]    = useState(null);       // null | "ok" | "err"
+  const [showPass, setShowPass] = useState({});       // id => bool
+  const [newUtente, setNewUtente] = useState(null);   // form nuovo utente
+  const [newServizio, setNewServizio] = useState(null);
+  const [newTipo, setNewTipo]   = useState(null);
+  const [confirmReset, setConfirmReset] = useState(false);
+
+  // ─── SALVA ──────────────────────────────────────────────────────
+  const salva = useCallback((updCfg) => {
+    const toSave = updCfg || cfg;
+    const ok = salvaCfg(toSave);
+    setSaved(ok ? "ok" : "err");
+    setTimeout(() => setSaved(null), 3000);
+  }, [cfg]);
+
+  // ─── UPDATE HELPERS ─────────────────────────────────────────────
+  const upd = (sezione, field, val) => {
+    setCfg(prev => {
+      const next = { ...prev, [sezione]: { ...prev[sezione], [field]: val } };
+      return next;
+    });
+  };
+
+  // ─── COLORI ─────────────────────────────────────────────────────
+  const C = {
+    bg: "#f0f3f7", surface: "#ffffff", surface2: "#f5f7fa",
+    border: "#dde3ec", border2: "#c4cdd9",
+    text: "#1a2535", text2: "#4a5568", text3: "#8896a8",
+    blue: "#0f62fe", blueL: "#e8f0ff",
+    green: "#1b7a4a", greenL: "#e6f7ee",
+    red: "#c62828", redL: "#fdecea",
+    amber: "#e65100", amberL: "#fff3e0",
+    navy: "#0a1929",
+  };
+
+  // ─── STILI RIUSABILI ────────────────────────────────────────────
+  const inp = {
+    border: `1.5px solid ${C.border}`, borderRadius: 6, padding: "8px 12px",
+    fontSize: 13, fontFamily: "'IBM Plex Sans',sans-serif", color: C.text,
+    width: "100%", background: C.surface, outline: "none",
+  };
+  const btnPrimary = {
+    padding: "9px 20px", borderRadius: 8, border: "none", cursor: "pointer",
+    background: C.blue, color: "#fff", fontWeight: 700, fontSize: 13,
+    fontFamily: "'IBM Plex Sans',sans-serif",
+  };
+  const btnSecondary = {
+    padding: "8px 16px", borderRadius: 8, border: `1.5px solid ${C.border}`,
+    cursor: "pointer", background: C.surface, color: C.text2, fontWeight: 600,
+    fontSize: 13, fontFamily: "'IBM Plex Sans',sans-serif",
+  };
+  const btnDanger = { ...btnPrimary, background: C.red };
+
+  const Label = ({children}) => (
+    <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase",
+      color: C.text3, marginBottom: 5 }}>{children}</div>
+  );
+  const Field = ({label, children, col="1/-1"}) => (
+    <div style={{ gridColumn: col }}>
+      <Label>{label}</Label>
+      {children}
+    </div>
+  );
+  const Card = ({children, title, subtitle, action}) => (
+    <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden", marginBottom: 16 }}>
+      {title && (
+        <div style={{ padding: "14px 20px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.text }}>{title}</div>
+            {subtitle && <div style={{ fontSize: 12, color: C.text3, marginTop: 2 }}>{subtitle}</div>}
+          </div>
+          {action}
+        </div>
+      )}
+      <div style={{ padding: 20 }}>{children}</div>
+    </div>
+  );
+  const Grid = ({cols="1fr 1fr", children}) => (
+    <div style={{ display: "grid", gridTemplateColumns: cols, gap: 14 }}>{children}</div>
+  );
+  const Toggle = ({val, onChange, label}) => (
+    <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+      <div onClick={onChange} style={{
+        width: 44, height: 24, borderRadius: 12, background: val ? C.blue : C.border,
+        position: "relative", transition: "background .2s", cursor: "pointer", flexShrink: 0,
+      }}>
+        <div style={{
+          width: 18, height: 18, borderRadius: "50%", background: "#fff",
+          position: "absolute", top: 3, left: val ? 23 : 3, transition: "left .2s",
+          boxShadow: "0 1px 4px rgba(0,0,0,.2)",
+        }}/>
+      </div>
+      {label && <span style={{ fontSize: 13, color: C.text2 }}>{label}</span>}
+    </label>
+  );
+
+  const SEZIONI = [
+    { k: "hotel",        icon: "🏨", label: "Dati Hotel" },
+    { k: "operativo",    icon: "⏰", label: "Parametri Operativi" },
+    { k: "fiscale",      icon: "💶", label: "Tariffe & Fiscalità" },
+    { k: "roomtypes",    icon: "🛏️", label: "Tipi di Camera" },
+    { k: "servizi",      icon: "🧴", label: "Servizi" },
+    { k: "integrazioni", icon: "🔌", label: "Integrazioni" },
+    { k: "utenti",       icon: "👥", label: "Utenti & Accessi" },
+    { k: "sistema",      icon: "💾", label: "Sistema & Backup" },
+  ];
+
+  return (
+    <div style={{ fontFamily: "'IBM Plex Sans',system-ui,sans-serif", color: C.text, display: "flex", gap: 20 }}>
+      {/* ── SIDEBAR SEZIONI ── */}
+      <div style={{ width: 200, flexShrink: 0 }}>
+        <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden", position: "sticky", top: 20 }}>
+          <div style={{ padding: "14px 16px", borderBottom: `1px solid ${C.border}`, background: C.navy }}>
+            <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#90b4d4" }}>Configurazione</div>
+            <div style={{ fontSize: 12, color: "#64b5f6", marginTop: 2 }}>⚙️ Impostazioni PMS</div>
+          </div>
+          {SEZIONI.map(s => (
+            <button key={s.k} onClick={() => setSezione(s.k)} style={{
+              width: "100%", padding: "10px 16px", border: "none", borderBottom: `1px solid ${C.border}`,
+              background: sezione === s.k ? C.blueL : C.surface, cursor: "pointer",
+              display: "flex", alignItems: "center", gap: 8, textAlign: "left",
+              borderLeft: `3px solid ${sezione === s.k ? C.blue : "transparent"}`,
+              color: sezione === s.k ? C.blue : C.text2, fontWeight: sezione === s.k ? 700 : 400,
+              fontSize: 13, fontFamily: "'IBM Plex Sans',sans-serif", transition: "all .15s",
+            }}>
+              <span>{s.icon}</span>{s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── CONTENT ── */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {/* Header */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800 }}>
+              {SEZIONI.find(s => s.k === sezione)?.icon} {SEZIONI.find(s => s.k === sezione)?.label}
+            </h2>
+            <p style={{ margin: "4px 0 0", fontSize: 12, color: C.text3 }}>
+              Le modifiche vengono salvate localmente nel browser
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            {saved === "ok" && (
+              <span style={{ fontSize: 12, color: C.green, fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                ✓ Salvato
+              </span>
+            )}
+            {saved === "err" && (
+              <span style={{ fontSize: 12, color: C.red, fontWeight: 600 }}>✗ Errore</span>
+            )}
+            <button onClick={() => { setCfg(CFG_DEFAULT); salva(CFG_DEFAULT); }} style={btnSecondary}>
+              ↺ Ripristina default
+            </button>
+            <button onClick={() => salva()} style={btnPrimary}>
+              💾 Salva modifiche
+            </button>
+          </div>
+        </div>
+
+        {/* ════ DATI HOTEL ════ */}
+        {sezione === "hotel" && (
+          <div>
+            <Card title="Informazioni generali" subtitle="Nome, stelle e descrizione">
+              <Grid cols="1fr 80px">
+                <Field label="Nome hotel">
+                  <input style={inp} value={cfg.hotel.nome} onChange={e => upd("hotel","nome",e.target.value)}/>
+                </Field>
+                <Field label="Stelle">
+                  <select style={inp} value={cfg.hotel.stelle} onChange={e => upd("hotel","stelle",parseInt(e.target.value))}>
+                    {[1,2,3,4,5].map(s => <option key={s} value={s}>{s} ★</option>)}
+                  </select>
+                </Field>
+              </Grid>
+              <div style={{ marginTop: 14 }}>
+                <Field label="Descrizione">
+                  <textarea style={{...inp, resize:"vertical"}} rows={3} value={cfg.hotel.descrizione}
+                    onChange={e => upd("hotel","descrizione",e.target.value)}/>
+                </Field>
+              </div>
+            </Card>
+
+            <Card title="Indirizzo" subtitle="Sede legale e operativa">
+              <Grid cols="1fr 1fr">
+                <Field label="Indirizzo (via e numero)" col="1/-1">
+                  <input style={inp} value={cfg.hotel.indirizzo} onChange={e => upd("hotel","indirizzo",e.target.value)}/>
+                </Field>
+                <Field label="Città">
+                  <input style={inp} value={cfg.hotel.citta} onChange={e => upd("hotel","citta",e.target.value)}/>
+                </Field>
+                <Field label="Provincia (sigla)">
+                  <input style={{...inp, textTransform:"uppercase"}} maxLength={2} value={cfg.hotel.provincia} onChange={e => upd("hotel","provincia",e.target.value.toUpperCase())}/>
+                </Field>
+                <Field label="CAP">
+                  <input style={inp} value={cfg.hotel.cap} onChange={e => upd("hotel","cap",e.target.value)}/>
+                </Field>
+                <Field label="Paese">
+                  <input style={inp} value={cfg.hotel.paese} onChange={e => upd("hotel","paese",e.target.value)}/>
+                </Field>
+              </Grid>
+            </Card>
+
+            <Card title="Dati fiscali" subtitle="P.IVA, Codice Fiscale, Codice ATECO">
+              <Grid cols="1fr 1fr">
+                <Field label="Partita IVA">
+                  <input style={inp} value={cfg.hotel.piva} onChange={e => upd("hotel","piva",e.target.value)}/>
+                </Field>
+                <Field label="Codice Fiscale">
+                  <input style={inp} value={cfg.hotel.cf} onChange={e => upd("hotel","cf",e.target.value)}/>
+                </Field>
+                <Field label="Codice SDI (fatturazione elettronica)">
+                  <input style={inp} value={cfg.hotel.codiceSdi} onChange={e => upd("hotel","codiceSdi",e.target.value)}/>
+                </Field>
+                <Field label="Codice ATECO">
+                  <input style={inp} value={cfg.hotel.codeAteco} onChange={e => upd("hotel","codeAteco",e.target.value)}/>
+                </Field>
+              </Grid>
+            </Card>
+
+            <Card title="Contatti" subtitle="Email, telefono, sito web, PEC">
+              <Grid cols="1fr 1fr">
+                <Field label="Email principale">
+                  <input type="email" style={inp} value={cfg.hotel.email} onChange={e => upd("hotel","email",e.target.value)}/>
+                </Field>
+                <Field label="PEC">
+                  <input type="email" style={inp} value={cfg.hotel.pec} onChange={e => upd("hotel","pec",e.target.value)}/>
+                </Field>
+                <Field label="Telefono">
+                  <input style={inp} value={cfg.hotel.telefono} onChange={e => upd("hotel","telefono",e.target.value)}/>
+                </Field>
+                <Field label="Sito web">
+                  <input style={inp} value={cfg.hotel.sito} onChange={e => upd("hotel","sito",e.target.value)}/>
+                </Field>
+              </Grid>
+            </Card>
+          </div>
+        )}
+
+        {/* ════ OPERATIVO ════ */}
+        {sezione === "operativo" && (
+          <div>
+            <Card title="Orari check-in / check-out" subtitle="Orari standard e servizi aggiuntivi">
+              <Grid cols="1fr 1fr">
+                <Field label="Check-in standard (dalle)">
+                  <input type="time" style={inp} value={cfg.operativo.checkInOra}
+                    onChange={e => upd("operativo","checkInOra",e.target.value)}/>
+                </Field>
+                <Field label="Check-out standard (entro)">
+                  <input type="time" style={inp} value={cfg.operativo.checkOutOra}
+                    onChange={e => upd("operativo","checkOutOra",e.target.value)}/>
+                </Field>
+                <Field label="Early check-in disponibile dalle">
+                  <input type="time" style={inp} value={cfg.operativo.checkInEarly}
+                    onChange={e => upd("operativo","checkInEarly",e.target.value)}/>
+                </Field>
+                <Field label="Late check-out disponibile fino alle">
+                  <input type="time" style={inp} value={cfg.operativo.checkOutLate}
+                    onChange={e => upd("operativo","checkOutLate",e.target.value)}/>
+                </Field>
+              </Grid>
+            </Card>
+
+            <Card title="Localizzazione" subtitle="Fuso orario, lingua e valuta">
+              <Grid cols="1fr 1fr">
+                <Field label="Fuso orario">
+                  <select style={inp} value={cfg.operativo.timezone} onChange={e => upd("operativo","timezone",e.target.value)}>
+                    <option value="Europe/Rome">Europe/Rome (CET/CEST)</option>
+                    <option value="Europe/London">Europe/London</option>
+                    <option value="UTC">UTC</option>
+                  </select>
+                </Field>
+                <Field label="Lingua default">
+                  <select style={inp} value={cfg.operativo.lingua} onChange={e => upd("operativo","lingua",e.target.value)}>
+                    <option value="it">🇮🇹 Italiano</option>
+                    <option value="en">🇬🇧 English</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="fr">🇫🇷 Français</option>
+                  </select>
+                </Field>
+                <Field label="Valuta">
+                  <select style={inp} value={cfg.operativo.valuta} onChange={e => upd("operativo","valuta",e.target.value)}>
+                    <option value="EUR">€ Euro (EUR)</option>
+                    <option value="USD">$ Dollaro USA (USD)</option>
+                    <option value="GBP">£ Sterlina (GBP)</option>
+                  </select>
+                </Field>
+                <Field label="Formato data">
+                  <select style={inp} value={cfg.operativo.formatoData} onChange={e => upd("operativo","formatoData",e.target.value)}>
+                    <option value="DD/MM/YYYY">GG/MM/AAAA (europeo)</option>
+                    <option value="MM/DD/YYYY">MM/GG/AAAA (americano)</option>
+                    <option value="YYYY-MM-DD">AAAA-MM-GG (ISO)</option>
+                  </select>
+                </Field>
+              </Grid>
+            </Card>
+
+            <Card title="Politiche di prenotazione" subtitle="Limiti e regole di prenotazione">
+              <Grid cols="1fr 1fr">
+                <Field label="Soggiorno minimo (notti)">
+                  <input type="number" min={1} max={30} style={inp} value={cfg.operativo.notteMinima}
+                    onChange={e => upd("operativo","notteMinima",parseInt(e.target.value)||1)}/>
+                </Field>
+                <Field label="Anticipo max prenotazione (giorni)">
+                  <input type="number" min={30} max={730} style={inp} value={cfg.operativo.prenotazioneMaxAnticipo}
+                    onChange={e => upd("operativo","prenotazioneMaxAnticipo",parseInt(e.target.value)||365)}/>
+                </Field>
+              </Grid>
+              <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 12 }}>
+                <Toggle val={cfg.operativo.overbooking} onChange={() => upd("operativo","overbooking",!cfg.operativo.overbooking)} label="Consenti overbooking"/>
+                {cfg.operativo.overbooking && (
+                  <Field label="Percentuale overbooking ammessa (%)">
+                    <input type="number" min={0} max={20} style={{...inp, width: 80}} value={cfg.operativo.overbookingPct}
+                      onChange={e => upd("operativo","overbookingPct",parseInt(e.target.value)||0)}/>
+                  </Field>
+                )}
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* ════ FISCALE ════ */}
+        {sezione === "fiscale" && (
+          <div>
+            <Card title="Aliquote IVA" subtitle="Percentuali IVA per categoria di servizio">
+              <Grid cols="1fr 1fr 1fr">
+                <Field label="IVA alloggio (%)">
+                  <input type="number" min={0} max={25} style={inp} value={cfg.fiscale.ivaAlloggio}
+                    onChange={e => upd("fiscale","ivaAlloggio",parseFloat(e.target.value)||10)}/>
+                </Field>
+                <Field label="IVA servizi extra (%)">
+                  <input type="number" min={0} max={25} style={inp} value={cfg.fiscale.ivaServizi}
+                    onChange={e => upd("fiscale","ivaServizi",parseFloat(e.target.value)||22)}/>
+                </Field>
+                <Field label="IVA ristorante (%)">
+                  <input type="number" min={0} max={25} style={inp} value={cfg.fiscale.ivaRistorante}
+                    onChange={e => upd("fiscale","ivaRistorante",parseFloat(e.target.value)||10)}/>
+                </Field>
+              </Grid>
+            </Card>
+
+            <Card title="Tassa di soggiorno" subtitle="City tax per persona per notte">
+              <Grid cols="1fr 1fr">
+                <Field label="Importo city tax (€ / persona / notte)">
+                  <input type="number" min={0} max={10} step={0.5} style={inp} value={cfg.fiscale.cityTax}
+                    onChange={e => upd("fiscale","cityTax",parseFloat(e.target.value)||0)}/>
+                </Field>
+                <Field label="Notti massime di applicazione">
+                  <input type="number" min={1} max={30} style={inp} value={cfg.fiscale.cityTaxMaxNotti}
+                    onChange={e => upd("fiscale","cityTaxMaxNotti",parseInt(e.target.value)||5)}/>
+                </Field>
+                <Field label="Esenzioni" col="1/-1">
+                  <input style={inp} value={cfg.fiscale.cityTaxEsenzioni}
+                    onChange={e => upd("fiscale","cityTaxEsenzioni",e.target.value)}
+                    placeholder="Es. Under 14, disabili, residenti"/>
+                </Field>
+              </Grid>
+              <div style={{ marginTop: 12, padding: "10px 14px", background: C.blueL, borderRadius: 6, fontSize: 12, color: C.text3 }}>
+                ℹ️ La city tax non è soggetta a IVA e va riportata separatamente in fattura (art. 4 DL 23/2011)
+              </div>
+            </Card>
+
+            <Card title="Politica di cancellazione & Acconto" subtitle="Deposito richiesto e penali">
+              <Grid cols="1fr 1fr 1fr">
+                <Field label="Acconto richiesto alla prenotazione (%)">
+                  <input type="number" min={0} max={100} style={inp} value={cfg.fiscale.acconto}
+                    onChange={e => upd("fiscale","acconto",parseInt(e.target.value)||0)}/>
+                </Field>
+                <Field label="Periodo cancellazione gratuita (giorni)">
+                  <input type="number" min={0} max={60} style={inp} value={cfg.fiscale.periodoGratuito}
+                    onChange={e => upd("fiscale","periodoGratuito",parseInt(e.target.value)||7)}/>
+                </Field>
+                <Field label="Penale di cancellazione (%)">
+                  <input type="number" min={0} max={100} style={inp} value={cfg.fiscale.penaleAnnullamento}
+                    onChange={e => upd("fiscale","penaleAnnullamento",parseInt(e.target.value)||100)}/>
+                </Field>
+              </Grid>
+              <div style={{ marginTop: 12, padding: "10px 14px", background: C.amberL, borderRadius: 6, fontSize: 12, color: C.amber, border: `1px solid #ffcc8044` }}>
+                ⚠️ Penale del {cfg.fiscale.penaleAnnullamento}% applicata sulle prenotazioni cancellate entro {cfg.fiscale.periodoGratuito} giorni dall'arrivo.
+                Acconto del {cfg.fiscale.acconto}% richiesto alla conferma.
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* ════ TIPI CAMERA ════ */}
+        {sezione === "roomtypes" && (
+          <div>
+            <Card
+              title="Tipi di camera configurati"
+              subtitle={`${cfg.roomTypes.filter(r=>r.attiva).length} attivi su ${cfg.roomTypes.length} totali`}
+              action={
+                <button onClick={() => setNewTipo({ id:"", label:"", prezzoBase:100, capacita:2, descrizione:"", attiva:true })} style={btnPrimary}>
+                  + Nuovo tipo
+                </button>
+              }
+            >
+              {/* Form nuovo tipo */}
+              {newTipo && (
+                <div style={{ background: C.blueL, border: `1px solid ${C.border}`, borderRadius: 8, padding: 16, marginBottom: 16 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, color: C.blue }}>Nuovo tipo camera</div>
+                  <Grid cols="1fr 1fr">
+                    <Field label="ID (slug, es. 'superior-plus')">
+                      <input style={inp} value={newTipo.id} onChange={e => setNewTipo(t=>({...t,id:e.target.value.toLowerCase().replace(/\s+/g,"-")}))}/>
+                    </Field>
+                    <Field label="Nome visualizzato">
+                      <input style={inp} value={newTipo.label} onChange={e => setNewTipo(t=>({...t,label:e.target.value}))}/>
+                    </Field>
+                    <Field label="Prezzo base (€/notte)">
+                      <input type="number" style={inp} value={newTipo.prezzoBase} onChange={e => setNewTipo(t=>({...t,prezzoBase:parseFloat(e.target.value)||0}))}/>
+                    </Field>
+                    <Field label="Capacità max (persone)">
+                      <input type="number" min={1} max={8} style={inp} value={newTipo.capacita} onChange={e => setNewTipo(t=>({...t,capacita:parseInt(e.target.value)||2}))}/>
+                    </Field>
+                    <Field label="Descrizione" col="1/-1">
+                      <input style={inp} value={newTipo.descrizione} onChange={e => setNewTipo(t=>({...t,descrizione:e.target.value}))}/>
+                    </Field>
+                  </Grid>
+                  <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                    <button onClick={() => {
+                      if(!newTipo.id||!newTipo.label) return;
+                      setCfg(p=>({...p,roomTypes:[...p.roomTypes,newTipo]}));
+                      setNewTipo(null);
+                    }} style={btnPrimary}>✓ Aggiungi</button>
+                    <button onClick={() => setNewTipo(null)} style={btnSecondary}>Annulla</button>
+                  </div>
+                </div>
+              )}
+
+              <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+                <thead>
+                  <tr style={{ background: C.surface2 }}>
+                    {["Tipo","Prezzo base","Capacità","Descrizione","Attivo","Azioni"].map(h=>(
+                      <th key={h} style={{ padding:"8px 12px", textAlign:"left", fontSize:10, fontWeight:700, letterSpacing:.5, textTransform:"uppercase", color:C.text3, borderBottom:`1px solid ${C.border}` }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {cfg.roomTypes.map((rt, i) => (
+                    <tr key={rt.id} style={{ borderBottom:`1px solid ${C.border}` }}>
+                      <td style={{ padding:"10px 12px", fontWeight:700 }}>{rt.label}</td>
+                      <td style={{ padding:"10px 12px" }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:4 }}>
+                          €<input type="number" style={{...inp, width:70, padding:"4px 6px"}} value={rt.prezzoBase}
+                            onChange={e=>{
+                              const v=parseFloat(e.target.value)||0;
+                              setCfg(p=>({...p,roomTypes:p.roomTypes.map((r,j)=>j===i?{...r,prezzoBase:v}:r)}));
+                            }}/>
+                        </div>
+                      </td>
+                      <td style={{ padding:"10px 12px", textAlign:"center" }}>{rt.capacita} pers.</td>
+                      <td style={{ padding:"10px 12px", color:C.text3, fontSize:12 }}>{rt.descrizione}</td>
+                      <td style={{ padding:"10px 12px" }}>
+                        <Toggle val={rt.attiva} onChange={() =>
+                          setCfg(p=>({...p,roomTypes:p.roomTypes.map((r,j)=>j===i?{...r,attiva:!r.attiva}:r)}))}/>
+                      </td>
+                      <td style={{ padding:"10px 12px" }}>
+                        <button onClick={() => setCfg(p=>({...p,roomTypes:p.roomTypes.filter((_,j)=>j!==i)}))}
+                          style={{ background:"none", border:"none", cursor:"pointer", color:C.red, fontSize:16 }}>🗑</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Card>
+          </div>
+        )}
+
+        {/* ════ SERVIZI ════ */}
+        {sezione === "servizi" && (
+          <div>
+            <Card
+              title="Catalogo servizi aggiuntivi"
+              subtitle="Prezzi e disponibilità dei servizi extra"
+              action={
+                <button onClick={() => setNewServizio({id:"",label:"",prezzo:0,unita:"persona",attivo:true})} style={btnPrimary}>
+                  + Aggiungi servizio
+                </button>
+              }
+            >
+              {newServizio && (
+                <div style={{ background:C.blueL, border:`1px solid ${C.border}`, borderRadius:8, padding:16, marginBottom:16 }}>
+                  <Grid cols="1fr 1fr">
+                    <Field label="ID (slug)">
+                      <input style={inp} value={newServizio.id} onChange={e=>setNewServizio(s=>({...s,id:e.target.value.toLowerCase().replace(/\s+/g,"-")}))}/>
+                    </Field>
+                    <Field label="Nome visualizzato">
+                      <input style={inp} value={newServizio.label} onChange={e=>setNewServizio(s=>({...s,label:e.target.value}))}/>
+                    </Field>
+                    <Field label="Prezzo (€)">
+                      <input type="number" style={inp} value={newServizio.prezzo} onChange={e=>setNewServizio(s=>({...s,prezzo:parseFloat(e.target.value)||0}))}/>
+                    </Field>
+                    <Field label="Unità di misura">
+                      <select style={inp} value={newServizio.unita} onChange={e=>setNewServizio(s=>({...s,unita:e.target.value}))}>
+                        {["persona","persona/notte","auto/notte","servizio","notte","corsa","ora"].map(u=><option key={u}>{u}</option>)}
+                      </select>
+                    </Field>
+                  </Grid>
+                  <div style={{ display:"flex", gap:8, marginTop:12 }}>
+                    <button onClick={()=>{
+                      if(!newServizio.id||!newServizio.label) return;
+                      setCfg(p=>({...p,servizi:[...p.servizi,newServizio]}));
+                      setNewServizio(null);
+                    }} style={btnPrimary}>✓ Aggiungi</button>
+                    <button onClick={()=>setNewServizio(null)} style={btnSecondary}>Annulla</button>
+                  </div>
+                </div>
+              )}
+
+              <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+                <thead>
+                  <tr style={{ background:C.surface2 }}>
+                    {["Servizio","Prezzo (€)","Unità","Attivo",""].map(h=>(
+                      <th key={h} style={{ padding:"8px 12px", textAlign:"left", fontSize:10, fontWeight:700, letterSpacing:.5, textTransform:"uppercase", color:C.text3, borderBottom:`1px solid ${C.border}` }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {cfg.servizi.map((sv, i) => (
+                    <tr key={sv.id} style={{ borderBottom:`1px solid ${C.border}`, opacity:sv.attivo?1:.5 }}>
+                      <td style={{ padding:"10px 12px", fontWeight:600 }}>{sv.label}</td>
+                      <td style={{ padding:"10px 12px" }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:4 }}>
+                          €<input type="number" step={0.5} style={{...inp, width:70, padding:"4px 6px"}} value={sv.prezzo}
+                            onChange={e=>{
+                              const v=parseFloat(e.target.value)||0;
+                              setCfg(p=>({...p,servizi:p.servizi.map((s,j)=>j===i?{...s,prezzo:v}:s)}));
+                            }}/>
+                        </div>
+                      </td>
+                      <td style={{ padding:"10px 12px", color:C.text3, fontSize:12 }}>{sv.unita}</td>
+                      <td style={{ padding:"10px 12px" }}>
+                        <Toggle val={sv.attivo} onChange={()=>setCfg(p=>({...p,servizi:p.servizi.map((s,j)=>j===i?{...s,attivo:!s.attivo}:s)}))}/>
+                      </td>
+                      <td style={{ padding:"10px 12px" }}>
+                        <button onClick={()=>setCfg(p=>({...p,servizi:p.servizi.filter((_,j)=>j!==i)}))}
+                          style={{ background:"none", border:"none", cursor:"pointer", color:C.red, fontSize:16 }}>🗑</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Card>
+          </div>
+        )}
+
+        {/* ════ INTEGRAZIONI ════ */}
+        {sezione === "integrazioni" && (
+          <div>
+            {/* Supabase */}
+            <Card title="🗄️ Database — Supabase" subtitle="Connessione al database PostgreSQL">
+              <Grid cols="1fr">
+                <Field label="Project URL">
+                  <input style={inp} value={cfg.integrazioni.supabaseUrl}
+                    onChange={e=>upd("integrazioni","supabaseUrl",e.target.value)}
+                    placeholder="https://xxx.supabase.co"/>
+                </Field>
+                <Field label="Anon Key (pubblica)">
+                  <div style={{ position:"relative" }}>
+                    <input type={showPass.supabase?"text":"password"} style={{...inp, paddingRight:40}} value={cfg.integrazioni.supabaseKey}
+                      onChange={e=>upd("integrazioni","supabaseKey",e.target.value)} placeholder="eyJ..."/>
+                    <button onClick={()=>setShowPass(p=>({...p,supabase:!p.supabase}))}
+                      style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", color:C.text3 }}>
+                      {showPass.supabase?"🙈":"👁"}
+                    </button>
+                  </div>
+                </Field>
+              </Grid>
+              <div style={{ marginTop:12, display:"flex", gap:8 }}>
+                <div style={{ padding:"8px 12px", background:C.greenL, border:`1px solid ${C.greenLb||"#6fcf97"}`, borderRadius:6, fontSize:12, color:C.green, display:"flex", alignItems:"center", gap:6 }}>
+                  <span style={{ width:8, height:8, borderRadius:"50%", background:C.green, display:"inline-block" }}/>
+                  Connesso · https://ecxpqxtqdakfmjokudwn.supabase.co
+                </div>
+                <button style={btnSecondary}>Testa connessione</button>
+              </div>
+            </Card>
+
+            {/* Stripe */}
+            <Card title="💳 Pagamenti — Stripe" subtitle="Chiavi API per i pagamenti online">
+              <Grid cols="1fr">
+                <Field label="Publishable Key (pk_live_...)">
+                  <input style={inp} value={cfg.integrazioni.stripeKey}
+                    onChange={e=>upd("integrazioni","stripeKey",e.target.value)}
+                    placeholder="pk_live_..."/>
+                </Field>
+                <Field label="Webhook Secret (whsec_...)">
+                  <div style={{ position:"relative" }}>
+                    <input type={showPass.stripe?"text":"password"} style={{...inp,paddingRight:40}} value={cfg.integrazioni.stripeWebhook}
+                      onChange={e=>upd("integrazioni","stripeWebhook",e.target.value)} placeholder="whsec_..."/>
+                    <button onClick={()=>setShowPass(p=>({...p,stripe:!p.stripe}))}
+                      style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", color:C.text3 }}>
+                      {showPass.stripe?"🙈":"👁"}
+                    </button>
+                  </div>
+                </Field>
+              </Grid>
+              <div style={{ marginTop:10, padding:"8px 12px", background:C.amberL, borderRadius:6, fontSize:12, color:C.amber }}>
+                ⚠️ Non inserire mai la Secret Key (sk_live_...) nel frontend. Usare solo la Publishable Key.
+              </div>
+            </Card>
+
+            {/* AI */}
+            <Card title="🤖 AI Assistente — Anthropic" subtitle="Chiave API per Claude">
+              <Field label="API Key (sk-ant-...)">
+                <div style={{ position:"relative" }}>
+                  <input type={showPass.anthropic?"text":"password"} style={{...inp,paddingRight:40}} value={cfg.integrazioni.anthropicKey}
+                    onChange={e=>upd("integrazioni","anthropicKey",e.target.value)} placeholder="sk-ant-api03-..."/>
+                  <button onClick={()=>setShowPass(p=>({...p,anthropic:!p.anthropic}))}
+                    style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", color:C.text3 }}>
+                    {showPass.anthropic?"🙈":"👁"}
+                  </button>
+                </div>
+              </Field>
+            </Card>
+
+            {/* Email SMTP */}
+            <Card title="📧 Email — SMTP" subtitle="Configurazione invio email automatiche">
+              <Grid cols="1fr 1fr">
+                <Field label="Server SMTP">
+                  <input style={inp} value={cfg.integrazioni.smtpHost} onChange={e=>upd("integrazioni","smtpHost",e.target.value)} placeholder="smtp.gmail.com"/>
+                </Field>
+                <Field label="Porta">
+                  <select style={inp} value={cfg.integrazioni.smtpPort} onChange={e=>upd("integrazioni","smtpPort",parseInt(e.target.value))}>
+                    <option value={587}>587 (STARTTLS)</option>
+                    <option value={465}>465 (SSL)</option>
+                    <option value={25}>25</option>
+                  </select>
+                </Field>
+                <Field label="Utente SMTP">
+                  <input style={inp} value={cfg.integrazioni.smtpUser} onChange={e=>upd("integrazioni","smtpUser",e.target.value)}/>
+                </Field>
+                <Field label="Password SMTP">
+                  <div style={{ position:"relative" }}>
+                    <input type={showPass.smtp?"text":"password"} style={{...inp,paddingRight:40}} value={cfg.integrazioni.smtpPass}
+                      onChange={e=>upd("integrazioni","smtpPass",e.target.value)}/>
+                    <button onClick={()=>setShowPass(p=>({...p,smtp:!p.smtp}))}
+                      style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", color:C.text3 }}>
+                      {showPass.smtp?"🙈":"👁"}
+                    </button>
+                  </div>
+                </Field>
+                <Field label="Email mittente (From)" col="1/-1">
+                  <input type="email" style={inp} value={cfg.integrazioni.smtpFrom} onChange={e=>upd("integrazioni","smtpFrom",e.target.value)}/>
+                </Field>
+              </Grid>
+            </Card>
+
+            {/* Channel Manager / OTA */}
+            <Card title="🌐 Channel Manager & OTA" subtitle="Booking.com, Airbnb, Channel Manager">
+              <Grid cols="1fr 1fr">
+                <Field label="Booking.com Property ID">
+                  <input style={inp} value={cfg.integrazioni.bookingComId} onChange={e=>upd("integrazioni","bookingComId",e.target.value)} placeholder="12345678"/>
+                </Field>
+                <Field label="Airbnb API Key">
+                  <div style={{ position:"relative" }}>
+                    <input type={showPass.airbnb?"text":"password"} style={{...inp,paddingRight:40}} value={cfg.integrazioni.airbnbApiKey}
+                      onChange={e=>upd("integrazioni","airbnbApiKey",e.target.value)}/>
+                    <button onClick={()=>setShowPass(p=>({...p,airbnb:!p.airbnb}))}
+                      style={{ position:"absolute", right:10, top:"50%", transform:"translateY(-50%)", background:"none", border:"none", cursor:"pointer", color:C.text3 }}>
+                      {showPass.airbnb?"🙈":"👁"}
+                    </button>
+                  </div>
+                </Field>
+                <Field label="Channel Manager URL webhook" col="1/-1">
+                  <input style={inp} value={cfg.integrazioni.channelMgrUrl} onChange={e=>upd("integrazioni","channelMgrUrl",e.target.value)} placeholder="https://api.channelmanager.com/webhook/..."/>
+                </Field>
+              </Grid>
+            </Card>
+          </div>
+        )}
+
+        {/* ════ UTENTI ════ */}
+        {sezione === "utenti" && (
+          <div>
+            <Card
+              title="Gestione utenti"
+              subtitle={`${cfg.utenti.filter(u=>u.attivo).length} utenti attivi · ${cfg.utenti.length} totali`}
+              action={
+                <button onClick={() => setNewUtente({id:"u"+Date.now(),nome:"",cognome:"",email:"",ruolo:"receptionist",attivo:true,ultimoAccesso:"-"})} style={btnPrimary}>
+                  + Nuovo utente
+                </button>
+              }
+            >
+              {newUtente && (
+                <div style={{ background:C.blueL, border:`1px solid ${C.border}`, borderRadius:8, padding:16, marginBottom:16 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:C.blue, marginBottom:12 }}>Nuovo utente</div>
+                  <Grid cols="1fr 1fr">
+                    <Field label="Nome"><input style={inp} value={newUtente.nome} onChange={e=>setNewUtente(u=>({...u,nome:e.target.value}))}/></Field>
+                    <Field label="Cognome"><input style={inp} value={newUtente.cognome} onChange={e=>setNewUtente(u=>({...u,cognome:e.target.value}))}/></Field>
+                    <Field label="Email"><input type="email" style={inp} value={newUtente.email} onChange={e=>setNewUtente(u=>({...u,email:e.target.value}))}/></Field>
+                    <Field label="Ruolo">
+                      <select style={inp} value={newUtente.ruolo} onChange={e=>setNewUtente(u=>({...u,ruolo:e.target.value}))}>
+                        {Object.entries(RUOLI).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+                      </select>
+                    </Field>
+                  </Grid>
+                  <div style={{ display:"flex", gap:8, marginTop:12 }}>
+                    <button onClick={()=>{
+                      if(!newUtente.nome||!newUtente.email) return;
+                      setCfg(p=>({...p,utenti:[...p.utenti,newUtente]}));
+                      setNewUtente(null);
+                    }} style={btnPrimary}>✓ Aggiungi</button>
+                    <button onClick={()=>setNewUtente(null)} style={btnSecondary}>Annulla</button>
+                  </div>
+                </div>
+              )}
+
+              <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+                <thead>
+                  <tr style={{ background:C.surface2 }}>
+                    {["Nome","Email","Ruolo","Ultimo accesso","Attivo",""].map(h=>(
+                      <th key={h} style={{ padding:"8px 12px", textAlign:"left", fontSize:10, fontWeight:700, letterSpacing:.5, textTransform:"uppercase", color:C.text3, borderBottom:`1px solid ${C.border}` }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {cfg.utenti.map((u, i) => {
+                    const ruolo = RUOLI[u.ruolo] || RUOLI.readonly;
+                    return (
+                      <tr key={u.id} style={{ borderBottom:`1px solid ${C.border}`, opacity:u.attivo?1:.5 }}>
+                        <td style={{ padding:"10px 12px" }}>
+                          <div style={{ fontWeight:700 }}>{u.nome} {u.cognome}</div>
+                        </td>
+                        <td style={{ padding:"10px 12px", color:C.text3, fontSize:12 }}>{u.email}</td>
+                        <td style={{ padding:"10px 12px" }}>
+                          <span style={{ display:"inline-flex", alignItems:"center", padding:"3px 8px", borderRadius:12,
+                            background:`${ruolo.colore}18`, color:ruolo.colore, fontSize:11, fontWeight:700, border:`1px solid ${ruolo.colore}44` }}>
+                            {ruolo.label}
+                          </span>
+                        </td>
+                        <td style={{ padding:"10px 12px", color:C.text3, fontSize:12 }}>{u.ultimoAccesso}</td>
+                        <td style={{ padding:"10px 12px" }}>
+                          <Toggle val={u.attivo} onChange={()=>setCfg(p=>({...p,utenti:p.utenti.map((x,j)=>j===i?{...x,attivo:!x.attivo}:x)}))}/>
+                        </td>
+                        <td style={{ padding:"10px 12px" }}>
+                          <select value={u.ruolo} onChange={e=>setCfg(p=>({...p,utenti:p.utenti.map((x,j)=>j===i?{...x,ruolo:e.target.value}:x)}))}
+                            style={{...inp, width:150, padding:"4px 8px", fontSize:12}}>
+                            {Object.entries(RUOLI).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+                          </select>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </Card>
+
+            {/* Matrice permessi */}
+            <Card title="Matrice permessi per ruolo" subtitle="Accesso alle sezioni del PMS per ruolo">
+              {(() => {
+                const sezioniPms = ["Dashboard","Prenotazioni","Anagrafica","Check-In/Out","Camere","Cassa","Statistiche","MICE","Configurazione"];
+                const permessi = {
+                  gm:           { all: true },
+                  admin:        { all: true },
+                  receptionist: { allow: ["Dashboard","Prenotazioni","Anagrafica","Check-In/Out","Camere","Cassa"] },
+                  housekeeping: { allow: ["Dashboard","Camere"] },
+                  ristorante:   { allow: ["Dashboard","Cassa"] },
+                  readonly:     { allow: ["Dashboard","Statistiche"] },
+                };
+                return (
+                  <div style={{ overflowX:"auto" }}>
+                    <table style={{ borderCollapse:"collapse", fontSize:12, width:"100%" }}>
+                      <thead>
+                        <tr>
+                          <th style={{ padding:"8px 12px", textAlign:"left", color:C.text3, borderBottom:`1px solid ${C.border}`, fontSize:10, fontWeight:700, letterSpacing:.5, textTransform:"uppercase", minWidth:140 }}>Ruolo</th>
+                          {sezioniPms.map(s=>(
+                            <th key={s} style={{ padding:"8px 8px", textAlign:"center", color:C.text3, borderBottom:`1px solid ${C.border}`, fontSize:10, fontWeight:700, letterSpacing:.5, textTransform:"uppercase", whiteSpace:"nowrap", writingMode:"vertical-rl", height:80 }}>{s}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.entries(RUOLI).map(([k,v])=>{
+                          const p = permessi[k] || { allow:[] };
+                          return (
+                            <tr key={k} style={{ borderBottom:`1px solid ${C.border}` }}>
+                              <td style={{ padding:"8px 12px" }}>
+                                <span style={{ display:"inline-flex", alignItems:"center", padding:"3px 8px", borderRadius:12,
+                                  background:`${v.colore}18`, color:v.colore, fontSize:11, fontWeight:700 }}>{v.label}</span>
+                              </td>
+                              {sezioniPms.map(s=>{
+                                const ok = p.all || (p.allow||[]).includes(s);
+                                return (
+                                  <td key={s} style={{ padding:"8px", textAlign:"center" }}>
+                                    <span style={{ fontSize:14 }}>{ok?"✅":"—"}</span>
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
+            </Card>
+          </div>
+        )}
+
+        {/* ════ SISTEMA & BACKUP ════ */}
+        {sezione === "sistema" && (
+          <div>
+            {/* Info versione */}
+            <Card title="ℹ️ Informazioni sistema">
+              <Grid cols="1fr 1fr">
+                {[
+                  ["Versione PMS", "2.4.1"],
+                  ["Ultima build", "2026-02-26"],
+                  ["Framework", "React 18 + Vite"],
+                  ["Deploy", "Vercel"],
+                  ["Database", "Supabase PostgreSQL"],
+                  ["AI Engine", "Claude claude-sonnet-4-6"],
+                ].map(([k,v])=>(
+                  <div key={k} style={{ padding:"10px 14px", background:C.surface2, borderRadius:8, border:`1px solid ${C.border}` }}>
+                    <div style={{ fontSize:10, fontWeight:700, letterSpacing:.5, textTransform:"uppercase", color:C.text3, marginBottom:3 }}>{k}</div>
+                    <div style={{ fontSize:14, fontWeight:700, color:C.text, fontFamily:"'IBM Plex Mono',monospace" }}>{v}</div>
+                  </div>
+                ))}
+              </Grid>
+            </Card>
+
+            {/* Export dati */}
+            <Card title="💾 Export & Backup" subtitle="Scarica i dati del PMS in vari formati">
+              <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                {[
+                  { label:"Export configurazione (JSON)", desc:"Esporta tutte le impostazioni del PMS", icon:"⚙️",
+                    onClick: () => {
+                      const blob = new Blob([JSON.stringify(cfg, null, 2)], {type:"application/json"});
+                      const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+                      a.download = `gasparini_config_${new Date().toISOString().slice(0,10)}.json`; a.click();
+                    }
+                  },
+                  { label:"Import configurazione (JSON)", desc:"Ripristina impostazioni da file JSON", icon:"📥",
+                    onClick: () => {
+                      const input = document.createElement("input"); input.type="file"; input.accept=".json";
+                      input.onchange = e => {
+                        const file = e.target.files[0]; if(!file) return;
+                        const reader = new FileReader();
+                        reader.onload = ev => {
+                          try {
+                            const imported = JSON.parse(ev.target.result);
+                            setCfg(prev=>({...prev,...imported}));
+                            setSaved("ok");
+                          } catch { setSaved("err"); }
+                        };
+                        reader.readAsText(file);
+                      };
+                      input.click();
+                    }
+                  },
+                ].map((btn,i)=>(
+                  <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"14px 16px", background:C.surface2, borderRadius:8, border:`1px solid ${C.border}` }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                      <span style={{ fontSize:22 }}>{btn.icon}</span>
+                      <div>
+                        <div style={{ fontSize:13, fontWeight:700 }}>{btn.label}</div>
+                        <div style={{ fontSize:12, color:C.text3 }}>{btn.desc}</div>
+                      </div>
+                    </div>
+                    <button onClick={btn.onClick} style={btnSecondary}>{btn.icon === "📥"?"Sfoglia...":"Scarica"}</button>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* Zona pericolo */}
+            <Card title="⚠️ Zona pericolo" subtitle="Operazioni irreversibili — attenzione">
+              <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"14px 16px", background:C.redL, borderRadius:8, border:`1px solid ${C.redLb||"#ef9a9a"}` }}>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:700, color:C.red }}>Reset configurazione</div>
+                    <div style={{ fontSize:12, color:C.text3 }}>Ripristina tutti i valori ai default di fabbrica</div>
+                  </div>
+                  {!confirmReset
+                    ? <button onClick={()=>setConfirmReset(true)} style={btnDanger}>Reset</button>
+                    : <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                        <span style={{ fontSize:12, color:C.red, fontWeight:600 }}>Sei sicuro?</span>
+                        <button onClick={()=>{ setCfg(CFG_DEFAULT); salvaCfg(CFG_DEFAULT); setConfirmReset(false); setSaved("ok"); }} style={btnDanger}>✓ Sì, reset</button>
+                        <button onClick={()=>setConfirmReset(false)} style={btnSecondary}>Annulla</button>
+                      </div>
+                  }
+                </div>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"14px 16px", background:C.redL, borderRadius:8, border:`1px solid ${C.redLb||"#ef9a9a"}` }}>
+                  <div>
+                    <div style={{ fontSize:13, fontWeight:700, color:C.red }}>Svuota localStorage</div>
+                    <div style={{ fontSize:12, color:C.text3 }}>Cancella tutti i dati salvati nel browser</div>
+                  </div>
+                  <button onClick={()=>{ localStorage.removeItem(CFG_KEY); setCfg(CFG_DEFAULT); setSaved("ok"); }} style={btnDanger}>Svuota</button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* ── SALVA FISSO IN BASSO ── */}
+        <div style={{ position:"sticky", bottom:0, background:`${C.bg}ee`, backdropFilter:"blur(8px)", padding:"12px 0", borderTop:`1px solid ${C.border}`, display:"flex", justifyContent:"flex-end", gap:10, marginTop:20 }}>
+          {saved === "ok" && <span style={{ fontSize:12, color:C.green, fontWeight:600, display:"flex", alignItems:"center", gap:4, padding:"0 8px" }}>✓ Configurazione salvata</span>}
+          {saved === "err" && <span style={{ fontSize:12, color:C.red, fontWeight:600, padding:"0 8px" }}>✗ Errore nel salvataggio</span>}
+          <button onClick={() => { setCfg(caricaCfg()); setSaved(null); }} style={btnSecondary}>↺ Annulla modifiche</button>
+          <button onClick={() => salva()} style={btnPrimary}>💾 Salva tutte le modifiche</button>
+        </div>
       </div>
     </div>
   );
