@@ -6078,7 +6078,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
 
         {/*   MICE & MEETING   */}
         {page==="MICE & Meeting" && <MICEModule reservations={reservations} setReservations={setReservations} guests={guests} />}
-        {page==="Statistiche"   && <StatisticheModule reservations={reservations} guests={guests} rooms={rooms} preventivi={preventivi} />}
+        {page==="Statistiche"   && <StatisticheModule reservations={reservations} guests={guests} rooms={rooms} />}
 
         {/* ── MODAL PREVENTIVO MICE ── */}
         {micePreviewEv && (() => {
@@ -8398,10 +8398,9 @@ function AreaChart({ data, color="#00c8ff", color2=null, label1="", label2="", y
       {color2 && <polyline points={pts2} fill="none" stroke={color2} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4,3"/>}
       <polyline points={pts1} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
       {/* X labels */}
-      {data.filter((_,i)=>i%2===0||data.length<=8).map((d,i)=>{
-        const origIdx = data.indexOf(d);
-        return <text key={i} x={toX(origIdx)} y={pad.t+ch+16} textAnchor="middle" fontSize="9" fill={BI.text3}>{d.label}</text>;
-      })}
+      {data.filter((_,i)=>i%2===0||data.length<=8).map((d,origIdx)=>(
+        <text key={origIdx} x={toX(origIdx*( data.length<=8 ? 1 : 2))} y={pad.t+ch+16} textAnchor="middle" fontSize="9" fill={BI.text3}>{d.label}</text>
+      ))}
       {/* Tooltip */}
       {tooltip && tooltip.idx < data.length && (
         <g>
@@ -8470,7 +8469,7 @@ function HeatMap({ data, rows, cols, colorFn, cellW=32, cellH=22 }) {
 }
 
 // ─── MAIN MODULE ────────────────────────────────────────────────────
-function StatisticheModule({ reservations=[], guests=[], rooms=[], preventivi=[] }) {
+function StatisticheModule({ reservations=[], guests=[], rooms=[] }) {
   const [periodo,    setPeriodo]    = useState("12m");
   const [sezione,    setSezione]    = useState("overview");
   const [confronto,  setConfronto]  = useState(true);
@@ -9010,7 +9009,7 @@ function StatisticheModule({ reservations=[], guests=[], rooms=[], preventivi=[]
           <div style={{background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:10,padding:16,marginBottom:14}}>
             <div style={{fontSize:13,fontWeight:700,color:BI.text,marginBottom:4}}>ADR vs Occupancy — per tipo camera</div>
             <div style={{fontSize:11,color:BI.text3,marginBottom:16}}>Ogni barra: ADR (altezza) e Occupancy (colore). Ampiezza = n° camere del tipo.</div>
-            <svg width="100%" height={200} viewBox="0 0 700 200" preserveAspectRatio="xMidYMid meet" style={{overflow:"visible"}}>
+            <svg width={700} height={200} viewBox="0 0 700 200" preserveAspectRatio="xMidYMid meet" style={{overflow:"visible",maxWidth:"100%"}}>
               {perfTipo.map((c,i)=>{
                 const maxAdr=Math.max(...perfTipo.map(x=>x.adr),1);
                 const barW=Math.max(20,Math.min(60,c.nc*8));
