@@ -667,7 +667,7 @@ const CSS = `
     background: ${C.sidebar};
     display: flex; flex-direction: column;
     z-index: 100; overflow-y: auto; overflow-x: hidden;
-    box-shadow: 2px 0 12px rgba(0,0,0,.25);
+    box-shadow: 2px 0 12px rgba(0,0,0,.25); transition: transform .25s ease;
   }
   .sidebar-logo {
     padding: 20px 20px 16px;
@@ -957,6 +957,77 @@ const CSS = `
   .precomanda-row { padding:9px 14px; border-bottom:1px solid ${C.border}; display:grid; grid-template-columns:1fr 60px 90px 90px; gap:8px; align-items:center; font-size:13px; }
   .pos-stat { background:${C.surface}; border:1px solid ${C.border}; border-radius:5px; padding:16px 20px; position:relative; overflow:hidden; }
   .pos-stat::before { content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:${C.gold}; }
+
+  /* ── RESPONSIVE BREAKPOINTS ─────────────────── */
+
+  /* Tablet: 768–1199px */
+  @media (max-width: 1199px) {
+    .sidebar { width: 64px !important; }
+    .sidebar-logo-name, .sidebar-logo-sub, .sidebar-section,
+    .nav-btn span:not(.nav-icon), .sidebar-bottom { display: none !important; }
+    .nav-btn { padding: 11px 0; justify-content: center; }
+    .main-content { margin-left: 64px !important; padding-left: 18px; padding-right: 18px; }
+    .topbar { left: 64px !important; }
+    .form-grid   { grid-template-columns: 1fr !important; }
+    .form-grid-3 { grid-template-columns: 1fr 1fr !important; }
+  }
+
+  /* Mobile: < 768px */
+  @media (max-width: 767px) {
+    .sidebar { display: none !important; }
+    .topbar {
+      left: 0 !important; right: 0 !important;
+      height: 54px; padding: 0 14px;
+    }
+    .main-content {
+      margin-left: 0 !important;
+      padding: 66px 12px 80px !important;
+    }
+    .form-grid   { grid-template-columns: 1fr !important; }
+    .form-grid-3 { grid-template-columns: 1fr !important; }
+    .stat-card { padding: 14px 16px; }
+    .btn-primary, .btn-secondary, .btn-blue, .btn-danger {
+      padding: 10px 14px; font-size: 14px;
+      min-height: 44px; touch-action: manipulation;
+    }
+    .input-field { font-size: 16px; min-height: 44px; padding: 10px 12px; }
+    select, input[type="text"], input[type="email"], input[type="tel"],
+    input[type="number"], input[type="date"], input[type="time"] {
+      font-size: 16px !important; /* Prevent iOS zoom */
+      min-height: 44px;
+    }
+    table { font-size: 12px; }
+    th, td { padding: 8px 10px !important; }
+  }
+
+  /* Bottom nav (mobile only) */
+  .bottom-nav {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0; height: 62px;
+    background: ${C.sidebar}; border-top: 1px solid rgba(255,255,255,.1);
+    z-index: 200; align-items: stretch;
+    box-shadow: 0 -2px 12px rgba(0,0,0,.3);
+  }
+  @media (max-width: 767px) {
+    .bottom-nav { display: flex !important; }
+  }
+  .bn-tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 3px; border: none; background: none;
+    cursor: pointer; color: ${C.sidebarT}; font-size: 10px;
+    font-family: 'IBM Plex Sans', sans-serif; font-weight: 500;
+    padding: 6px 2px; touch-action: manipulation; transition: color .15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .bn-tab.active { color: ${C.sidebarAT}; }
+  .bn-tab .bn-icon { font-size: 20px; line-height: 1; }
+  .bn-tab .bn-label { font-size: 9px; letter-spacing: .2px; white-space: nowrap; }
+
+  /* Mobile card stacking helper */
+  .mob-stack { display: flex; flex-direction: column; gap: 10px; }
+  @media (min-width: 768px) {
+    .mob-stack { flex-direction: row; }
+  }
 `;
 
 // ════════════════════════════════════════════
@@ -1085,6 +1156,19 @@ const PAGE_GROUPS = [
 export default function HotelPMS() {
   const [page, setPage]               = useState("Dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [isMobile,    setIsMobile]    = useState(() => window.innerWidth < 768);
+    const [isTablet,    setIsTablet]    = useState(() => window.innerWidth < 1200);
+    useEffect(() => {
+      const onResize = () => {
+        const w = window.innerWidth;
+        setIsMobile(w < 768);
+        setIsTablet(w < 1200);
+        if (w < 768) setSidebarOpen(false);
+      };
+      window.addEventListener('resize', onResize);
+      onResize(); // run immediately
+      return () => window.removeEventListener('resize', onResize);
+    }, []);
   const [guests, setGuests]           = useState(DEMO_GUESTS);
   const [reservations, setReservations] = useState(DEMO_RESERVATIONS);
   const [modal, setModal]             = useState(null);
@@ -2144,7 +2228,12 @@ Rispondi in italiano, in modo conciso e professionale.`;
       <style>{CSS}</style>
 
       {/*   SIDEBAR   */}
-      <aside className="sidebar" style={{ position:"fixed", left:0, top:0, bottom:0, width:sidebarOpen?230:64, background:"#0a1929", zIndex:100, overflowY:"auto", display:"flex", flexDirection:"column", boxShadow:"2px 0 12px rgba(0,0,0,.25)", transition:"width .22s ease", overflow:"hidden" }}>
+      {isMobile && sidebarOpen && (
+        <div onClick={() => setSidebarOpen(false)} style={{
+          position:"fixed", inset:0, background:"rgba(0,0,0,.5)", zIndex:99,
+        }}/>
+      )}
+            <aside className="sidebar" style={{ position:"fixed", left:0, top:0, bottom:0, width:230, transform:isMobile?(sidebarOpen?"translateX(0)":"translateX(-100%)"):"none", background:"#0a1929", zIndex:100, overflowY:"auto", display:"flex", flexDirection:"column", boxShadow:"2px 0 12px rgba(0,0,0,.25)", transition:"width .22s ease", overflow:"hidden" }}>
         {/* Logo */}
         <div className="sidebar-logo" style={{ padding:sidebarOpen?"20px 20px 16px":"16px 0", borderBottom:"1px solid rgba(255,255,255,.08)", display:"flex", alignItems:"center", justifyContent:"center" }}>
           <div style={{ display:"flex", alignItems:"center", gap:10, overflow:"hidden" }}>
@@ -2194,7 +2283,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
       </aside>
 
       {/*   TOPBAR CONTESTUALE   */}
-      <div className="topbar" style={{ position:"fixed", top:0, left:sidebarOpen?230:64, right:0, height:52, background:"#fff", borderBottom:"1px solid #dde3ec", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 24px 0 16px", zIndex:90, boxShadow:"0 1px 4px rgba(0,0,0,.06)", transition:"left .22s ease" }}>
+      <div className="topbar" style={{ position:"fixed", top:0, left:isMobile?0:sidebarOpen?230:64, right:0, height:52, background:"#fff", borderBottom:"1px solid #dde3ec", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 24px 0 16px", zIndex:90, boxShadow:"0 1px 4px rgba(0,0,0,.06)", transition:"left .22s ease" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10, fontSize:13, color:C.text2 }}>
           <button onClick={() => setSidebarOpen(v=>!v)} style={{ background:"none", border:"none", cursor:"pointer", color:C.text3, fontSize:20, lineHeight:1, padding:"2px 4px", borderRadius:4, flexShrink:0 }} title={sidebarOpen?"Chiudi barra":"Apri barra"}>☰</button>
           <span style={{ color:"#8896a8", fontSize:12 }}>Hotel Gasparini</span>
@@ -2210,7 +2299,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
       </div>
 
       {/*   CONTENUTO PRINCIPALE   */}
-      <div className="main-content" style={{ marginLeft:sidebarOpen?230:64, paddingTop:72, paddingLeft:28, paddingRight:28, paddingBottom:32, minHeight:"100vh", transition:"margin-left .22s ease" }}>
+      <div className="main-content" style={{ marginLeft:isMobile?0:sidebarOpen?230:64, paddingTop:72, paddingLeft:isMobile?12:28, paddingRight:isMobile?12:28, paddingBottom:isMobile?80:32, minHeight:"100vh", transition:"margin-left .22s ease" }}>
 
         {/*   DASHBOARD   */}
         {page==="Dashboard" && (() => {
@@ -2322,7 +2411,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
               <AiBar pg="Dashboard" />
 
               {/*   KPI strip — stile Opera Cloud   */}
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:10, marginBottom:18 }}>
+              <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr 1fr":isTablet?"repeat(3,1fr)":"repeat(6,1fr)", gap:10, marginBottom:18 }}>
                 {[
                   { l:"Occupate oggi",   v:`${occToday}`,            sub:`/${totalRooms} camere`,  c:C.navy,   accent:"#0f62fe", icon:"🏨" },
                   { l:"Occupazione %",   v:`${occPctToday}%`,        sub:"tasso oggi",             c:occPctToday>=80?C.green:occPctToday>=50?C.amber:C.red, accent:occPctToday>=80?"#1b7a4a":occPctToday>=50?"#e65100":"#c62828", icon:"📊" },
@@ -2855,7 +2944,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
               </select>
             </div>
             <div className="card" style={{ padding:0 }}>
-              <div style={{ padding:"12px 18px", borderBottom:`1px solid ${C.border}`, display:"grid", gridTemplateColumns:"110px 1fr 90px 190px 130px 110px", gap:10, fontSize:10, fontWeight:600, color:C.text3, letterSpacing:1, textTransform:"uppercase" }}>
+              <div style={{ padding:"12px 18px", borderBottom:`1px solid ${C.border}`, display:"grid", gridTemplateColumns:isMobile?"1fr":"110px 1fr 90px 190px 130px 110px", gap:10, fontSize:10, fontWeight:600, color:C.text3, letterSpacing:1, textTransform:"uppercase" }}>
                 <div>N° Pren.</div><div>Ospite</div><div>Camera</div><div>Date</div><div>Importo</div><div>Stato</div>
               </div>
               {filteredRes.length===0 && <div style={{ padding:"32px", textAlign:"center", color:C.text3 }}>Nessuna prenotazione trovata</div>}
@@ -2863,7 +2952,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                 const room=ROOMS.find(x=>x.id===r.roomId), sc=STATUS_CFG[r.status];
                 return (
                   <div key={r.id} className="res-row" onClick={() => openEditReservation(r)}
-                    style={{ display:"grid", gridTemplateColumns:"110px 1fr 90px 190px 130px 110px", gap:10, alignItems:"center" }}>
+                    style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"110px 1fr 90px 190px 130px 110px", gap:10, alignItems:"center" }}>
                     <div style={{ fontSize:12, fontWeight:700, color:C.gold }}>{r.id}</div>
                     <div>
                       <div style={{ fontWeight:600 }}>{r.guestName}</div>
@@ -3031,7 +3120,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
               <AiBar pg="Check-In/Out" />
 
               {/* KPI strip */}
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:20 }}>
+              <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr 1fr":isTablet?"1fr 1fr":"repeat(4,1fr)", gap:12, marginBottom:20 }}>
                 {[
                   { l:"Arrivi in Attesa",    v:arrivi.length,   c:C.green,  icon:"▲" },
                   { l:"Ospiti in Casa",       v:inCasa.length,   c:C.navy,   icon:"🏨" },
@@ -3046,7 +3135,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
               </div>
 
               {/* Griglia 3 colonne */}
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 2fr 1fr", gap:16 }}>
+              <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":isTablet?"1fr 1fr":"1fr 2fr 1fr", gap:16 }}>
 
                 {/*   COLONNA 1: Arrivi   */}
                 <div className="card" style={{ padding:0, overflow:"hidden" }}>
@@ -4062,7 +4151,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
           <div>
             <div className="page-header"><div><h1>Cassa</h1><div className="page-subtitle">Pagamenti ricevuti, estratto conto e report fiscali</div></div></div>
             <AiBar pg="Cassa" />
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14, marginBottom:22 }}>
+            <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr 1fr":isTablet?"1fr 1fr":"repeat(4,1fr)", gap:14, marginBottom:22 }}>
               {[
                 { l:"Totale Fatturato",v:reservations.filter(r=>r.status!=="cancelled").reduce((s,r)=>s+calcTotal(r),0), c:C.gold   },
                 { l:"Totale Incassato",v:reservations.reduce((s,r)=>s+calcPaid(r),0),                                    c:C.green  },
@@ -4119,7 +4208,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                 {psRes.length} pren · <span style={{ color:C.green }}>{psRes.filter(r=>r.psInviato).length} inviate</span> · <span style={{ color:C.red }}>{psRes.filter(r=>!r.psInviato).length} da inviare</span>
               </div>
             </div>
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 2fr", gap:16, marginBottom:20 }}>
+            <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 2fr", gap:16, marginBottom:20 }}>
               <div className="card">
                 <div className="section-title">Riepilogo</div>
                 {[["Totale schedine",psRes.reduce((s,r)=>s+1+(r.companions?.length||0),0),C.gold],
@@ -4211,7 +4300,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                 <div><label className="label">Mese</label><input type="month" className="input-field" style={{ width:175 }} value={istatMonth} onChange={e=>setIstatMonth(e.target.value)} /></div>
                 <button className="btn-primary" onClick={() => window.print()}>🖨 Stampa</button>
               </div>
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:20 }}>
+              <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr 1fr":isTablet?"1fr 1fr":"repeat(4,1fr)", gap:12, marginBottom:20 }}>
                 {[["Arrivi Totali",totArr,C.gold],["Presenze Totali",totPres,C.navy],["Arr. Italiani",itArr,C.green],["Arr. Stranieri",stArr,C.purple]].map(([l,v,c]) => (
                   <div key={l} className="stat-card"><div style={{ fontSize:10, fontWeight:700, color:C.text3, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>{l}</div><div style={{ fontSize:30, fontWeight:300, color:c, fontFamily:"IBM Plex Sans,sans-serif" }}>{v}</div></div>
                 ))}
@@ -5597,7 +5686,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
               </div>
 
               {/* KPI strip */}
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:12, marginBottom:20 }}>
+              <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr 1fr":isTablet?"1fr 1fr":"repeat(4,1fr)", gap:12, marginBottom:20 }}>
                 {[
                   { l:"Tavoli Occupati",  v:`${tavoliOccupati}/${TAVOLI_LAYOUT.length}`, c:C.green },
                   { l:"Coperti in Sala",  v:copertiOra,                                  c:C.navy  },
@@ -6248,6 +6337,23 @@ ${ev.noteCliente?`<div style="padding:0 48px 28px"><div class="conditions">${ev.
           );
         })()}
 
+
+        {/* ── BOTTOM NAV (mobile only) ── */}
+        <nav className="bottom-nav">
+          {[
+            { k:"Dashboard",     icon:"⊞",  label:"Home" },
+            { k:"Prenotazioni",  icon:"📋", label:"Prenotazioni" },
+            { k:"Check-In/Out",  icon:"🔑", label:"Check-in" },
+            { k:"Cassa",         icon:"💰", label:"Cassa" },
+            { k:"Disponibilità", icon:"🛏️", label:"Camere" },
+          ].map(item => (
+            <button key={item.k} className={`bn-tab${page===item.k?" active":""}`}
+              onClick={() => setPage(item.k)}>
+              <span className="bn-icon">{item.icon}</span>
+              <span className="bn-label">{item.label}</span>
+            </button>
+          ))}
+        </nav>
       </div>{/* fine main content */}
 
     </div>
