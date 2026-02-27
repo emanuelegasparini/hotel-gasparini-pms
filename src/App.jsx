@@ -662,13 +662,7 @@ const CSS = `
   input, select, textarea { font-family: 'IBM Plex Sans', sans-serif; }
 
   /* ── SIDEBAR ── */
-  .sidebar {
-    position: fixed; left: 0; top: 0; bottom: 0; width: 230px;
-    background: ${C.sidebar};
-    display: flex; flex-direction: column;
-    z-index: 100; overflow-y: auto; overflow-x: hidden;
-    box-shadow: 2px 0 12px rgba(0,0,0,.25); transition: transform .25s ease;
-  }
+  /* .sidebar — width/transform managed via React inline styles */
   .sidebar-logo {
     padding: 20px 20px 16px;
     border-bottom: 1px solid rgba(255,255,255,.08);
@@ -960,14 +954,8 @@ const CSS = `
 
   /* ── RESPONSIVE BREAKPOINTS ─────────────────── */
 
-  /* Tablet: 768–1199px */
+  /* Tablet: form grids collapse (sidebar gestita via React inline style) */
   @media (max-width: 1199px) {
-    .sidebar { width: 64px !important; }
-    .sidebar-logo-name, .sidebar-logo-sub, .sidebar-section,
-    .nav-btn span:not(.nav-icon), .sidebar-bottom { display: none !important; }
-    .nav-btn { padding: 11px 0; justify-content: center; }
-    .main-content { margin-left: 64px !important; padding-left: 18px; padding-right: 18px; }
-    .topbar { left: 64px !important; }
     .form-grid   { grid-template-columns: 1fr !important; }
     .form-grid-3 { grid-template-columns: 1fr 1fr !important; }
   }
@@ -1127,21 +1115,21 @@ const DEMO_MICE = [
 // - COMPONENTE PRINCIPALE -
 
 const PAGE_ICONS = {
-  "Dashboard":         "⊞",
-  "Prenotazioni":      "📋",
-  "Anagrafica":        "👤",
-  "Check-In/Out":      "🏨",
-  "Disponibilità":     "📅",
-  "Camere":            "🛏",
-  "Prezzi & Revenue":  "💰",
-  "Cassa":             "🖨",
-  "Pubblica Sicurezza":"🛡",
-  "ISTAT Veneto":      "📊",
-  "API & Integrazioni":"⚡",
-  "Ristorante POS":    "🍽",
-  "MICE & Meeting":    "🎯",
-  "Statistiche":       "📈",
-  "Configurazione":    "⚙️",
+  "Dashboard":         "grid",
+  "Prenotazioni":      "calendar",
+  "Anagrafica":        "users",
+  "Check-In/Out":      "key",
+  "Disponibilità":     "layout",
+  "Camere":            "bed",
+  "Prezzi & Revenue":  "trending-up",
+  "Cassa":             "receipt",
+  "Pubblica Sicurezza":"shield",
+  "ISTAT Veneto":      "bar-chart",
+  "API & Integrazioni":"zap",
+  "Ristorante POS":    "utensils",
+  "MICE & Meeting":    "presentation",
+  "Statistiche":       "pie-chart",
+  "Configurazione":    "settings",
 };
 const PAGE_GROUPS = [
   { label:"Front Office",   pages:["Dashboard","Prenotazioni","Anagrafica","Check-In/Out","Disponibilità"] },
@@ -1150,6 +1138,59 @@ const PAGE_GROUPS = [
   { label:"Integrazioni",   pages:["API & Integrazioni","Ristorante POS"] },
   { label:"Sistema",        pages:["Configurazione"] },
 ];
+
+
+// ── SVG ICON COMPONENT ──────────────────────────────────────────────
+// Icone stile Lucide — stroke-only, 24x24 viewBox, 1.5px stroke
+// ── ICONE SVG multi-elemento — stile Lucide 24×24 ─────────────────
+const ICONS = {
+  "grid":        [[["rect",{x:3,y:3,width:7,height:7,rx:1}],["rect",{x:14,y:3,width:7,height:7,rx:1}],["rect",{x:3,y:14,width:7,height:7,rx:1}],["rect",{x:14,y:14,width:7,height:7,rx:1}]]],
+  "calendar":    [[["rect",{x:3,y:4,width:18,height:18,rx:2}],["path",{d:"M16 2v4M8 2v4M3 10h18"}],["path",{d:"M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"}]]],
+  "users":       [[["path",{d:"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"}],["circle",{cx:9,cy:7,r:4}],["path",{d:"M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"}]]],
+  "key":         [[["circle",{cx:7.5,cy:15.5,r:5.5}],["path",{d:"m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3m-3.5 3.5 1.5 1.5"}]]],
+  "layout":      [[["rect",{x:3,y:3,width:18,height:7,rx:1}],["rect",{x:3,y:14,width:7,height:7,rx:1}],["rect",{x:14,y:14,width:7,height:7,rx:1}]]],
+  "bed":         [[["path",{d:"M2 4v16M2 8h20v12H2M12 8V4H2"}],["rect",{x:7,y:11,width:4,height:3,rx:.5}],["rect",{x:13,y:11,width:4,height:3,rx:.5}]]],
+  "trending-up": [[["polyline",{points:"22 7 13.5 15.5 8.5 10.5 2 17"}],["polyline",{points:"16 7 22 7 22 13"}]]],
+  "receipt":     [[["path",{d:"M4 2h16a1 1 0 0 1 1 1v18l-3-2-2 2-2-2-2 2-2-2-3 2V3a1 1 0 0 1 1-1z"}],["path",{d:"M8 8h8M8 12h8M8 16h5"}]]],
+  "shield":      [[["path",{d:"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"}],["path",{d:"m9 12 2 2 4-4"}]]],
+  "bar-chart":   [[["path",{d:"M3 3v18h18"}],["path",{d:"M7 16v-3M11 16V9M15 16v-6M19 16v-9"}]]],
+  "zap":         [[["polygon",{points:"13 2 3 14 12 14 11 22 21 10 12 10 13 2"}]]],
+  "utensils":    [[["path",{d:"M3 2v7c0 1.66 1.34 3 3 3s3-1.34 3-3V2M6 12v10M20 2v5a4 4 0 0 1-4 4v11"}]]],
+  "presentation":[[["rect",{x:2,y:3,width:20,height:13,rx:1}],["path",{d:"M8 21h8M12 17v4M7 8l3 3 2-2 3 3"}]]],
+  "pie-chart":   [[["path",{d:"M21.21 15.89A10 10 0 1 1 8 2.83"}],["path",{d:"M22 12A10 10 0 0 0 12 2v10z"}]]],
+  "settings":    [[["circle",{cx:12,cy:12,r:3}],["path",{d:"M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"}]]],
+  "home":        [[["path",{d:"M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"}],["polyline",{points:"9 22 9 12 15 12 15 22"}]]],
+  "check-circle":[[["path",{d:"M22 11.08V12a10 10 0 1 1-5.93-9.14"}],["polyline",{points:"22 4 12 14.01 9 11.01"}]]],
+  "log-out":     [[["path",{d:"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"}],["polyline",{points:"16 17 21 12 16 7"}],["line",{x1:21,y1:12,x2:9,y2:12}]]],
+  "database":    [[["ellipse",{cx:12,cy:5,rx:9,ry:3}],["path",{d:"M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"}],["path",{d:"M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"}]]],
+  "bell":        [[["path",{d:"M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"}],["path",{d:"M13.73 21a2 2 0 0 1-3.46 0"}]]],
+  "credit-card": [[["rect",{x:1,y:4,width:22,height:16,rx:2}],["line",{x1:1,y1:10,x2:23,y2:10}]]],
+  "activity":    [[["polyline",{points:"22 12 18 12 15 21 9 3 6 12 2 12"}]]],
+  "map-pin":     [[["path",{d:"M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"}],["circle",{cx:12,cy:10,r:3}]]],
+  "file-text":   [[["path",{d:"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"}],["polyline",{points:"14 2 14 8 20 8"}],["line",{x1:16,y1:13,x2:8,y2:13}],["line",{x1:16,y1:17,x2:8,y2:17}]]],
+};
+
+function Icon({ name, size=16, color="currentColor", strokeWidth=1.5, style={} }) {
+  const elems = ICONS[name]?.[0];
+  if (!elems) return <span style={{ width:size, height:size, display:"inline-block" }}/>;
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      strokeLinecap="round" strokeLinejoin="round"
+      style={{ flexShrink:0, ...style }}>
+      {elems.map(([tag, attrs], i) => {
+        const p = { key:i, ...attrs, stroke:color, strokeWidth, fill:"none" };
+        if (tag==="path")     return <path {...p}/>;
+        if (tag==="rect")     return <rect {...p}/>;
+        if (tag==="circle")   return <circle {...p}/>;
+        if (tag==="ellipse")  return <ellipse {...p}/>;
+        if (tag==="line")     return <line {...p}/>;
+        if (tag==="polyline") return <polyline {...p}/>;
+        if (tag==="polygon")  return <polygon {...p} fill={color} stroke="none"/>;
+        return null;
+      })}
+    </svg>
+  );
+}
 
 
 // - Componente suggerimento AI contestuale -
@@ -1163,10 +1204,12 @@ export default function HotelPMS() {
         const w = window.innerWidth;
         setIsMobile(w < 768);
         setIsTablet(w < 1200);
-        if (w < 768) setSidebarOpen(false);
+        if (w < 768)         setSidebarOpen(false);  // mobile: sidebar nascosta
+        else if (w < 1200)   setSidebarOpen(false);  // tablet: sidebar collassata a icone
+        else                 setSidebarOpen(true);   // desktop: sidebar aperta
       };
       window.addEventListener('resize', onResize);
-      onResize(); // run immediately
+      onResize();
       return () => window.removeEventListener('resize', onResize);
     }, []);
   const [guests, setGuests]           = useState(DEMO_GUESTS);
@@ -2233,57 +2276,96 @@ Rispondi in italiano, in modo conciso e professionale.`;
           position:"fixed", inset:0, background:"rgba(0,0,0,.5)", zIndex:99,
         }}/>
       )}
-            <aside className="sidebar" style={{ position:"fixed", left:0, top:0, bottom:0, width:230, transform:isMobile?(sidebarOpen?"translateX(0)":"translateX(-100%)"):"none", background:"#0a1929", zIndex:100, overflowY:"auto", display:"flex", flexDirection:"column", boxShadow:"2px 0 12px rgba(0,0,0,.25)", transition:"width .22s ease", overflow:"hidden" }}>
-        {/* Logo */}
-        <div className="sidebar-logo" style={{ padding:sidebarOpen?"20px 20px 16px":"16px 0", borderBottom:"1px solid rgba(255,255,255,.08)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:10, overflow:"hidden" }}>
-            <div style={{ width:32, height:32, borderRadius:6, background:"linear-gradient(135deg,#1565c0,#0f62fe)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, fontWeight:700, color:"#fff", flexShrink:0 }}>G</div>
-            {sidebarOpen && <div style={{ whiteSpace:"nowrap" }}>
-              <div style={{ fontSize:15, fontWeight:700, color:"#fff", letterSpacing:.5 }}>Hotel Gasparini</div>
-              <div style={{ fontSize:9, letterSpacing:2.5, color:"#90b4d4", textTransform:"uppercase", marginTop:2 }}>PMS</div>
-            </div>}
-          </div>
-        </div>
+            <aside style={{
+              position:"fixed", left:0, top:0, bottom:0,
+              width: isMobile ? 0 : sidebarOpen ? 230 : 64,
+              background:"#0a1929",
+              display:"flex", flexDirection:"column",
+              zIndex:100, overflowY:"auto", overflowX:"hidden",
+              boxShadow:"2px 0 16px rgba(0,0,0,.3)",
+              transition:"width .22s cubic-bezier(.4,0,.2,1)",
+            }}>
+              {/* Logo */}
+              <div style={{ padding:sidebarOpen?"18px 16px 14px":"14px 0", borderBottom:"1px solid rgba(255,255,255,.08)", display:"flex", alignItems:"center", gap:10, overflow:"hidden", flexShrink:0, justifyContent:sidebarOpen?"flex-start":"center" }}>
+                <div style={{ width:34, height:34, borderRadius:8, background:"linear-gradient(135deg,#1565c0,#0f62fe)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, fontWeight:800, color:"#fff", flexShrink:0, boxShadow:"0 2px 8px rgba(15,98,254,.4)" }}>G</div>
+                <div style={{ overflow:"hidden", maxWidth:sidebarOpen?160:0, opacity:sidebarOpen?1:0, transition:"max-width .22s ease, opacity .18s ease", whiteSpace:"nowrap" }}>
+                  <div style={{ fontSize:14, fontWeight:700, color:"#fff", letterSpacing:.3 }}>Hotel Gasparini</div>
+                  <div style={{ fontSize:9, letterSpacing:2.5, color:"#90b4d4", textTransform:"uppercase", marginTop:1 }}>PMS · Chioggia</div>
+                </div>
+              </div>
 
-        {/* Nav Groups */}
-        {PAGE_GROUPS.map(group => (
-          <div key={group.label}>
-            {sidebarOpen && <div className="sidebar-section" style={{ fontSize:9, letterSpacing:2, color:"rgba(144,180,212,.45)", textTransform:"uppercase", padding:"18px 20px 6px", fontWeight:600 }}>{group.label}</div>}
-            {group.pages.map(p => (
-              <button key={p}
-                className={`nav-btn${page===p?" active":""}`}
-                onClick={() => setPage(p)}
-                title={!sidebarOpen ? p : ""}
-                style={{
-                  display:"flex", alignItems:"center", gap:10, justifyContent:sidebarOpen?"flex-start":"center",
-                  width:"100%", padding:sidebarOpen?"9px 20px":"10px 0", border:"none",
-                  background: page===p ? "#1565c0" : "none",
-                  cursor:"pointer", fontSize:13, fontWeight: page===p ? 600 : 400,
-                  color: page===p ? "#fff" : "#90b4d4",
-                  textAlign:"left", borderLeft: page===p ? "3px solid #5b9dff" : "3px solid transparent",
-                  transition:"all .15s", whiteSpace:"nowrap",
-                }}>
-                <span style={{ fontSize:15, width:18, flexShrink:0, textAlign:"center" }}>{PAGE_ICONS[p]}</span>
-                {sidebarOpen && <span>{p}</span>}
-              </button>
-            ))}
-          </div>
-        ))}
+              {/* Nav Groups */}
+              <div style={{ flex:1, paddingTop:8, paddingBottom:8 }}>
+                {PAGE_GROUPS.map(group => (
+                  <div key={group.label}>
+                    <div style={{
+                      fontSize:9, letterSpacing:2.2, color:"rgba(144,180,212,.45)",
+                      textTransform:"uppercase", fontWeight:700,
+                      padding: sidebarOpen ? "14px 20px 5px" : "0",
+                      maxHeight: sidebarOpen ? 30 : 0,
+                      opacity: sidebarOpen ? 1 : 0,
+                      overflow:"hidden",
+                      transition:"max-height .2s ease, opacity .15s ease, padding .2s ease",
+                    }}>{group.label}</div>
 
-        {/* Bottom: DB status */}
-        {sidebarOpen && <div className="sidebar-bottom">
-          <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:8 }}>
-            <span style={{ fontSize:8, color: dbStatus==="ok"?"#6fcf97":dbStatus==="connecting"||dbStatus==="seeding"?"#90caf9":"#ef9a9a" }}>●</span>
-            <span style={{ fontSize:11 }}>{dbStatus==="ok"?"Database online":dbStatus==="seeding"?"Inizializzazione…":dbStatus==="connecting"?"Connessione…":"Database offline"}</span>
-          </div>
-          <div style={{ fontSize:11, color:"rgba(144,180,212,.4)" }}>
-            {new Date().toLocaleDateString("it-IT",{day:"2-digit",month:"short",year:"numeric"})}
-          </div>
-        </div>}
-      </aside>
+                    {group.pages.map(p => (
+                      <button key={p}
+                        onClick={() => { setPage(p); if(isMobile) setSidebarOpen(false); }}
+                        title={!sidebarOpen ? p : ""}
+                        style={{
+                          display:"flex", alignItems:"center",
+                          justifyContent: sidebarOpen ? "flex-start" : "center",
+                          width:"100%", padding: sidebarOpen ? "9px 20px 9px 17px" : "11px 0",
+                          border:"none", borderLeft: page===p ? "3px solid #5b9dff" : "3px solid transparent",
+                          background: page===p ? "rgba(21,101,192,.35)" : "none",
+                          cursor:"pointer", fontSize:13,
+                          color: page===p ? "#e8f0ff" : "#90b4d4",
+                          textAlign:"left", transition:"all .15s",
+                          fontFamily:"'IBM Plex Sans',sans-serif",
+                          fontWeight: page===p ? 600 : 400,
+                          WebkitTapHighlightColor:"transparent",
+                        }}
+                        onMouseEnter={e=>{ if(page!==p){ e.currentTarget.style.background="rgba(255,255,255,.06)"; e.currentTarget.style.color="#fff"; }}}
+                        onMouseLeave={e=>{ e.currentTarget.style.background=page===p?"rgba(21,101,192,.35)":"none"; e.currentTarget.style.color=page===p?"#e8f0ff":"#90b4d4"; }}
+                      >
+                        <Icon name={PAGE_ICONS[p]} size={17} color={page===p?"#90c8ff":"#6a8fad"} strokeWidth={page===p?2:1.5} style={{ flexShrink:0 }}/>
+                        <span style={{
+                          whiteSpace:"nowrap", overflow:"hidden",
+                          maxWidth: sidebarOpen ? 160 : 0,
+                          opacity: sidebarOpen ? 1 : 0,
+                          transition:"max-width .22s ease, opacity .15s ease",
+                          display:"block", marginLeft: sidebarOpen ? 10 : 0,
+                        }}>{p}</span>
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+
+              {/* Bottom: DB status */}
+              <div style={{
+                borderTop:"1px solid rgba(255,255,255,.08)",
+                padding: sidebarOpen ? "14px 20px" : "12px 0",
+                fontSize:11, color:"rgba(144,180,212,.5)", flexShrink:0,
+                display:"flex", flexDirection:"column", gap:4,
+                alignItems: sidebarOpen ? "flex-start" : "center",
+                transition:"padding .22s ease",
+              }}>
+                <div style={{ display:"flex", alignItems:"center", gap:6, overflow:"hidden" }}>
+                  <span style={{ width:7, height:7, borderRadius:"50%", flexShrink:0, display:"block",
+                    background: dbStatus==="ok"?"#6fcf97":dbStatus==="connecting"||dbStatus==="seeding"?"#90caf9":"#ef9a9a" }}/>
+                  <span style={{ whiteSpace:"nowrap", overflow:"hidden", maxWidth:sidebarOpen?160:0, opacity:sidebarOpen?1:0, transition:"max-width .22s ease, opacity .15s ease" }}>
+                    {dbStatus==="ok"?"DB online":dbStatus==="seeding"?"Init…":"Offline"}
+                  </span>
+                </div>
+                <span style={{ whiteSpace:"nowrap", maxWidth:sidebarOpen?160:0, opacity:sidebarOpen?1:0, transition:"max-width .22s ease, opacity .15s ease", overflow:"hidden", fontSize:10 }}>
+                  {new Date().toLocaleDateString("it-IT",{day:"2-digit",month:"short",year:"numeric"})}
+                </span>
+              </div>
+            </aside>
 
       {/*   TOPBAR CONTESTUALE   */}
-      <div className="topbar" style={{ position:"fixed", top:0, left:isMobile?0:sidebarOpen?230:64, right:0, height:52, background:"#fff", borderBottom:"1px solid #dde3ec", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 24px 0 16px", zIndex:90, boxShadow:"0 1px 4px rgba(0,0,0,.06)", transition:"left .22s ease" }}>
+      <div className="topbar" style={{ position:"fixed", top:0, left:isMobile?0:sidebarOpen?230:64, right:0, height:52, transition:"left .22s cubic-bezier(.4,0,.2,1)", background:"#fff", borderBottom:"1px solid #dde3ec", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 24px 0 16px", zIndex:90, boxShadow:"0 1px 4px rgba(0,0,0,.06)", transition:"left .22s ease" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10, fontSize:13, color:C.text2 }}>
           <button onClick={() => setSidebarOpen(v=>!v)} style={{ background:"none", border:"none", cursor:"pointer", color:C.text3, fontSize:20, lineHeight:1, padding:"2px 4px", borderRadius:4, flexShrink:0 }} title={sidebarOpen?"Chiudi barra":"Apri barra"}>☰</button>
           <span style={{ color:"#8896a8", fontSize:12 }}>Hotel Gasparini</span>
@@ -2299,7 +2381,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
       </div>
 
       {/*   CONTENUTO PRINCIPALE   */}
-      <div className="main-content" style={{ marginLeft:isMobile?0:sidebarOpen?230:64, paddingTop:72, paddingLeft:isMobile?12:28, paddingRight:isMobile?12:28, paddingBottom:isMobile?80:32, minHeight:"100vh", transition:"margin-left .22s ease" }}>
+      <div className="main-content" style={{ marginLeft:isMobile?0:sidebarOpen?230:64, paddingTop:72, paddingLeft:isMobile?12:28, paddingRight:isMobile?12:28, paddingBottom:isMobile?80:32, minHeight:"100vh", transition:"margin-left .22s cubic-bezier(.4,0,.2,1)" }}>
 
         {/*   DASHBOARD   */}
         {page==="Dashboard" && (() => {
@@ -6341,15 +6423,15 @@ ${ev.noteCliente?`<div style="padding:0 48px 28px"><div class="conditions">${ev.
         {/* ── BOTTOM NAV (mobile only) ── */}
         <nav className="bottom-nav">
           {[
-            { k:"Dashboard",     icon:"⊞",  label:"Home" },
-            { k:"Prenotazioni",  icon:"📋", label:"Prenotazioni" },
-            { k:"Check-In/Out",  icon:"🔑", label:"Check-in" },
-            { k:"Cassa",         icon:"💰", label:"Cassa" },
-            { k:"Disponibilità", icon:"🛏️", label:"Camere" },
+            { k:"Dashboard",     icon:"grid",     label:"Home" },
+            { k:"Prenotazioni",  icon:"calendar", label:"Prenot." },
+            { k:"Check-In/Out",  icon:"key",      label:"Check-in" },
+            { k:"Cassa",         icon:"receipt",  label:"Cassa" },
+            { k:"Disponibilità", icon:"layout",   label:"Camere" },
           ].map(item => (
             <button key={item.k} className={`bn-tab${page===item.k?" active":""}`}
               onClick={() => setPage(item.k)}>
-              <span className="bn-icon">{item.icon}</span>
+              <Icon name={item.icon} size={22} color={page===item.k?"#5b9dff":"#90b4d4"} strokeWidth={1.5}/>
               <span className="bn-label">{item.label}</span>
             </button>
           ))}
