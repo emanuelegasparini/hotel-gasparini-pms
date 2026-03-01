@@ -55,75 +55,75 @@ const sb = {
 
 const ROOMS = [
   // - Piano 1 — Standard (10 camere) -
-  { id: 101, type: "Standard",            capacity: 2, price: 90,  floor: 1 },
-  { id: 102, type: "Standard",            capacity: 2, price: 90,  floor: 1 },
-  { id: 103, type: "Standard",            capacity: 2, price: 90,  floor: 1 },
-  { id: 104, type: "Standard",            capacity: 2, price: 90,  floor: 1 },
-  { id: 105, type: "Standard",            capacity: 2, price: 90,  floor: 1 },
-  { id: 106, type: "Standard",            capacity: 2, price: 90,  floor: 1 },
-  { id: 107, type: "Standard",            capacity: 3, price: 110, floor: 1 },
-  { id: 108, type: "Standard",            capacity: 3, price: 110, floor: 1 },
-  { id: 109, type: "Standard Accessibile",capacity: 2, price: 95,  floor: 1 },
-  { id: 110, type: "Standard Accessibile",capacity: 2, price: 95,  floor: 1 },
+  { id: 101, type: "Standard",            capacity: 2, price: 90,  floor: 1, priceMode: "camera" },
+  { id: 102, type: "Standard",            capacity: 2, price: 90,  floor: 1, priceMode: "camera" },
+  { id: 103, type: "Standard",            capacity: 2, price: 90,  floor: 1, priceMode: "camera" },
+  { id: 104, type: "Standard",            capacity: 2, price: 90,  floor: 1, priceMode: "camera" },
+  { id: 105, type: "Standard",            capacity: 2, price: 90,  floor: 1, priceMode: "camera" },
+  { id: 106, type: "Standard",            capacity: 2, price: 90,  floor: 1, priceMode: "camera" },
+  { id: 107, type: "Standard",            capacity: 3, price: 110, floor: 1, priceMode: "camera" },
+  { id: 108, type: "Standard",            capacity: 3, price: 110, floor: 1, priceMode: "camera" },
+  { id: 109, type: "Standard Accessibile",capacity: 2, price: 95,  floor: 1, priceMode: "camera" },
+  { id: 110, type: "Standard Accessibile",capacity: 2, price: 95,  floor: 1, priceMode: "camera" },
 
   // - Piano 2 — Standard / Superior (10 camere) -
-  { id: 201, type: "Standard",            capacity: 2, price: 95,  floor: 2 },
-  { id: 202, type: "Standard",            capacity: 2, price: 95,  floor: 2 },
-  { id: 203, type: "Standard",            capacity: 2, price: 95,  floor: 2 },
-  { id: 204, type: "Standard",            capacity: 2, price: 95,  floor: 2 },
-  { id: 205, type: "Superior",            capacity: 2, price: 130, floor: 2 },
-  { id: 206, type: "Superior",            capacity: 2, price: 130, floor: 2 },
-  { id: 207, type: "Superior",            capacity: 3, price: 150, floor: 2 },
-  { id: 208, type: "Superior",            capacity: 3, price: 150, floor: 2 },
-  { id: 209, type: "Superior",            capacity: 2, price: 135, floor: 2 },
-  { id: 210, type: "Superior",            capacity: 2, price: 135, floor: 2 },
+  { id: 201, type: "Standard",            capacity: 2, price: 95,  floor: 2, priceMode: "camera" },
+  { id: 202, type: "Standard",            capacity: 2, price: 95,  floor: 2, priceMode: "camera" },
+  { id: 203, type: "Standard",            capacity: 2, price: 95,  floor: 2, priceMode: "camera" },
+  { id: 204, type: "Standard",            capacity: 2, price: 95,  floor: 2, priceMode: "camera" },
+  { id: 205, type: "Superior",            capacity: 2, price: 130, floor: 2, priceMode: "camera" },
+  { id: 206, type: "Superior",            capacity: 2, price: 130, floor: 2, priceMode: "camera" },
+  { id: 207, type: "Superior",            capacity: 3, price: 150, floor: 2, priceMode: "camera" },
+  { id: 208, type: "Superior",            capacity: 3, price: 150, floor: 2, priceMode: "camera" },
+  { id: 209, type: "Superior",            capacity: 2, price: 135, floor: 2, priceMode: "camera" },
+  { id: 210, type: "Superior",            capacity: 2, price: 135, floor: 2, priceMode: "camera" },
 
   // - Piano 3 — Superior / Deluxe (10 camere) -
-  { id: 301, type: "Superior",            capacity: 2, price: 140, floor: 3 },
-  { id: 302, type: "Superior",            capacity: 2, price: 140, floor: 3 },
-  { id: 303, type: "Superior",            capacity: 3, price: 155, floor: 3 },
-  { id: 304, type: "Superior",            capacity: 3, price: 155, floor: 3 },
-  { id: 305, type: "Deluxe",              capacity: 2, price: 180, floor: 3 },
-  { id: 306, type: "Deluxe",              capacity: 2, price: 180, floor: 3 },
-  { id: 307, type: "Deluxe",              capacity: 2, price: 185, floor: 3 },
-  { id: 308, type: "Deluxe",              capacity: 3, price: 200, floor: 3 },
-  { id: 309, type: "Deluxe",              capacity: 2, price: 180, floor: 3 },
-  { id: 310, type: "Deluxe",              capacity: 2, price: 185, floor: 3 },
+  { id: 301, type: "Superior",            capacity: 2, price: 140, floor: 3, priceMode: "camera" },
+  { id: 302, type: "Superior",            capacity: 2, price: 140, floor: 3, priceMode: "camera" },
+  { id: 303, type: "Superior",            capacity: 3, price: 155, floor: 3, priceMode: "camera" },
+  { id: 304, type: "Superior",            capacity: 3, price: 155, floor: 3, priceMode: "camera" },
+  { id: 305, type: "Deluxe",              capacity: 2, price: 180, floor: 3, priceMode: "camera" },
+  { id: 306, type: "Deluxe",              capacity: 2, price: 180, floor: 3, priceMode: "camera" },
+  { id: 307, type: "Deluxe",              capacity: 2, price: 185, floor: 3, priceMode: "camera" },
+  { id: 308, type: "Deluxe",              capacity: 3, price: 200, floor: 3, priceMode: "camera" },
+  { id: 309, type: "Deluxe",              capacity: 2, price: 180, floor: 3, priceMode: "camera" },
+  { id: 310, type: "Deluxe",              capacity: 2, price: 185, floor: 3, priceMode: "camera" },
 
   // - Piano 4 — Deluxe / Junior Suite (10 camere) -
-  { id: 401, type: "Deluxe",              capacity: 2, price: 190, floor: 4 },
-  { id: 402, type: "Deluxe",              capacity: 2, price: 190, floor: 4 },
-  { id: 403, type: "Deluxe",              capacity: 3, price: 210, floor: 4 },
-  { id: 404, type: "Deluxe",              capacity: 3, price: 210, floor: 4 },
-  { id: 405, type: "Junior Suite",        capacity: 2, price: 240, floor: 4 },
-  { id: 406, type: "Junior Suite",        capacity: 2, price: 240, floor: 4 },
-  { id: 407, type: "Junior Suite",        capacity: 3, price: 260, floor: 4 },
-  { id: 408, type: "Junior Suite",        capacity: 3, price: 260, floor: 4 },
-  { id: 409, type: "Junior Suite",        capacity: 2, price: 245, floor: 4 },
-  { id: 410, type: "Junior Suite",        capacity: 2, price: 245, floor: 4 },
+  { id: 401, type: "Deluxe",              capacity: 2, price: 190, floor: 4, priceMode: "camera" },
+  { id: 402, type: "Deluxe",              capacity: 2, price: 190, floor: 4, priceMode: "camera" },
+  { id: 403, type: "Deluxe",              capacity: 3, price: 210, floor: 4, priceMode: "camera" },
+  { id: 404, type: "Deluxe",              capacity: 3, price: 210, floor: 4, priceMode: "camera" },
+  { id: 405, type: "Junior Suite",        capacity: 2, price: 240, floor: 4, priceMode: "camera" },
+  { id: 406, type: "Junior Suite",        capacity: 2, price: 240, floor: 4, priceMode: "camera" },
+  { id: 407, type: "Junior Suite",        capacity: 3, price: 260, floor: 4, priceMode: "camera" },
+  { id: 408, type: "Junior Suite",        capacity: 3, price: 260, floor: 4, priceMode: "camera" },
+  { id: 409, type: "Junior Suite",        capacity: 2, price: 245, floor: 4, priceMode: "camera" },
+  { id: 410, type: "Junior Suite",        capacity: 2, price: 245, floor: 4, priceMode: "camera" },
 
   // - Piano 5 — Suite (10 camere) -
-  { id: 501, type: "Suite",               capacity: 4, price: 280, floor: 5 },
-  { id: 502, type: "Suite",               capacity: 4, price: 280, floor: 5 },
-  { id: 503, type: "Suite",               capacity: 4, price: 290, floor: 5 },
-  { id: 504, type: "Suite",               capacity: 4, price: 290, floor: 5 },
-  { id: 505, type: "Suite",               capacity: 4, price: 295, floor: 5 },
-  { id: 506, type: "Suite",               capacity: 4, price: 295, floor: 5 },
-  { id: 507, type: "Suite Vista Laguna",  capacity: 4, price: 340, floor: 5 },
-  { id: 508, type: "Suite Vista Laguna",  capacity: 4, price: 340, floor: 5 },
-  { id: 509, type: "Suite Vista Laguna",  capacity: 4, price: 350, floor: 5 },
-  { id: 510, type: "Suite Vista Laguna",  capacity: 5, price: 360, floor: 5 },
+  { id: 501, type: "Suite",               capacity: 4, price: 280, floor: 5, priceMode: "persona" },
+  { id: 502, type: "Suite",               capacity: 4, price: 280, floor: 5, priceMode: "persona" },
+  { id: 503, type: "Suite",               capacity: 4, price: 290, floor: 5, priceMode: "persona" },
+  { id: 504, type: "Suite",               capacity: 4, price: 290, floor: 5, priceMode: "persona" },
+  { id: 505, type: "Suite",               capacity: 4, price: 295, floor: 5, priceMode: "persona" },
+  { id: 506, type: "Suite",               capacity: 4, price: 295, floor: 5, priceMode: "persona" },
+  { id: 507, type: "Suite Vista Laguna",  capacity: 4, price: 340, floor: 5, priceMode: "persona" },
+  { id: 508, type: "Suite Vista Laguna",  capacity: 4, price: 340, floor: 5, priceMode: "persona" },
+  { id: 509, type: "Suite Vista Laguna",  capacity: 4, price: 350, floor: 5, priceMode: "persona" },
+  { id: 510, type: "Suite Vista Laguna",  capacity: 5, price: 360, floor: 5, priceMode: "persona" },
 
   // - Piano 6 — Suite Presidenziale / Penthouse (9 camere) -
-  { id: 601, type: "Suite Presidenziale", capacity: 6, price: 450, floor: 6 },
-  { id: 602, type: "Suite Presidenziale", capacity: 6, price: 450, floor: 6 },
-  { id: 603, type: "Suite Presidenziale", capacity: 6, price: 470, floor: 6 },
-  { id: 604, type: "Suite Presidenziale", capacity: 6, price: 470, floor: 6 },
-  { id: 605, type: "Suite Presidenziale", capacity: 6, price: 490, floor: 6 },
-  { id: 606, type: "Penthouse",           capacity: 6, price: 650, floor: 6 },
-  { id: 607, type: "Penthouse",           capacity: 6, price: 650, floor: 6 },
-  { id: 608, type: "Penthouse",           capacity: 8, price: 750, floor: 6 },
-  { id: 609, type: "Penthouse",           capacity: 8, price: 850, floor: 6 },
+  { id: 601, type: "Suite Presidenziale", capacity: 6, price: 450, floor: 6, priceMode: "persona" },
+  { id: 602, type: "Suite Presidenziale", capacity: 6, price: 450, floor: 6, priceMode: "persona" },
+  { id: 603, type: "Suite Presidenziale", capacity: 6, price: 470, floor: 6, priceMode: "persona" },
+  { id: 604, type: "Suite Presidenziale", capacity: 6, price: 470, floor: 6, priceMode: "persona" },
+  { id: 605, type: "Suite Presidenziale", capacity: 6, price: 490, floor: 6, priceMode: "persona" },
+  { id: 606, type: "Penthouse",           capacity: 6, price: 650, floor: 6, priceMode: "camera" },
+  { id: 607, type: "Penthouse",           capacity: 6, price: 650, floor: 6, priceMode: "camera" },
+  { id: 608, type: "Penthouse",           capacity: 8, price: 750, floor: 6, priceMode: "camera" },
+  { id: 609, type: "Penthouse",           capacity: 8, price: 850, floor: 6, priceMode: "camera" },
 ];
 
 const SERVICES = [
@@ -556,18 +556,60 @@ const DEMO_RESERVATIONS = [
   { id:"RES001", guestId:"GST001", guestName:"Bianchi Marco",
     companions:[], roomId:201, checkIn:"2026-02-22", checkOut:"2026-02-25",
     guests:2, adulti:2, bambini:0, services:["colazione","parcheggio"], status:"checked-in",
-    notes:"Cliente VIP", roomServiceItems:[], payments:[{amount:100,method:"Carta di Credito",date:"22/02/2026"}],
+    notes:"Cliente VIP", roomServiceItems:[], payments:[{amount:285,method:"Carta di Credito",date:"22/02/2026"},{amount:115,method:"Carta di Credito",date:"25/02/2026"}],
     checkInTime:"2026-02-22T14:30:00", psInviato:true, istatRegistrato:false },
   { id:"RES002", guestId:"GST002", guestName:"Romano Sofia",
     companions:[], roomId:301, checkIn:"2026-02-24", checkOut:"2026-02-28",
     guests:4, adulti:2, bambini:2, services:["spa","colazione"], status:"reserved",
-    notes:"", roomServiceItems:[], payments:[], psInviato:false, istatRegistrato:false },
+    notes:"", roomServiceItems:[], payments:[{amount:200,method:"Bonifico",date:"20/02/2026"}], psInviato:false, istatRegistrato:false },
   { id:"RES003", guestId:"GST003", guestName:"Müller Hans",
     companions:[], roomId:203, checkIn:"2026-02-20", checkOut:"2026-02-22",
     guests:1, adulti:1, bambini:0, services:["colazione"], status:"checked-out",
     notes:"", roomServiceItems:[],
     payments:[{amount:396,method:"Carta di Credito",date:"22/02/2026"}],
     psInviato:true, istatRegistrato:true },
+  { id:"RES008", guestId:"GST008", guestName:"Chen Wei",
+    companions:[], roomId:407, checkIn:"2026-02-10", checkOut:"2026-02-15",
+    guests:3, adulti:3, bambini:0, services:["colazione","spa","parcheggio"], status:"checked-out",
+    notes:"Pagato in contanti", roomServiceItems:[],
+    payments:[{amount:1300,method:"Contanti",date:"15/02/2026"}],
+    checkInTime:"2026-02-10T15:00:00", psInviato:true, istatRegistrato:true },
+  { id:"RES009", guestId:"GST009", guestName:"Dubois Marie",
+    companions:[], roomId:205, checkIn:"2026-02-18", checkOut:"2026-02-21",
+    guests:2, adulti:2, bambini:0, services:["colazione"], status:"checked-out",
+    notes:"", roomServiceItems:[],
+    payments:[{amount:450,method:"Carta di Credito",date:"21/02/2026"}],
+    checkInTime:"2026-02-18T14:00:00", psInviato:true, istatRegistrato:true },
+  { id:"RES010", guestId:"GST010", guestName:"Kovacs Istvan",
+    companions:[], roomId:305, checkIn:"2026-02-20", checkOut:"2026-02-23",
+    guests:2, adulti:2, bambini:0, services:["parcheggio"], status:"checked-out",
+    notes:"Fattura B2B", roomServiceItems:[],
+    payments:[{amount:590,method:"Bonifico",date:"25/02/2026"}],
+    checkInTime:"2026-02-20T16:30:00", psInviato:true, istatRegistrato:true },
+  { id:"RES011", guestId:"GST011", guestName:"Nakamura Keiko",
+    companions:[], roomId:501, checkIn:"2026-01-28", checkOut:"2026-02-02",
+    guests:4, adulti:2, bambini:2, services:["colazione","spa","minibar"], status:"checked-out",
+    notes:"VIP Suite", roomServiceItems:[],
+    payments:[{amount:1000,method:"Carta di Credito",date:"28/01/2026"},{amount:500,method:"Carta di Credito",date:"02/02/2026"}],
+    checkInTime:"2026-01-28T13:00:00", psInviato:true, istatRegistrato:true },
+  { id:"RES012", guestId:"GST012", guestName:"Ferreira Ana",
+    companions:[], roomId:102, checkIn:"2026-02-05", checkOut:"2026-02-07",
+    guests:1, adulti:1, bambini:0, services:["colazione"], status:"checked-out",
+    notes:"", roomServiceItems:[],
+    payments:[{amount:216,method:"PayPal",date:"07/02/2026"}],
+    checkInTime:"2026-02-05T15:00:00", psInviato:true, istatRegistrato:true },
+  { id:"RES013", guestId:"GST013", guestName:"Schmidt Klaus",
+    companions:[], roomId:303, checkIn:"2026-02-12", checkOut:"2026-02-14",
+    guests:2, adulti:2, bambini:0, services:["colazione","parcheggio"], status:"checked-out",
+    notes:"", roomServiceItems:[],
+    payments:[{amount:380,method:"Contanti",date:"14/02/2026"}],
+    checkInTime:"2026-02-12T14:30:00", psInviato:true, istatRegistrato:true },
+  { id:"RES014", guestId:"GST014", guestName:"Lombardi Giulio",
+    companions:[], roomId:406, checkIn:"2026-02-01", checkOut:"2026-02-03",
+    guests:2, adulti:2, bambini:0, services:["colazione"], status:"checked-out",
+    notes:"Pagamento misto", roomServiceItems:[],
+    payments:[{amount:200,method:"Carta di Credito",date:"01/02/2026"},{amount:98,method:"Contanti",date:"03/02/2026"}],
+    checkInTime:"2026-02-01T15:00:00", psInviato:true, istatRegistrato:true },
 ];
 
 // - POS RISTORANTE — DATI STATICI -
@@ -1222,6 +1264,10 @@ export default function HotelPMS() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [searchQ, setSearchQ]         = useState("");
   const [guestSearch, setGuestSearch]     = useState("");
+  const [expandedGuest, setExpandedGuest] = useState(null);
+  const [cassaTab, setCassaTab]           = useState("conti");      // conti | modalita | corrispettivi
+  const [cassaDateFrom, setCassaDateFrom] = useState("");
+  const [cassaDateTo,   setCassaDateTo]   = useState("");
   const [anagraficaTab, setAnagraficaTab] = useState("individuali"); // individuali | aziende
   const [emailPreviewRes, setEmailPreviewRes] = useState(null);    // modal anteprima email conferma
   const [emailTo, setEmailTo]               = useState("");         // campo A: modal email
@@ -1640,11 +1686,19 @@ Rispondi in italiano, in modo conciso e professionale.`;
 
   const calcTotal = (res) => {
     const room = ROOMS.find(r => r.id === res.roomId); if (!room) return 0;
-    const n = nights(res.checkIn, res.checkOut);
-    return room.price * n
+    const n    = nights(res.checkIn, res.checkOut);
+    const pax  = room.priceMode === "persona"
+      ? ((res.adulti||0) + (res.bambini||0) || res.guests || 1)
+      : 1;
+    return room.price * n * pax
       + (res.services||[]).reduce((s,sid) => { const sv=SERVICES.find(x=>x.id===sid); return s+(sv?sv.price*n:0); },0)
       + (res.roomServiceItems||[]).reduce((s,x) => s+x.price, 0);
   };
+  // Helper label prezzo camera
+  const fmtRoomPrice = (room) =>
+    room.priceMode === "persona"
+      ? `€${room.price}/p.p./notte`
+      : `€${room.price}/notte`;
   const calcPaid  = (res) => (res.payments||[]).reduce((s,p) => s+p.amount, 0);
 
   // ─── MICE Calcoli ───
@@ -3126,13 +3180,134 @@ Rispondi in italiano, in modo conciso e professionale.`;
                         {g.email    && <div>📧 {g.email}</div>}
                         {g.telefono && <div>📞 {g.telefono}</div>}
                       </div>
-                      {last && (
-                        <div style={{ marginTop:10, padding:"7px 10px", background:C.surface2, border:`1px solid ${C.border}`, borderRadius:6, fontSize:11, color:C.text3 }}>
-                          Ultimo sogg: {last.id} · Cam {last.roomId} · {fmtDate(last.checkIn)} &nbsp;
-                          <span className="badge" style={{ background:STATUS_CFG[last.status].bg, color:STATUS_CFG[last.status].text, border:`1px solid ${STATUS_CFG[last.status].border}`, fontSize:9 }}>{STATUS_CFG[last.status].label}</span>
-                        </div>
-                      )}
-                      <div style={{ marginTop:8, fontSize:11, color:C.text3 }}>{gRes.length} soggiorni registrati</div>
+                      {/* ── STORICO SOGGIORNI ── */}
+                      <div style={{ marginTop:10 }}>
+                        <button
+                          onClick={() => setExpandedGuest(expandedGuest === g.id ? null : g.id)}
+                          style={{ width:"100%", display:"flex", justifyContent:"space-between",
+                            alignItems:"center", padding:"8px 10px",
+                            background: expandedGuest===g.id ? C.navyL : C.surface2,
+                            border:`1px solid ${expandedGuest===g.id ? C.navyLb : C.border}`,
+                            borderRadius: expandedGuest===g.id ? "6px 6px 0 0" : 6,
+                            cursor:"pointer", fontFamily:"'IBM Plex Sans',sans-serif",
+                            transition:"all .15s" }}>
+                          <span style={{ fontSize:12, fontWeight:600,
+                            color: expandedGuest===g.id ? C.navy : C.text2 }}>
+                            📋 Storico soggiorni
+                            <span style={{ marginLeft:8, background: expandedGuest===g.id ? C.navy : C.border,
+                              color: expandedGuest===g.id ? "#fff" : C.text3,
+                              borderRadius:10, padding:"1px 7px", fontSize:10, fontWeight:700 }}>
+                              {gRes.length}
+                            </span>
+                          </span>
+                          <span style={{ fontSize:12, color: expandedGuest===g.id ? C.navy : C.text3,
+                            transition:"transform .2s",
+                            display:"inline-block",
+                            transform: expandedGuest===g.id ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
+                        </button>
+
+                        {expandedGuest === g.id && (
+                          <div style={{ border:`1px solid ${C.navyLb}`, borderTop:"none",
+                            borderRadius:"0 0 6px 6px", overflow:"hidden", background:"#fff" }}>
+                            {gRes.length === 0 ? (
+                              <div style={{ padding:"16px", textAlign:"center", color:C.text3, fontSize:12 }}>
+                                Nessun soggiorno registrato
+                              </div>
+                            ) : (
+                              <div style={{ maxHeight:320, overflowY:"auto" }}>
+                                {gRes.map((res, ri) => {
+                                  const notti_res = nights(res.checkIn, res.checkOut);
+                                  const st = STATUS_CFG[res.status] || STATUS_CFG.reserved;
+                                  const room = ROOMS.find(r => r.id === res.roomId);
+                                  const totale = (res.payments||[]).reduce((s,p)=>s+(p.amount||0),0);
+                                  const svcList = (res.services||[]).join(", ");
+                                  return (
+                                    <div key={res.id}
+                                      style={{ padding:"10px 12px",
+                                        borderBottom: ri < gRes.length-1 ? `1px solid ${C.border}` : "none",
+                                        background: ri%2===0 ? "#fff" : C.surface2 }}>
+                                      {/* Riga 1: ID + camera + badge */}
+                                      <div style={{ display:"flex", justifyContent:"space-between",
+                                        alignItems:"flex-start", marginBottom:4 }}>
+                                        <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                                          <span style={{ fontSize:11, fontWeight:700,
+                                            fontFamily:"'IBM Plex Mono',monospace",
+                                            color:C.text }}>{res.id}</span>
+                                          <span style={{ fontSize:10, color:C.text3 }}>
+                                            · Cam {res.roomId}
+                                            {room ? ` (${room.type})` : ""}
+                                          </span>
+                                        </div>
+                                        <span className="badge"
+                                          style={{ background:st.bg, color:st.text,
+                                            border:`1px solid ${st.border}`, fontSize:9 }}>
+                                          {st.label}
+                                        </span>
+                                      </div>
+                                      {/* Riga 2: date + notti + ospiti */}
+                                      <div style={{ display:"flex", gap:10, fontSize:11,
+                                        color:C.text3, flexWrap:"wrap", marginBottom:3 }}>
+                                        <span>📅 {fmtDate(res.checkIn)} → {fmtDate(res.checkOut)}</span>
+                                        <span>· {notti_res} {notti_res===1?"notte":"notti"}</span>
+                                        <span>· {res.guests||1} osp.</span>
+                                      </div>
+                                      {/* Riga 3: servizi + totale */}
+                                      <div style={{ display:"flex", justifyContent:"space-between",
+                                        alignItems:"center" }}>
+                                        <div style={{ fontSize:10, color:C.text3, flex:1,
+                                          overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                                          {svcList ? `🧴 ${svcList}` : ""}
+                                        </div>
+                                        {totale > 0 && (
+                                          <div style={{ fontSize:12, fontWeight:700,
+                                            color:C.gold, marginLeft:8, flexShrink:0 }}>
+                                            €{totale.toFixed(2)}
+                                          </div>
+                                        )}
+                                      </div>
+                                      {/* Riga 4: note se presenti */}
+                                      {res.notes && (
+                                        <div style={{ fontSize:10, color:C.text3,
+                                          fontStyle:"italic", marginTop:3 }}>
+                                          📝 {res.notes}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                            {/* Footer con statistiche */}
+                            {gRes.length > 0 && (() => {
+                              const totNotti = gRes.reduce((s,r)=>s+nights(r.checkIn,r.checkOut),0);
+                              const totSpeso = gRes.reduce((s,r)=>s+(r.payments||[]).reduce((ps,p)=>ps+(p.amount||0),0),0);
+                              const primoSoggiorno = gRes[gRes.length-1];
+                              return (
+                                <div style={{ padding:"8px 12px", background:C.navyL,
+                                  borderTop:`1px solid ${C.navyLb}`,
+                                  display:"flex", gap:16, flexWrap:"wrap" }}>
+                                  <div style={{ fontSize:11 }}>
+                                    <span style={{ color:C.text3 }}>Totale notti: </span>
+                                    <span style={{ fontWeight:700, color:C.navy }}>{totNotti}</span>
+                                  </div>
+                                  {totSpeso > 0 && (
+                                    <div style={{ fontSize:11 }}>
+                                      <span style={{ color:C.text3 }}>Spesa tot.: </span>
+                                      <span style={{ fontWeight:700, color:C.navy }}>€{totSpeso.toFixed(0)}</span>
+                                    </div>
+                                  )}
+                                  {primoSoggiorno && (
+                                    <div style={{ fontSize:11 }}>
+                                      <span style={{ color:C.text3 }}>Primo soggiorno: </span>
+                                      <span style={{ fontWeight:700, color:C.navy }}>{fmtDate(primoSoggiorno.checkIn)}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -3696,7 +3871,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                         <span>✦ Cam {tlRoom}</span>
                         <span>{d1.toLocaleDateString("it-IT",{day:"2-digit",month:"short"})} → {d2.toLocaleDateString("it-IT",{day:"2-digit",month:"short"})}</span>
                         <span style={{ color:C.text }}><b>{n}</b> {n===1?"notte":"notti"}</span>
-                        <span>€{((room?.price||0)*n).toFixed(2)} stimati</span>
+                        <span>€{((room?.price||0)*n*(room?.priceMode==="persona"?1:1)).toFixed(2)} stimati{room?.priceMode==="persona"?"/p.p.":""}</span>
                         <span style={{ color:C.text2, fontSize:11 }}>Clicca la data di fine per confermare</span>
                       </div>
                     );
@@ -3741,7 +3916,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                   <div key={room.id} className="room-card" style={{ borderColor:isOcc?C.greenLb:isRes?C.navyLb:C.border }}>
                     <div style={{ fontSize:22, fontWeight:600, color:c, marginBottom:6, fontFamily:"IBM Plex Sans,sans-serif" }}>Camera {room.id}</div>
                     <div style={{ fontSize:12, color:C.text2, fontWeight:500 }}>{room.type} · Piano {room.floor}</div>
-                    <div style={{ fontSize:11, color:C.text3, marginTop:3 }}>{room.capacity} ospiti · <b style={{ color:C.gold }}>€{room.price}</b>/notte</div>
+                    <div style={{ fontSize:11, color:C.text3, marginTop:3 }}>{room.capacity} ospiti · <b style={{ color:C.gold }}>€{room.price}</b>{room.priceMode==="persona"?<span style={{fontSize:9,color:C.text3}}> /p.p.</span>:""}/notte</div>
                     <div style={{ marginTop:10, fontSize:11, textTransform:"uppercase", fontWeight:600, color:c }}>
                       {isOcc?`● ${ar.guestName}`:isRes?`● ${ar.guestName}`:"○ Disponibile"}
                     </div>
@@ -3870,6 +4045,12 @@ Rispondi in italiano, in modo conciso e professionale.`;
             setRooms(p => p.map(r => r.id === roomId ? {...r, price: parseFloat(newPrice)||r.price} : r));
             dbSaveCameraPrice(roomId, parseFloat(newPrice)).catch(()=>{});
           };
+          const togglePriceMode = (roomId) => {
+            setRooms(p => p.map(r => r.id === roomId ? {...r, priceMode: r.priceMode==="persona"?"camera":"persona"} : r));
+          };
+          const toggleTypePriceMode = (type, mode) => {
+            setRooms(p => p.map(r => r.type === type ? {...r, priceMode: mode} : r));
+          };
 
           const updateTypePrice = (type, newBase) => {
             const base = parseFloat(newBase); if (!base || base <= 0) return;
@@ -3949,8 +4130,8 @@ Rispondi in italiano, in modo conciso e professionale.`;
                   {/*   Vista per TIPOLOGIA   */}
                   {priceViewMode === "tipologia" && (
                     <div className="card" style={{ padding:0, overflow:"hidden" }}>
-                      <div style={{ padding:"14px 20px", borderBottom:`1px solid ${C.border}`, display:"grid", gridTemplateColumns:"1fr 80px 80px 80px 80px 80px 120px 90px", gap:8, fontSize:10, fontWeight:700, color:C.text3, letterSpacing:1, textTransform:"uppercase" }}>
-                        <div>Tipologia</div><div style={{ textAlign:"center" }}>Camere</div><div style={{ textAlign:"center" }}>Occup.</div><div style={{ textAlign:"center" }}>Pick-up 7g</div><div style={{ textAlign:"right" }}>Prezzo Base</div><div style={{ textAlign:"right" }}>Prezzo Eff.</div><div style={{ textAlign:"center" }}>Regole attive</div><div style={{ textAlign:"center" }}>Azioni</div>
+                      <div style={{ padding:"14px 20px", borderBottom:`1px solid ${C.border}`, display:"grid", gridTemplateColumns:"1fr 80px 110px 80px 80px 80px 120px 90px", gap:8, fontSize:10, fontWeight:700, color:C.text3, letterSpacing:1, textTransform:"uppercase" }}>
+                        <div>Tipologia</div><div style={{ textAlign:"center" }}>Camere</div><div style={{ textAlign:"center" }}>Modo prezzo</div><div style={{ textAlign:"center" }}>Occup.</div><div style={{ textAlign:"center" }}>Pick-up 7g</div><div style={{ textAlign:"right" }}>Prezzo Base</div><div style={{ textAlign:"right" }}>Prezzo Eff.</div><div style={{ textAlign:"center" }}>Regole attive</div><div style={{ textAlign:"center" }}>Azioni</div>
                       </div>
                       {typeStats.map(({ type, typeRooms, baseMin, baseMax, effMin, effMax, occ, pu7, activeRuleCount }) => {
                         const diffPct = baseMin > 0 ? Math.round(((effMin - baseMin) / baseMin) * 100) : 0;
@@ -3964,6 +4145,9 @@ Rispondi in italiano, in modo conciso e professionale.`;
                               </div>
                               <div style={{ textAlign:"center", fontSize:13, fontWeight:600 }}>{typeRooms.length}</div>
                               <div style={{ textAlign:"center" }}>
+                                {(()=>{const modes=[...new Set(typeRooms.map(r=>r.priceMode||"camera"))];const cur=modes.length===1?modes[0]:"misto";return(<div style={{display:"flex",gap:4,justifyContent:"center"}}>{["camera","persona"].map(m=>(<button key={m} onClick={()=>toggleTypePriceMode(type,m)} style={{fontSize:10,padding:"2px 6px",border:`1px solid ${cur===m?m==="persona"?C.navyLb:C.goldLb:C.border}`,background:cur===m?m==="persona"?C.navyL:C.goldL:C.surface2,color:cur===m?m==="persona"?C.navy:C.gold:C.text3,borderRadius:4,cursor:"pointer",fontFamily:"IBM Plex Sans,sans-serif",fontWeight:600}}>{m==="persona"?"👤 p.p.":"🏨 cam"}</button>))}</div>);})()}
+                              </div>
+                              <div style={{ textAlign:"center" }}>
                                 <div style={{ fontSize:14, fontWeight:700, color:occColor }}>{occ}%</div>
                                 <div style={{ height:3, background:C.border, borderRadius:2, marginTop:3 }}>
                                   <div style={{ height:3, width:`${occ}%`, background:occColor, borderRadius:2, transition:"width .4s" }} />
@@ -3971,11 +4155,11 @@ Rispondi in italiano, in modo conciso e professionale.`;
                               </div>
                               <div style={{ textAlign:"center", fontSize:14, fontWeight:700, color:C.navy }}>{pu7}</div>
                               <div style={{ textAlign:"right", fontSize:13, color:C.text2 }}>
-                                {baseMin === baseMax ? `€${baseMin}` : `€${baseMin}–${baseMax}`}
+                                {(() => { const m=typeRooms[0]?.priceMode==="persona"?"/p.p.":"/cam"; return baseMin===baseMax?`€${baseMin}${m}`:`€${baseMin}–${baseMax}${m}`; })()}
                               </div>
                               <div style={{ textAlign:"right" }}>
                                 <div style={{ fontSize:14, fontWeight:700, color: diffPct > 0 ? C.green : diffPct < 0 ? C.red : C.text }}>
-                                  {effMin === effMax ? `€${effMin}` : `€${effMin}–${effMax}`}
+                                  {(() => { const m=typeRooms[0]?.priceMode==="persona"?"/p.p.":"/cam"; return effMin===effMax?`€${effMin}${m}`:`€${effMin}–${effMax}${m}`; })()}
                                 </div>
                                 {diffPct !== 0 && (
                                   <div style={{ fontSize:10, color: diffPct > 0 ? C.green : C.red, fontWeight:700 }}>
@@ -4229,51 +4413,514 @@ Rispondi in italiano, in modo conciso e professionale.`;
         })()}
 
         {/*   CASSA   */}
-        {page==="Cassa" && (
-          <div>
-            <div className="page-header"><div><h1>Cassa</h1><div className="page-subtitle">Pagamenti ricevuti, estratto conto e report fiscali</div></div></div>
-            <AiBar pg="Cassa" />
-            <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr 1fr":isTablet?"1fr 1fr":"repeat(4,1fr)", gap:14, marginBottom:22 }}>
-              {[
-                { l:"Totale Fatturato",v:reservations.filter(r=>r.status!=="cancelled").reduce((s,r)=>s+calcTotal(r),0), c:C.gold   },
-                { l:"Totale Incassato",v:reservations.reduce((s,r)=>s+calcPaid(r),0),                                    c:C.green  },
-                { l:"Da Riscuotere",   v:reservations.filter(r=>r.status==="checked-in").reduce((s,r)=>s+Math.max(0,calcTotal(r)-calcPaid(r)),0), c:C.amber },
-                { l:"IVA (10%)",       v:reservations.filter(r=>r.status!=="cancelled").reduce((s,r)=>s+calcTotal(r)*TAX_RATE,0),c:C.purple },
-              ].map(s => (
-                <div key={s.l} className="stat-card">
-                  <div style={{ fontSize:10, fontWeight:700, color:C.text3, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>{s.l}</div>
-                  <div style={{ fontSize:30, fontWeight:300, color:s.c, fontFamily:"IBM Plex Sans,sans-serif" }}>€{s.v.toLocaleString("it-IT",{minimumFractionDigits:2})}</div>
-                </div>
-              ))}
-            </div>
-            <div className="card" style={{ padding:0 }}>
-              <div style={{ padding:"13px 20px", borderBottom:`1px solid ${C.border}`, fontSize:10, fontWeight:700, letterSpacing:2, textTransform:"uppercase", color:C.text3 }}>Situazione Conti</div>
-              {reservations.filter(r=>r.status!=="cancelled").map(r => {
-                const room=ROOMS.find(x=>x.id===r.roomId), total=calcTotal(r), paid=calcPaid(r), bal=total-paid, sc=STATUS_CFG[r.status];
-                return (
-                  <div key={r.id} style={{ padding:"12px 20px", borderBottom:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                    <div>
-                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                        <span style={{ fontWeight:600 }}>{r.guestName}</span>
-                        <span className="badge" style={{ background:sc.bg, color:sc.text, border:`1px solid ${sc.border}`, fontSize:9 }}>{sc.label}</span>
-                      </div>
-                      <div style={{ fontSize:11, color:C.text3 }}>{r.id} · Cam {r.roomId} {room?.type} · {nights(r.checkIn,r.checkOut)}n</div>
-                    </div>
-                    <div style={{ display:"flex", gap:18, alignItems:"center" }}>
-                      {[["Tot",`€${total.toFixed(2)}`,C.gold],["Pag",`€${paid.toFixed(2)}`,C.green],["Sal",`€${bal.toFixed(2)}`,bal>0?C.red:C.green]].map(([l,v,co]) => (
-                        <div key={l} style={{ textAlign:"right" }}>
-                          <div style={{ fontSize:10, color:C.text3, fontWeight:600 }}>{l}</div>
-                          <div style={{ fontWeight:700, color:co, fontSize:14 }}>{v}</div>
+        {page==="Cassa" && (() => {
+          // ── Filtro date ───────────────────────────────────────────
+          const resAttive = reservations.filter(r => r.status !== "cancelled");
+          const resFiltrate = resAttive.filter(r => {
+            if (cassaDateFrom && r.checkOut < cassaDateFrom) return false;
+            if (cassaDateTo   && r.checkIn  > cassaDateTo)   return false;
+            return true;
+          });
+
+          // ── Tutti i pagamenti (flatMap sui pagamenti delle prenotazioni filtrate) ──
+          const tuttiPagamenti = resFiltrate.flatMap(r =>
+            (r.payments || []).map(p => ({ ...p, res: r }))
+          );
+
+          // ── KPI ────────────────────────────────────────────────────
+          const totFatturato  = resAttive.reduce((s,r) => s + calcTotal(r), 0);
+          const totIncassato  = resAttive.reduce((s,r) => s + calcPaid(r), 0);
+          const totDaRiscuotere = resAttive.filter(r=>r.status==="checked-in").reduce((s,r)=>s+Math.max(0,calcTotal(r)-calcPaid(r)),0);
+          const totIva        = resAttive.reduce((s,r) => s + calcTotal(r)*TAX_RATE, 0);
+
+          // ── Calcoli per Report Modalità Pagamento ──────────────────
+          const metodiMap = {};
+          tuttiPagamenti.forEach(p => {
+            const m = p.method || "Altro";
+            if (!metodiMap[m]) metodiMap[m] = { metodo:m, importo:0, operazioni:0, conti:new Set() };
+            metodiMap[m].importo    += p.amount || 0;
+            metodiMap[m].operazioni += 1;
+            metodiMap[m].conti.add(p.res.id);
+          });
+          const metodiList = Object.values(metodiMap)
+            .map(m => ({ ...m, conti: m.conti.size }))
+            .sort((a,b) => b.importo - a.importo);
+          const totaleMetodi = metodiList.reduce((s,m) => s + m.importo, 0);
+
+          const metodoIcone = {
+            "Carta di Credito": "💳",
+            "Contanti":         "💵",
+            "Bonifico":         "🏦",
+            "PayPal":           "🅿️",
+            "Assegno":          "📄",
+          };
+          const metodoColori = {
+            "Carta di Credito": { bg:"#e8f0ff", text:"#0f62fe", border:"#b3ccff" },
+            "Contanti":         { bg:"#e6f7ee", text:"#1b7a4a", border:"#6fcf97" },
+            "Bonifico":         { bg:"#fff3e0", text:"#e65100", border:"#ffcc80" },
+            "PayPal":           { bg:"#ede7f6", text:"#5c35cc", border:"#b39ddb" },
+          };
+
+          // ── Calcoli Report Corrispettivi ───────────────────────────
+          // Raggruppa per data di check-out (= data competenza fiscale)
+          const giorniMap = {};
+          resFiltrate.filter(r => r.status === "checked-out").forEach(r => {
+            const data = r.checkOut;
+            if (!giorniMap[data]) giorniMap[data] = {
+              data, conti:0, alloggio:0, servizi:0, imponibile:0, iva:0, totale:0, pagamenti:{}
+            };
+            const room = ROOMS.find(x => x.id === r.roomId);
+            const n    = nights(r.checkIn, r.checkOut);
+            const alloggio = room ? room.price * n : 0;
+            const servizi  = (r.services||[]).reduce((s,sid) => {
+              const sv = SERVICES.find(x => x.id === sid);
+              return s + (sv ? sv.price * n : 0);
+            }, 0) + (r.roomServiceItems||[]).reduce((s,x) => s + x.price, 0);
+            const imponibile = alloggio + servizi;
+            const iva        = imponibile * TAX_RATE;
+            giorniMap[data].conti      += 1;
+            giorniMap[data].alloggio   += alloggio;
+            giorniMap[data].servizi    += servizi;
+            giorniMap[data].imponibile += imponibile;
+            giorniMap[data].iva        += iva;
+            giorniMap[data].totale     += imponibile + iva;
+            (r.payments||[]).forEach(p => {
+              const m = p.method || "Altro";
+              giorniMap[data].pagamenti[m] = (giorniMap[data].pagamenti[m] || 0) + p.amount;
+            });
+          });
+          const giorniList = Object.values(giorniMap).sort((a,b) => b.data.localeCompare(a.data));
+          const totCorr = giorniList.reduce((acc,g) => ({
+            conti:      acc.conti + g.conti,
+            alloggio:   acc.alloggio + g.alloggio,
+            servizi:    acc.servizi + g.servizi,
+            imponibile: acc.imponibile + g.imponibile,
+            iva:        acc.iva + g.iva,
+            totale:     acc.totale + g.totale,
+          }), { conti:0, alloggio:0, servizi:0, imponibile:0, iva:0, totale:0 });
+
+          const fmt = (n) => `€${(n||0).toLocaleString("it-IT",{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+          const fmtPct = (v,tot) => tot > 0 ? `${((v/tot)*100).toFixed(1)}%` : "0%";
+
+          const TAB_ITEMS = [
+            { k:"conti",         label:"📋 Conti emessi",           desc:"Tutte le prenotazioni" },
+            { k:"modalita",      label:"💳 Per modalità pagamento",  desc:"Breakdown per metodo" },
+            { k:"corrispettivi", label:"🧾 Corrispettivi",           desc:"Registro fiscale giornaliero" },
+          ];
+
+          return (
+            <div>
+              <div className="page-header">
+                <div><h1>Cassa</h1><div className="page-subtitle">Pagamenti, report fiscali e corrispettivi</div></div>
+              </div>
+              <AiBar pg="Cassa" />
+
+              {/* ── KPI ── */}
+              <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr 1fr":isTablet?"1fr 1fr":"repeat(4,1fr)", gap:14, marginBottom:22 }}>
+                {[
+                  { l:"Totale Fatturato", v:totFatturato,     c:C.gold  },
+                  { l:"Totale Incassato", v:totIncassato,     c:C.green },
+                  { l:"Da Riscuotere",    v:totDaRiscuotere,  c:C.red   },
+                  { l:"IVA (10%)",        v:totIva,           c:C.purple||"#6c63ff" },
+                ].map(s => (
+                  <div key={s.l} className="stat-card">
+                    <div style={{ fontSize:10, fontWeight:700, color:C.text3, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>{s.l}</div>
+                    <div style={{ fontSize:30, fontWeight:300, color:s.c, fontFamily:"IBM Plex Sans,sans-serif" }}>{fmt(s.v)}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* ── FILTRO DATE ── */}
+              <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:16, flexWrap:"wrap" }}>
+                <span style={{ fontSize:12, color:C.text3, fontWeight:600 }}>Periodo:</span>
+                <input type="date" value={cassaDateFrom} onChange={e=>setCassaDateFrom(e.target.value)}
+                  className="input-field" style={{ width:150, fontSize:12, padding:"6px 10px" }}/>
+                <span style={{ fontSize:12, color:C.text3 }}>→</span>
+                <input type="date" value={cassaDateTo} onChange={e=>setCassaDateTo(e.target.value)}
+                  className="input-field" style={{ width:150, fontSize:12, padding:"6px 10px" }}/>
+                {(cassaDateFrom||cassaDateTo) && (
+                  <button className="btn-secondary" style={{ fontSize:12, padding:"6px 10px" }}
+                    onClick={()=>{ setCassaDateFrom(""); setCassaDateTo(""); }}>✕ Reset</button>
+                )}
+                <span style={{ fontSize:11, color:C.text3 }}>{resFiltrate.length} prenotazioni</span>
+              </div>
+
+              {/* ── TAB BAR ── */}
+              <div style={{ display:"flex", gap:0, marginBottom:20, border:`1px solid ${C.border}`, borderRadius:8, overflow:"hidden" }}>
+                {TAB_ITEMS.map(t => (
+                  <button key={t.k} onClick={() => setCassaTab(t.k)}
+                    style={{ flex:1, padding:"10px 14px", border:"none", cursor:"pointer",
+                      borderRight:`1px solid ${C.border}`,
+                      background: cassaTab===t.k ? C.gold : C.surface,
+                      color: cassaTab===t.k ? "#fff" : C.text2,
+                      fontFamily:"'IBM Plex Sans',sans-serif",
+                      fontWeight: cassaTab===t.k ? 700 : 400,
+                      fontSize: isMobile ? 11 : 13,
+                      transition:"all .15s" }}>
+                    {isMobile ? t.label.split(" ").slice(0,2).join(" ") : t.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* ══════════════════════════════════════
+                   TAB 1 — CONTI EMESSI
+              ══════════════════════════════════════ */}
+              {cassaTab === "conti" && (
+                <div className="card" style={{ padding:0 }}>
+                  <div style={{ padding:"13px 20px", borderBottom:`1px solid ${C.border}`,
+                    fontSize:10, fontWeight:700, letterSpacing:2, textTransform:"uppercase",
+                    color:C.text3, display:"flex", justifyContent:"space-between" }}>
+                    <span>Conti emessi ({resFiltrate.length})</span>
+                    <span style={{ color:C.gold }}>{fmt(totFatturato)}</span>
+                  </div>
+                  {resFiltrate.map(r => {
+                    const room=ROOMS.find(x=>x.id===r.roomId), total=calcTotal(r), paid=calcPaid(r), bal=total*(1+TAX_RATE)-paid, sc=STATUS_CFG[r.status];
+                    const metodi = [...new Set((r.payments||[]).map(p=>p.method))];
+                    return (
+                      <div key={r.id} style={{ padding:"12px 20px", borderBottom:`1px solid ${C.border}`,
+                        display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:8 }}>
+                        <div style={{ minWidth:0 }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:3 }}>
+                            <span style={{ fontWeight:600 }}>{r.guestName}</span>
+                            <span className="badge" style={{ background:sc.bg, color:sc.text, border:`1px solid ${sc.border}`, fontSize:9 }}>{sc.label}</span>
+                            {metodi.map(m => (
+                              <span key={m} style={{ fontSize:10 }}>{metodoIcone[m]||"💰"}</span>
+                            ))}
+                          </div>
+                          <div style={{ fontSize:11, color:C.text3 }}>
+                            {r.id} · Cam {r.roomId} {room?.type} · {nights(r.checkIn,r.checkOut)}n · {fmtDate(r.checkIn)}→{fmtDate(r.checkOut)}
+                          </div>
+                          {metodi.length > 0 && (
+                            <div style={{ fontSize:10, color:C.text3, marginTop:2 }}>
+                              {(r.payments||[]).map((p,i) => (
+                                <span key={i}>{metodoIcone[p.method]||"💰"} {p.method} {fmt(p.amount)} </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
+                        <div style={{ display:"flex", gap:18, alignItems:"center", flexShrink:0 }}>
+                          {[["Imponibile",`${fmt(total)}`,C.gold],["IVA 10%",`${fmt(total*TAX_RATE)}`,C.text3],["Totale",`${fmt(total*(1+TAX_RATE))}`,C.navy],["Saldo",`${fmt(bal)}`,bal>0.01?C.red:C.green]].map(([l,v,co]) => (
+                            <div key={l} style={{ textAlign:"right" }}>
+                              <div style={{ fontSize:10, color:C.text3, fontWeight:600 }}>{l}</div>
+                              <div style={{ fontWeight:700, color:co, fontSize:14 }}>{v}</div>
+                            </div>
+                          ))}
+                          <button className="btn-secondary" style={{ padding:"5px 12px", fontSize:11 }} onClick={() => openInvoice(r)}>Conto</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {/* Totale footer */}
+                  <div style={{ padding:"12px 20px", background:C.surface2,
+                    borderTop:`2px solid ${C.border}`,
+                    display:"flex", justifyContent:"flex-end", gap:18, alignItems:"center" }}>
+                    {[
+                      ["Totale imponibile", fmt(resFiltrate.reduce((s,r)=>s+calcTotal(r),0)), C.gold],
+                      ["IVA 10%",           fmt(resFiltrate.reduce((s,r)=>s+calcTotal(r)*TAX_RATE,0)), C.text2],
+                      ["Totale con IVA",    fmt(resFiltrate.reduce((s,r)=>s+calcTotal(r)*(1+TAX_RATE),0)), C.navy],
+                      ["Incassato",         fmt(resFiltrate.reduce((s,r)=>s+calcPaid(r),0)), C.green],
+                    ].map(([l,v,co]) => (
+                      <div key={l} style={{ textAlign:"right" }}>
+                        <div style={{ fontSize:10, color:C.text3, fontWeight:700, textTransform:"uppercase", letterSpacing:.5 }}>{l}</div>
+                        <div style={{ fontWeight:800, color:co, fontSize:15 }}>{v}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ══════════════════════════════════════
+                   TAB 2 — PER MODALITÀ DI PAGAMENTO
+              ══════════════════════════════════════ */}
+              {cassaTab === "modalita" && (
+                <div>
+                  {/* Grafico barre orizzontali */}
+                  <div className="card" style={{ marginBottom:16 }}>
+                    <div style={{ fontSize:12, fontWeight:700, textTransform:"uppercase",
+                      letterSpacing:1, color:C.text3, marginBottom:16 }}>Incassato per modalità</div>
+                    {metodiList.map(m => {
+                      const col = metodoColori[m.metodo] || { bg:"#f5f7fa", text:C.text2, border:C.border };
+                      const pct = totaleMetodi > 0 ? (m.importo / totaleMetodi) * 100 : 0;
+                      return (
+                        <div key={m.metodo} style={{ marginBottom:14 }}>
+                          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:5 }}>
+                            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                              <span style={{ fontSize:20 }}>{metodoIcone[m.metodo]||"💰"}</span>
+                              <span style={{ fontSize:14, fontWeight:700, color:col.text }}>{m.metodo}</span>
+                              <span style={{ fontSize:11, color:C.text3 }}>{m.operazioni} op. · {m.conti} conti</span>
+                            </div>
+                            <div style={{ textAlign:"right" }}>
+                              <span style={{ fontSize:15, fontWeight:800, color:col.text }}>{fmt(m.importo)}</span>
+                              <span style={{ fontSize:11, color:C.text3, marginLeft:8 }}>{pct.toFixed(1)}%</span>
+                            </div>
+                          </div>
+                          <div style={{ height:10, background:C.surface2, borderRadius:5, overflow:"hidden" }}>
+                            <div style={{ height:"100%", width:`${pct}%`, borderRadius:5,
+                              background:col.text, opacity:.85, transition:"width .5s ease" }}/>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Tabella dettaglio */}
+                  <div className="card" style={{ padding:0 }}>
+                    <div style={{ padding:"13px 20px", borderBottom:`1px solid ${C.border}`,
+                      fontSize:10, fontWeight:700, letterSpacing:2, textTransform:"uppercase", color:C.text3 }}>
+                      Dettaglio per modalità
+                    </div>
+                    {/* Header */}
+                    <div style={{ display:"grid", gridTemplateColumns:"1fr 120px 100px 100px 80px",
+                      padding:"9px 20px", background:C.surface2,
+                      borderBottom:`1px solid ${C.border}`, gap:10 }}>
+                      {["Modalità","Importo incassato","N° operazioni","N° conti","% tot."].map(h => (
+                        <div key={h} style={{ fontSize:10, fontWeight:700, color:C.text3,
+                          textTransform:"uppercase", letterSpacing:.5 }}>{h}</div>
                       ))}
-                      <button className="btn-secondary" style={{ padding:"5px 12px", fontSize:11 }} onClick={() => openInvoice(r)}>Conto</button>
+                    </div>
+                    {metodiList.map((m, i) => {
+                      const col = metodoColori[m.metodo] || { bg:"#f5f7fa", text:C.text2, border:C.border };
+                      const pct = totaleMetodi > 0 ? (m.importo / totaleMetodi) * 100 : 0;
+                      return (
+                        <div key={m.metodo} style={{ display:"grid",
+                          gridTemplateColumns:"1fr 120px 100px 100px 80px",
+                          padding:"12px 20px", gap:10, alignItems:"center",
+                          borderBottom:`1px solid ${C.border}`,
+                          background: i%2===0 ? "#fff" : C.surface2 }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                            <span style={{ fontSize:18 }}>{metodoIcone[m.metodo]||"💰"}</span>
+                            <span style={{ fontWeight:700, color:col.text,
+                              background:col.bg, border:`1px solid ${col.border}`,
+                              padding:"2px 10px", borderRadius:12, fontSize:12 }}>
+                              {m.metodo}
+                            </span>
+                          </div>
+                          <div style={{ fontWeight:800, color:col.text, fontSize:15 }}>{fmt(m.importo)}</div>
+                          <div style={{ fontSize:13, color:C.text2 }}>{m.operazioni}</div>
+                          <div style={{ fontSize:13, color:C.text2 }}>{m.conti}</div>
+                          <div style={{ fontSize:12, fontWeight:700, color:C.text3 }}>{pct.toFixed(1)}%</div>
+                        </div>
+                      );
+                    })}
+                    {/* Footer */}
+                    <div style={{ display:"grid", gridTemplateColumns:"1fr 120px 100px 100px 80px",
+                      padding:"12px 20px", gap:10,
+                      background:C.surface2, borderTop:`2px solid ${C.border}` }}>
+                      <div style={{ fontWeight:700, fontSize:13 }}>TOTALE</div>
+                      <div style={{ fontWeight:800, color:C.gold, fontSize:15 }}>{fmt(totaleMetodi)}</div>
+                      <div style={{ fontWeight:700, fontSize:13 }}>{tuttiPagamenti.length}</div>
+                      <div style={{ fontWeight:700, fontSize:13 }}>{resFiltrate.length}</div>
+                      <div style={{ fontWeight:700, fontSize:13 }}>100%</div>
                     </div>
                   </div>
-                );
-              })}
+
+                  {/* Lista pagamenti individuali */}
+                  <div className="card" style={{ padding:0, marginTop:16 }}>
+                    <div style={{ padding:"13px 20px", borderBottom:`1px solid ${C.border}`,
+                      fontSize:10, fontWeight:700, letterSpacing:2, textTransform:"uppercase", color:C.text3 }}>
+                      Registro pagamenti ({tuttiPagamenti.length})
+                    </div>
+                    <div style={{ maxHeight:400, overflowY:"auto" }}>
+                      {tuttiPagamenti.sort((a,b) => b.date?.localeCompare(a.date||"")||0).map((p, i) => {
+                        const col = metodoColori[p.method] || { bg:"#f5f7fa", text:C.text2, border:C.border };
+                        return (
+                          <div key={i} style={{ display:"flex", justifyContent:"space-between",
+                            alignItems:"center", padding:"10px 20px",
+                            borderBottom:`1px solid ${C.border}`,
+                            background: i%2===0 ? "#fff" : C.surface2 }}>
+                            <div>
+                              <div style={{ fontSize:13, fontWeight:600 }}>{p.res.guestName}</div>
+                              <div style={{ fontSize:11, color:C.text3 }}>{p.res.id} · {p.date}</div>
+                            </div>
+                            <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                              <span style={{ background:col.bg, color:col.text, border:`1px solid ${col.border}`,
+                                padding:"2px 9px", borderRadius:10, fontSize:11, fontWeight:600 }}>
+                                {metodoIcone[p.method]||"💰"} {p.method}
+                              </span>
+                              <span style={{ fontWeight:800, fontSize:15, color:col.text }}>{fmt(p.amount)}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ══════════════════════════════════════
+                   TAB 3 — CORRISPETTIVI
+              ══════════════════════════════════════ */}
+              {cassaTab === "corrispettivi" && (
+                <div>
+                  {/* Avviso fiscale */}
+                  <div style={{ background:"#fffde7", border:"1px solid #f9e04b",
+                    borderRadius:6, padding:"10px 16px", marginBottom:16, fontSize:12,
+                    color:"#795548", display:"flex", gap:8, alignItems:"flex-start" }}>
+                    <span style={{ fontSize:16, flexShrink:0 }}>ℹ️</span>
+                    <span>Registro corrispettivi ex art. 24 DPR 633/72. Le date di competenza coincidono con la data di check-out.
+                    Aliquota IVA 10% (alloggio e servizi accessori). Verificare con il proprio commercialista.</span>
+                  </div>
+
+                  {/* Totali periodo */}
+                  <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr 1fr":"repeat(5,1fr)", gap:12, marginBottom:16 }}>
+                    {[
+                      { l:"Conti",       v:totCorr.conti,         fmt:v=>v,              c:C.navy  },
+                      { l:"Alloggio",    v:totCorr.alloggio,      fmt:fmt,               c:C.text  },
+                      { l:"Servizi",     v:totCorr.servizi,       fmt:fmt,               c:C.text  },
+                      { l:"Imponibile",  v:totCorr.imponibile,    fmt:fmt,               c:C.gold  },
+                      { l:"IVA 10%",     v:totCorr.iva,           fmt:fmt,               c:C.purple||"#6c63ff" },
+                    ].map(k => (
+                      <div key={k.l} className="stat-card" style={{ padding:"14px 16px" }}>
+                        <div style={{ fontSize:10, fontWeight:700, color:C.text3,
+                          letterSpacing:1, textTransform:"uppercase", marginBottom:6 }}>{k.l}</div>
+                        <div style={{ fontSize:22, fontWeight:700, color:k.c }}>{k.fmt(k.v)}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Tabella corrispettivi giornalieri */}
+                  <div className="card" style={{ padding:0 }}>
+                    <div style={{ padding:"13px 20px", borderBottom:`1px solid ${C.border}`,
+                      display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                      <span style={{ fontSize:10, fontWeight:700, letterSpacing:2,
+                        textTransform:"uppercase", color:C.text3 }}>
+                        Corrispettivi giornalieri ({giorniList.length} giorni)
+                      </span>
+                      <button className="btn-secondary" style={{ fontSize:11, padding:"5px 12px" }}
+                        onClick={() => {
+                          const rows = [
+                            ["Data","N°Conti","Alloggio","Servizi","Imponibile","IVA 10%","Totale con IVA"],
+                            ...giorniList.map(g => [
+                              g.data, g.conti,
+                              g.alloggio.toFixed(2), g.servizi.toFixed(2),
+                              g.imponibile.toFixed(2), g.iva.toFixed(2), g.totale.toFixed(2)
+                            ]),
+                            ["TOTALE", totCorr.conti,
+                              totCorr.alloggio.toFixed(2), totCorr.servizi.toFixed(2),
+                              totCorr.imponibile.toFixed(2), totCorr.iva.toFixed(2), totCorr.totale.toFixed(2)],
+                          ];
+                          const csv = rows.map(r => r.join(";")).join("\n");
+                          const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+                          const a = document.createElement("a");
+                          a.href = URL.createObjectURL(blob);
+                          a.download = `corrispettivi_${new Date().toISOString().slice(0,10)}.csv`;
+                          a.click();
+                        }}>
+                        ⬇ Esporta CSV
+                      </button>
+                    </div>
+
+                    {/* Header tabella */}
+                    <div style={{ display:"grid",
+                      gridTemplateColumns:isMobile?"90px 40px 1fr 1fr":"90px 50px 110px 110px 120px 100px 130px",
+                      padding:"9px 16px", background:C.surface2,
+                      borderBottom:`1px solid ${C.border}`, gap:8 }}>
+                      {(isMobile
+                        ? ["Data","N°","Impon.","IVA+tot"]
+                        : ["Data","Conti","Alloggio","Servizi","Imponibile","IVA 10%","Totale IVA incl."]
+                      ).map(h => (
+                        <div key={h} style={{ fontSize:10, fontWeight:700, color:C.text3,
+                          textTransform:"uppercase", letterSpacing:.5 }}>{h}</div>
+                      ))}
+                    </div>
+
+                    {giorniList.map((g, i) => (
+                      <div key={g.data} style={{ borderBottom:`1px solid ${C.border}`,
+                        background: i%2===0 ? "#fff" : C.surface2 }}>
+                        <div style={{ display:"grid",
+                          gridTemplateColumns:isMobile?"90px 40px 1fr 1fr":"90px 50px 110px 110px 120px 100px 130px",
+                          padding:"11px 16px", gap:8, alignItems:"center" }}>
+                          <div style={{ fontSize:13, fontWeight:700,
+                            fontFamily:"'IBM Plex Mono',monospace" }}>
+                            {fmtDate(g.data)}
+                          </div>
+                          <div style={{ fontSize:12, color:C.text2 }}>{g.conti}</div>
+                          {!isMobile && (
+                            <>
+                              <div style={{ fontSize:12, color:C.text2 }}>{fmt(g.alloggio)}</div>
+                              <div style={{ fontSize:12, color:C.text2 }}>{fmt(g.servizi)}</div>
+                            </>
+                          )}
+                          <div style={{ fontSize:13, fontWeight:700, color:C.gold }}>{fmt(g.imponibile)}</div>
+                          <div style={{ fontSize:12, color:C.text2 }}>{fmt(g.iva)}</div>
+                          <div style={{ fontSize:13, fontWeight:800, color:C.navy }}>{fmt(g.totale)}</div>
+                        </div>
+                        {/* Metodi di pagamento di quella giornata */}
+                        {Object.keys(g.pagamenti).length > 0 && (
+                          <div style={{ padding:"0 16px 10px", display:"flex", gap:6, flexWrap:"wrap" }}>
+                            {Object.entries(g.pagamenti).map(([met, imp]) => {
+                              const col = metodoColori[met] || { bg:"#f5f7fa", text:C.text2, border:C.border };
+                              return (
+                                <span key={met} style={{ fontSize:10, padding:"2px 8px",
+                                  borderRadius:10, fontWeight:600,
+                                  background:col.bg, color:col.text, border:`1px solid ${col.border}` }}>
+                                  {metodoIcone[met]||"💰"} {met} {fmt(imp)}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
+                    {giorniList.length === 0 && (
+                      <div style={{ padding:40, textAlign:"center", color:C.text3 }}>
+                        Nessun corrispettivo nel periodo selezionato
+                      </div>
+                    )}
+
+                    {/* Footer totali */}
+                    {giorniList.length > 0 && (
+                      <div style={{ display:"grid",
+                        gridTemplateColumns:isMobile?"90px 40px 1fr 1fr":"90px 50px 110px 110px 120px 100px 130px",
+                        padding:"12px 16px", gap:8,
+                        background:C.navyL, borderTop:`2px solid ${C.navyLb}`,
+                        alignItems:"center" }}>
+                        <div style={{ fontWeight:800, fontSize:13, color:C.navy }}>TOTALE</div>
+                        <div style={{ fontWeight:800, fontSize:13, color:C.navy }}>{totCorr.conti}</div>
+                        {!isMobile && (
+                          <>
+                            <div style={{ fontWeight:700, color:C.navy }}>{fmt(totCorr.alloggio)}</div>
+                            <div style={{ fontWeight:700, color:C.navy }}>{fmt(totCorr.servizi)}</div>
+                          </>
+                        )}
+                        <div style={{ fontWeight:800, fontSize:15, color:C.gold }}>{fmt(totCorr.imponibile)}</div>
+                        <div style={{ fontWeight:700, color:C.navy }}>{fmt(totCorr.iva)}</div>
+                        <div style={{ fontWeight:800, fontSize:15, color:C.navy }}>{fmt(totCorr.totale)}</div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Riepilogo IVA */}
+                  <div className="card" style={{ marginTop:16 }}>
+                    <div style={{ fontSize:12, fontWeight:700, textTransform:"uppercase",
+                      letterSpacing:1, color:C.text3, marginBottom:14 }}>Riepilogo IVA periodo</div>
+                    <div style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"1fr 1fr 1fr 1fr", gap:0,
+                      border:`1px solid ${C.border}`, borderRadius:8, overflow:"hidden" }}>
+                      {[
+                        { l:"Base imponibile", v:fmt(totCorr.imponibile), sub:"Alloggio + servizi" },
+                        { l:"IVA 10%",         v:fmt(totCorr.iva),        sub:"Aliquota ridotta DPR 633/72" },
+                        { l:"Totale lordo",    v:fmt(totCorr.totale),     sub:"IVA inclusa" },
+                        { l:"Tassa soggiorno", v:"—",                      sub:"Esclusa (non soggetta IVA)" },
+                      ].map((k,i) => (
+                        <div key={k.l} style={{ padding:"14px 18px",
+                          borderRight: i < 3 ? `1px solid ${C.border}` : "none",
+                          borderBottom: isMobile && i < 3 ? `1px solid ${C.border}` : "none" }}>
+                          <div style={{ fontSize:10, fontWeight:700, letterSpacing:.8,
+                            textTransform:"uppercase", color:C.text3, marginBottom:6 }}>{k.l}</div>
+                          <div style={{ fontSize:18, fontWeight:800, color:C.navy }}>{k.v}</div>
+                          <div style={{ fontSize:10, color:C.text3, marginTop:3 }}>{k.sub}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
             </div>
-          </div>
-        )}
+          );
+        })()}
+
 
         {/*   PUBBLICA SICUREZZA   */}
         {page==="Pubblica Sicurezza" && (
@@ -4630,7 +5277,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                 <div><label className="label">Camera *</label>
                   <select className="input-field" value={form.roomId||""} onChange={e=>setForm(f=>({...f,roomId:e.target.value}))}>
                     <option value="">Seleziona...</option>
-                    {ROOMS.map(r=>{const ok=roomAvail(r,form.checkIn,form.checkOut,reservations,form.id); return <option key={r.id} value={r.id} disabled={!ok}>Cam {r.id} · {r.type} · €{r.price}/n{!ok?" (occupata)":""}</option>;})}
+                    {ROOMS.map(r=>{const ok=roomAvail(r,form.checkIn,form.checkOut,reservations,form.id); const pm=r.priceMode==="persona"?"p.p./n":"cam/n"; return <option key={r.id} value={r.id} disabled={!ok}>Cam {r.id} · {r.type} · €{r.price}/{pm}{!ok?" (occupata)":""}</option>;})}
                   </select>
                 </div>
                 <div><label className="label">Adulti</label><input type="number" className="input-field" min={1} max={10} value={form.adulti||1} onChange={e=>setForm(f=>({...f,adulti:parseInt(e.target.value)||1,guests:(parseInt(e.target.value)||1)+(f.bambini||0)}))} /></div>
@@ -5276,7 +5923,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
                     </div>
                   </div>
                   <div style={{ background:"#f0f4ff", padding:"7px 10px", fontWeight:700, fontSize:12, display:"flex", justifyContent:"space-between" }}><span>Descrizione</span><span>Importo</span></div>
-                  <div className="invoice-line"><span>Camera {r.roomId} ({room?.type}) — {n} notti × €{room?.price}</span><span>€{((room?.price||0)*n).toFixed(2)}</span></div>
+                  <div className="invoice-line"><span>Camera {r.roomId} ({room?.type}) — {n} notti × €{room?.price}{room?.priceMode==="persona"?`/p.p. × ${(res?.adulti||0)+(res?.bambini||0)||res?.guests||1} persone`:" /camera"}</span><span>€{((room?.price||0)*n).toFixed(2)}</span></div>
                   {svcLines.map((s,i)=><div key={i} className="invoice-line"><span>{s.label} — {n} notti</span><span>€{s.price.toFixed(2)}</span></div>)}
                   {(r.roomServiceItems||[]).map((item,i)=><div key={i} className="invoice-line"><span>Extra ({item.date}): {item.desc}</span><span>€{item.price.toFixed(2)}</span></div>)}
                   <div className="invoice-line" style={{ color:"#666" }}><span>Imponibile</span><span>€{sub.toFixed(2)}</span></div>
