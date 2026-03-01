@@ -193,6 +193,9 @@ const C = {
   purpleL:  "#ede9fe",
   gray:     "#607080",
   grayL:    "#f0f3f7",
+  blue:     "#1565c0",
+  blueL:    "#e3f0ff",
+  blueLb:   "#90caf9",
 };
 
 const STATUS_CFG = {
@@ -1357,6 +1360,7 @@ export default function HotelPMS() {
   const [toast, setToast]             = useState(null);
   const [invoiceRes, setInvoiceRes]   = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterTipo,   setFilterTipo]   = useState("all");       // all | individuale | gruppo
   const [searchQ, setSearchQ]         = useState("");
   const [guestSearch, setGuestSearch]     = useState("");
   const [expandedGuest, setExpandedGuest] = useState(null);
@@ -1966,10 +1970,24 @@ Rispondi in italiano, in modo conciso e professionale.`;
     setGruppoCamere(prev => prev.filter(c => c._key!==key));
   };
   const saveGruppo = () => {
-    if (!gruppoForm.nome) { showToast("Inserisci il nome del gruppo","error"); return; }
+    if (!gruppoForm.nome)    { showToast("Inserisci il nome del gruppo","error"); return; }
+    if (!gruppoForm.checkIn || !gruppoForm.checkOut) { showToast("Inserisci le date del gruppo","error"); return; }
+    if (new Date(gruppoForm.checkOut)<=new Date(gruppoForm.checkIn)) { showToast("Check-out deve essere dopo il check-in","error"); return; }
     if (gruppoCamere.length===0) { showToast("Aggiungi almeno una camera","error"); return; }
     const camereValide = gruppoCamere.filter(c=>c.roomId&&(c.guestId||c.guestName));
-    if (camereValide.length===0) { showToast("Ogni camera deve avere camera e ospite","error"); return; }
+    if (camereValide.length===0) { showToast("Ogni camera deve avere camera e ospite selezionati","error"); return; }
+    // Controlla disponibilità camere
+    const camereConConflitto = camereValide.filter(c => {
+      const room = ROOMS.find(r=>r.id===parseInt(c.roomId));
+      const ci   = c.checkIn  || gruppoForm.checkIn;
+      const co   = c.checkOut || gruppoForm.checkOut;
+      if (!room) return true; // camera non trovata = errore
+      return !roomAvail(room, ci, co, reservations, c.id);
+    });
+    if (camereConConflitto.length>0) {
+      const rooms = camereConConflitto.map(c=>`Cam ${c.roomId}`).join(", ");
+      showToast(`Camere non disponibili: ${rooms}`, "error"); return;
+    }
     // Salva o aggiorna il gruppo
     setGruppi(prev => {
       const idx = prev.findIndex(g=>g.id===gruppoForm.id);
@@ -1990,14 +2008,15 @@ Rispondi in italiano, in modo conciso e professionale.`;
       return [...senzaGruppo, ...nuoveRes];
     });
     setGruppoModal(false);
-    showToast(`Gruppo ${gruppoForm.nome} salvato — ${camereValide.length} camere`);
+    setPrenotazioniTab("gruppi");
+    showToast(`Gruppo ${gruppoForm.nome} salvato — ${camereValide.length} camere ✓`);
   };
   const editGruppo = (grpId) => {
     const grp = gruppi.find(g=>g.id===grpId);
     const camereGrp = reservations.filter(r=>r.gruppoId===grpId);
     if (!grp) return;
     setGruppoForm({...grp});
-    setGruppoCamere(camereGrp.map(c=>({...c, _key:c.id||Date.now()})));
+    setGruppoCamere(camereGrp.map((c,idx)=>({...c, _key:c.id||("k_"+Date.now()+"_"+idx)})));
     setGruppoTab("info");
     setGruppoModal(true);
   };
@@ -2366,8 +2385,16 @@ Rispondi in italiano, in modo conciso e professionale.`;
 
   const filteredRes = reservations.filter(r => {
     if (filterStatus!=="all" && r.status!==filterStatus) return false;
+    if (filterTipo==="individuale" && r.tipo==="gruppo") return false;
+    if (filterTipo==="gruppo"      && r.tipo!=="gruppo") return false;
     const q = searchQ.toLowerCase();
-    return !q || r.guestName?.toLowerCase().includes(q) || r.id?.includes(q);
+    if (!q) return true;
+    const grp = r.gruppoId ? gruppi.find(g=>g.id===r.gruppoId) : null;
+    return r.guestName?.toLowerCase().includes(q)
+        || r.id?.toLowerCase().includes(q)
+        || r.gruppoId?.toLowerCase().includes(q)
+        || grp?.nome?.toLowerCase().includes(q)
+        || grp?.azienda?.toLowerCase().includes(q);
   });
   const filteredGuests = guests.filter(g => {
     if (g.tipo === "azienda") return false;
@@ -3323,12 +3350,18 @@ Rispondi in italiano, in modo conciso e professionale.`;
               {prenotazioniTab==="lista" && (
                 <>
                   <div style={{display:"flex",gap:10,marginBottom:16,flexWrap:"wrap"}}>
-                    <input className="input-field" placeholder="Cerca ospite o n°..."
+                    <input className="input-field" placeholder="Cerca ospite, n°, gruppo..."
                       style={{maxWidth:240}} value={searchQ} onChange={e=>setSearchQ(e.target.value)}/>
-                    <select className="input-field" style={{maxWidth:180}}
+                    <select className="input-field" style={{maxWidth:170}}
                       value={filterStatus} onChange={e=>setFilterStatus(e.target.value)}>
                       <option value="all">Tutti gli stati</option>
                       {Object.entries(STATUS_CFG).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+                    </select>
+                    <select className="input-field" style={{maxWidth:170}}
+                      value={filterTipo||"all"} onChange={e=>setFilterTipo(e.target.value)}>
+                      <option value="all">Individuale + Gruppo</option>
+                      <option value="individuale">Solo individuali</option>
+                      <option value="gruppo">Solo gruppi</option>
                     </select>
                   </div>
                   <div className="card" style={{padding:0}}>
@@ -3344,7 +3377,8 @@ Rispondi in italiano, in modo conciso e professionale.`;
                       </div>
                     )}
                     {filteredRes.map(r=>{
-                      const room=ROOMS.find(x=>x.id===r.roomId), sc=STATUS_CFG[r.status];
+                      const room=ROOMS.find(x=>x.id===r.roomId);
+                      const sc=STATUS_CFG[r.status]||{bg:"#f5f5f5",text:"#666",border:"#ccc",label:r.status||"—"};
                       const grp=r.gruppoId?gruppi.find(g=>g.id===r.gruppoId):null;
                       return (
                         <div key={r.id} className="res-row" onClick={()=>openEditReservation(r)}
@@ -6135,10 +6169,14 @@ Rispondi in italiano, in modo conciso e professionale.`;
                 <div>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
                     <div style={{ fontSize:13, color:C.text3 }}>
-                      Aggiungi le camere del gruppo. Ogni riga = 1 camera / 1 prenotazione.
-                      {gruppoForm.checkIn && gruppoForm.checkOut && (
+                      Ogni riga = 1 camera / 1 prenotazione.
+                      {(!gruppoForm.checkIn || !gruppoForm.checkOut) ? (
+                        <span style={{ color:C.red, fontWeight:600, marginLeft:6 }}>
+                          ⚠️ Imposta le date nel Tab 1 prima di aggiungere camere
+                        </span>
+                      ) : (
                         <span style={{ color:C.navy, fontWeight:600 }}>
-                          {" "}Date default: {gruppoForm.checkIn} → {gruppoForm.checkOut}
+                          {" "}Date: {gruppoForm.checkIn} → {gruppoForm.checkOut}
                           {" "}({nights(gruppoForm.checkIn,gruppoForm.checkOut)} notti)
                         </span>
                       )}
@@ -6237,10 +6275,13 @@ Rispondi in italiano, in modo conciso e professionale.`;
                                 <option value="">Seleziona...</option>
                                 {ROOMS.map(r=>{
                                   const ci=cam.checkIn||gruppoForm.checkIn, co=cam.checkOut||gruppoForm.checkOut;
-                                  const ok=ci&&co?roomAvail(r,ci,co,reservations,cam.id):true;
+                                  const okRes   = ci&&co ? roomAvail(r,ci,co,reservations,cam.id) : true;
+                                  const inGruppo= gruppoCamere.some(gc=>gc._key!==cam._key && parseInt(gc.roomId)===r.id);
+                                  const ok = okRes && !inGruppo;
                                   const pm=r.priceMode==="persona"?"p.p.":"cam";
+                                  const note = !okRes?" (occupata)":inGruppo?" (già assegnata)":"";
                                   return <option key={r.id} value={r.id} disabled={!ok}>
-                                    Cam {r.id} · {r.type} · P{r.floor} · {r.capacity}p · €{r.price}/{pm}/n{!ok?" (occupata)":""}
+                                    Cam {r.id} · {r.type} · P{r.floor} · {r.capacity}p · €{r.price}/{pm}/n{note}
                                   </option>;
                                 })}
                               </select>
@@ -7347,6 +7388,27 @@ Rispondi in italiano, in modo conciso e professionale.`;
                       <span>TOTALE CONTO AZIENDA</span>
                       <span style={{color:"#003580"}}>€{tot.toFixed(2)}</span>
                     </div>
+                    {(grp.masterPagamenti||[]).length>0 && (() => {
+                      const totPag=(grp.masterPagamenti||[]).reduce((s,p)=>s+parseFloat(p.importo||0),0);
+                      const bal=tot-totPag;
+                      return (
+                        <div style={{marginTop:10,borderTop:"2px solid #e8edf3",paddingTop:10}}>
+                          <div style={{fontSize:10,letterSpacing:2,textTransform:"uppercase",color:"#888",marginBottom:6}}>Pagamenti ricevuti</div>
+                          {(grp.masterPagamenti||[]).map((p,i)=>(
+                            <div key={p.id} style={{display:"flex",justifyContent:"space-between",fontSize:12,padding:"4px 0",borderBottom:"1px solid #f0f0f0"}}>
+                              <span style={{color:"#555"}}>{p.data} · {p.metodo}{p.note?` · ${p.note}`:""}</span>
+                              <span style={{fontWeight:700,color:"#1b7a4a"}}>-€{parseFloat(p.importo||0).toFixed(2)}</span>
+                            </div>
+                          ))}
+                          <div style={{display:"flex",justifyContent:"space-between",padding:"7px 0",
+                            fontWeight:700,fontSize:14,borderTop:"2px solid #1a1a1a",marginTop:4,
+                            color:bal<=0.01?"#1b7a4a":"#c62828"}}>
+                            <span>{bal<=0.01?"✓ CONTO SALDATO":"SALDO RIMANENTE"}</span>
+                            <span>€{Math.abs(bal).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
                     <div style={{marginTop:14,fontSize:10,color:"#aaa",textAlign:"center",borderTop:"1px solid #eee",paddingTop:8}}>
                       Documento generato il {oggi} · Hotel Gasparini PMS · Non ha valore fiscale.
                     </div>
