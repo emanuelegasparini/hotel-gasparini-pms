@@ -206,6 +206,52 @@ const PAGES = ["Dashboard","Prenotazioni","Anagrafica","Check-In/Out","Disponibi
 
 // - HELPERS -
 
+
+// ─── GRUPPI DI PRENOTAZIONE ───────────────────────────────────────
+const genGrpId = () => "GRP" + Date.now().toString().slice(-6);
+
+const DEMO_GRUPPI = [
+  {
+    id: "GRP001",
+    nome: "Convegno Cardiologia 2026",
+    azienda: "Società Italiana Cardiologia",
+    pIva: "IT03456789012",
+    referente: "Dott. Andrea Visentin",
+    email: "a.visentin@sicardio.it",
+    telefono: "+39 041 512 3456",
+    checkIn: "2026-04-14",
+    checkOut: "2026-04-17",
+    note: "Gruppo di 18 medici. Cena di gala giovedì sera.",
+    splitPolicy: "misto",
+    contoAziendaVoci: ["room","colazione"],
+    regolaNGratuita: "1su10",
+    masterPagamenti: [
+      { id:"MP001", data:"2026-03-10", importo:1200, metodo:"Bonifico", note:"Acconto 30%" },
+      { id:"MP002", data:"2026-04-01", importo:800,  metodo:"Bonifico", note:"Acconto intermedio" },
+    ],
+    creatoIl: "2026-03-01",
+  },
+  {
+    id: "GRP002",
+    nome: "Team Building Zeta Corp",
+    azienda: "Zeta Corporation S.r.l.",
+    pIva: "IT09876543210",
+    referente: "Dott.ssa Elena Bertolini",
+    email: "e.bertolini@zetacorp.it",
+    telefono: "+39 02 4567890",
+    checkIn: "2026-04-22",
+    checkOut: "2026-04-24",
+    note: "20 manager. Tutto a carico azienda inclusi extras.",
+    splitPolicy: "tutto_azienda",
+    contoAziendaVoci: ["room","colazione","parcheggio","spa"],
+    regolaNGratuita: "1su20",
+    masterPagamenti: [
+      { id:"MP003", data:"2026-03-15", importo:2000, metodo:"Bonifico", note:"Acconto 40%" },
+    ],
+    creatoIl: "2026-03-05",
+  },
+];
+
 const genId      = () => "RES" + Date.now().toString().slice(-6) + Math.floor(Math.random()*100);
 const genGuestId = () => "GST" + Date.now().toString().slice(-6) + Math.floor(Math.random()*100);
 const fmtDate    = (d) => d ? new Date(d).toLocaleDateString("it-IT") : "";
@@ -604,7 +650,56 @@ const DEMO_RESERVATIONS = [
     notes:"", roomServiceItems:[],
     payments:[{amount:380,method:"Contanti",date:"14/02/2026"}],
     checkInTime:"2026-02-12T14:30:00", psInviato:true, istatRegistrato:true },
-  { id:"RES014", guestId:"GST014", guestName:"Lombardi Giulio",
+  { id:"GRP001-R1", guestId:"", guestName:"Visentin Andrea",
+    companions:[], roomId:201, checkIn:"2026-04-14", checkOut:"2026-04-17",
+    guests:2, adulti:2, bambini:0, services:["colazione"], status:"reserved",
+    notes:"Organizzatore evento - camera gratuita",
+    roomServiceItems:[], payments:[],
+    tipo:"gruppo", gruppoId:"GRP001", gratuita:true, gratuitaMotivo:"organizzatore",
+    trattamento:"BB", canale:"email", psInviato:false, istatRegistrato:false },
+  { id:"GRP001-R2", guestId:"", guestName:"Bortoluzzi Carlo",
+    companions:[], roomId:202, checkIn:"2026-04-14", checkOut:"2026-04-17",
+    guests:1, adulti:1, bambini:0, services:["colazione","parcheggio"], status:"reserved",
+    notes:"Cardiologo relatore principale",
+    roomServiceItems:[], payments:[{amount:200,method:"Bonifico",date:"01/04/2026"}],
+    tipo:"gruppo", gruppoId:"GRP001", gratuita:false, gratuitaMotivo:"",
+    trattamento:"BB", canale:"email", psInviato:false, istatRegistrato:false },
+  { id:"GRP001-R3", guestId:"", guestName:"Zanatta Marta",
+    companions:[], roomId:203, checkIn:"2026-04-14", checkOut:"2026-04-17",
+    guests:2, adulti:2, bambini:0, services:["colazione"], status:"reserved",
+    notes:"",
+    roomServiceItems:[], payments:[],
+    tipo:"gruppo", gruppoId:"GRP001", gratuita:false, gratuitaMotivo:"",
+    trattamento:"BB", canale:"email", psInviato:false, istatRegistrato:false },
+  { id:"GRP002-R1", guestId:"", guestName:"Bertolini Elena",
+    companions:[], roomId:401, checkIn:"2026-04-22", checkOut:"2026-04-24",
+    guests:1, adulti:1, bambini:0, services:["colazione","parcheggio"], status:"reserved",
+    notes:"Direttrice — camera gratuita come organizzatrice",
+    roomServiceItems:[], payments:[],
+    tipo:"gruppo", gruppoId:"GRP002", gratuita:true, gratuitaMotivo:"organizzatore",
+    trattamento:"BB", canale:"email", psInviato:false, istatRegistrato:false },
+  { id:"GRP002-R2", guestId:"", guestName:"Moretti Davide",
+    companions:[], roomId:402, checkIn:"2026-04-22", checkOut:"2026-04-24",
+    guests:2, adulti:2, bambini:0, services:["colazione","parcheggio","spa"], status:"reserved",
+    notes:"",
+    roomServiceItems:[], payments:[],
+    tipo:"gruppo", gruppoId:"GRP002", gratuita:false, gratuitaMotivo:"",
+    trattamento:"BB", canale:"email", psInviato:false, istatRegistrato:false },
+  { id:"GRP002-R3", guestId:"", guestName:"Ferraro Cristina",
+    companions:[], roomId:403, checkIn:"2026-04-22", checkOut:"2026-04-24",
+    guests:1, adulti:1, bambini:0, services:["colazione","spa"], status:"reserved",
+    notes:"",
+    roomServiceItems:[], payments:[],
+    tipo:"gruppo", gruppoId:"GRP002", gratuita:false, gratuitaMotivo:"",
+    trattamento:"BB", canale:"email", psInviato:false, istatRegistrato:false },
+  { id:"GRP002-R4", guestId:"", guestName:"Conti Roberto",
+    companions:[], roomId:404, checkIn:"2026-04-22", checkOut:"2026-04-24",
+    guests:1, adulti:1, bambini:0, services:["colazione"], status:"reserved",
+    notes:"",
+    roomServiceItems:[], payments:[],
+    tipo:"gruppo", gruppoId:"GRP002", gratuita:false, gratuitaMotivo:"",
+    trattamento:"BB", canale:"email", psInviato:false, istatRegistrato:false },
+    { id:"RES014", guestId:"GST014", guestName:"Lombardi Giulio",
     companions:[], roomId:406, checkIn:"2026-02-01", checkOut:"2026-02-03",
     guests:2, adulti:2, bambini:0, services:["colazione"], status:"checked-out",
     notes:"Pagamento misto", roomServiceItems:[],
@@ -1309,6 +1404,13 @@ export default function HotelPMS() {
   const [miceSearch, setMiceSearch]         = useState("");
   const [miceFilterStatus, setMiceFilterStatus] = useState("all");
   const [micePreviewEv, setMicePreviewEv]   = useState(null);         // modal preventivo PDF
+  // ─── Gruppi ───────────────────────────────────────────────────────
+  const [gruppi, setGruppi]               = useState(DEMO_GRUPPI);
+  const [gruppoModal, setGruppoModal]     = useState(false);         // wizard gruppo aperto
+  const [gruppoForm, setGruppoForm]       = useState(null);          // master dati gruppo
+  const [gruppoTab, setGruppoTab]         = useState("info");        // info | camere | split
+  const [gruppoCamere, setGruppoCamere]   = useState([]);            // righe camere nel wizard
+  const [prenotazioniTab, setPrenotazioniTab] = useState("lista");  // lista | gruppi
   const [meetingRooms, setMeetingRooms]     = useState(MEETING_ROOMS.map(r=>({...r})));
   const [miceConfigRoom, setMiceConfigRoom] = useState(null);         // sala in editing config
   // - Supabase sync state -
@@ -1458,6 +1560,7 @@ export default function HotelPMS() {
   };
   // Split conto state
   const [splitMode, setSplitMode]       = useState(false);       // attiva divisione conto
+  const [groupInvoice, setGroupInvoice] = useState(null);        // { grp, tipo, camIdx } conto gruppo
   const [splitPersone, setSplitPersone] = useState([]);          // [{nome, items:[], paid:false, method:""}]
   const [splitTab, setSplitTab]         = useState(0);           // indice persona attiva
   const [splitType, setSplitType]       = useState("equale");    // equale | personalizzata | per_voce
@@ -1690,9 +1793,33 @@ Rispondi in italiano, in modo conciso e professionale.`;
     const pax  = room.priceMode === "persona"
       ? ((res.adulti||0) + (res.bambini||0) || res.guests || 1)
       : 1;
-    return room.price * n * pax
+    // Camera gratuita: costo alloggio = 0, ma servizi e extra restano
+    const roomCost = res.gratuita ? 0 : room.price * n * pax;
+    return roomCost
       + (res.services||[]).reduce((s,sid) => { const sv=SERVICES.find(x=>x.id===sid); return s+(sv?sv.price*n:0); },0)
       + (res.roomServiceItems||[]).reduce((s,x) => s+x.price, 0);
+  };
+  // Calcola quanto va sul conto azienda vs conto camera individuale
+  const calcSplitConto = (res, grp) => {
+    if (!grp || !res.gruppoId) return { azienda:0, camera:calcTotal(res) };
+    const room = ROOMS.find(r => r.id === res.roomId); if (!room) return { azienda:0, camera:calcTotal(res) };
+    const n   = nights(res.checkIn, res.checkOut);
+    const pax = room.priceMode === "persona" ? ((res.adulti||0)+(res.bambini||0)||1) : 1;
+    const policy = grp.contoAziendaVoci || [];
+    let az = 0, cam = 0;
+    // Alloggio
+    const roomCost = res.gratuita ? 0 : room.price * n * pax;
+    policy.includes("room") ? (az += roomCost) : (cam += roomCost);
+    // Servizi
+    (res.services||[]).forEach(sid => {
+      const sv = SERVICES.find(x=>x.id===sid);
+      if (!sv) return;
+      const amt = sv.price * n;
+      policy.includes(sid) ? (az += amt) : (cam += amt);
+    });
+    // Extra in camera → sempre camera
+    cam += (res.roomServiceItems||[]).reduce((s,x)=>s+x.price,0);
+    return { azienda: az, camera: cam };
   };
   // Helper label prezzo camera
   const fmtRoomPrice = (room) =>
@@ -1808,8 +1935,71 @@ Rispondi in italiano, in modo conciso e professionale.`;
       roomServiceItems:[], payments:[], status:"reserved",
       psInviato:false, istatRegistrato:false,
       trattamento:"", canale:"", motivoSoggiorno:"", linguaOspite:"", mercato:"",
+      tipo:"individuale", gruppoId:null, gratuita:false, gratuitaMotivo:"",
       ...prefill });
     setModal("new-res");
+  };
+  const openNuovoGruppo = () => {
+    const gid = genGrpId();
+    setGruppoForm({ id:gid, nome:"", azienda:"", pIva:"", referente:"", email:"",
+      telefono:"", checkIn:"", checkOut:"", note:"",
+      splitPolicy:"misto", contoAziendaVoci:["room","colazione"],
+      regolaNGratuita:"", masterPagamenti:[],
+      creatoIl:new Date().toISOString().slice(0,10) });
+    setGruppoCamere([]);
+    setGruppoTab("info");
+    setGruppoModal(true);
+  };
+  const addCameraGruppo = () => {
+    setGruppoCamere(prev => [...prev, {
+      _key: Date.now(), id:genId(), roomId:"", guestId:"", guestName:"",
+      adulti:1, bambini:0, services:[], notes:"",
+      gratuita:false, gratuitaMotivo:"", trattamento:"", canale:"",
+      roomServiceItems:[], payments:[], status:"reserved",
+      psInviato:false, istatRegistrato:false,
+    }]);
+  };
+  const updCameraGruppo = (key, fields) => {
+    setGruppoCamere(prev => prev.map(c => c._key===key ? {...c,...fields} : c));
+  };
+  const removeCameraGruppo = (key) => {
+    setGruppoCamere(prev => prev.filter(c => c._key!==key));
+  };
+  const saveGruppo = () => {
+    if (!gruppoForm.nome) { showToast("Inserisci il nome del gruppo","error"); return; }
+    if (gruppoCamere.length===0) { showToast("Aggiungi almeno una camera","error"); return; }
+    const camereValide = gruppoCamere.filter(c=>c.roomId&&(c.guestId||c.guestName));
+    if (camereValide.length===0) { showToast("Ogni camera deve avere camera e ospite","error"); return; }
+    // Salva o aggiorna il gruppo
+    setGruppi(prev => {
+      const idx = prev.findIndex(g=>g.id===gruppoForm.id);
+      return idx>=0 ? prev.map(g=>g.id===gruppoForm.id?gruppoForm:g) : [...prev, gruppoForm];
+    });
+    // Crea/aggiorna le prenotazioni camera
+    const nuoveRes = camereValide.map(c => {
+      const g = guests.find(x=>x.id===c.guestId);
+      return { ...c, tipo:"gruppo", gruppoId:gruppoForm.id,
+        checkIn:c.checkIn||gruppoForm.checkIn, checkOut:c.checkOut||gruppoForm.checkOut,
+        guests:(c.adulti||1)+(c.bambini||0),
+        guestName: g ? `${g.cognome} ${g.nome}` : c.guestName,
+        roomId:parseInt(c.roomId) };
+    });
+    setReservations(prev => {
+      // rimuovi le vecchie camere dello stesso gruppo se in edit
+      const senzaGruppo = prev.filter(r=>r.gruppoId!==gruppoForm.id);
+      return [...senzaGruppo, ...nuoveRes];
+    });
+    setGruppoModal(false);
+    showToast(`Gruppo ${gruppoForm.nome} salvato — ${camereValide.length} camere`);
+  };
+  const editGruppo = (grpId) => {
+    const grp = gruppi.find(g=>g.id===grpId);
+    const camereGrp = reservations.filter(r=>r.gruppoId===grpId);
+    if (!grp) return;
+    setGruppoForm({...grp});
+    setGruppoCamere(camereGrp.map(c=>({...c, _key:c.id||Date.now()})));
+    setGruppoTab("info");
+    setGruppoModal(true);
   };
   const openEditReservation = (res) => { setForm({...res, services:[...(res.services||[])]}); setModal("edit-res"); };
 
@@ -3065,48 +3255,377 @@ Rispondi in italiano, in modo conciso e professionale.`;
         })()}
 
         {/*   PRENOTAZIONI   */}
-        {page==="Prenotazioni" && (
-          <div>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:22 }}>
-              <div className="page-header"><div><h1>Prenotazioni</h1><div className="page-subtitle">Archivio prenotazioni · ricerca, modifica e nuove inserzioni</div></div></div>
-              <button className="btn-primary" onClick={openNewReservation}>+ Nuova</button>
-            </div>
-            <AiBar pg="Prenotazioni" />
-            <div style={{ display:"flex", gap:10, marginBottom:16 }}>
-              <input className="input-field" placeholder="Cerca ospite o n°..." style={{ maxWidth:240 }} value={searchQ} onChange={e=>setSearchQ(e.target.value)} />
-              <select className="input-field" style={{ maxWidth:160 }} value={filterStatus} onChange={e=>setFilterStatus(e.target.value)}>
-                <option value="all">Tutti gli stati</option>
-                {Object.entries(STATUS_CFG).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
-              </select>
-            </div>
-            <div className="card" style={{ padding:0 }}>
-              <div style={{ padding:"12px 18px", borderBottom:`1px solid ${C.border}`, display:"grid", gridTemplateColumns:isMobile?"1fr":"110px 1fr 90px 190px 130px 110px", gap:10, fontSize:10, fontWeight:600, color:C.text3, letterSpacing:1, textTransform:"uppercase" }}>
-                <div>N° Pren.</div><div>Ospite</div><div>Camera</div><div>Date</div><div>Importo</div><div>Stato</div>
-              </div>
-              {filteredRes.length===0 && <div style={{ padding:"32px", textAlign:"center", color:C.text3 }}>Nessuna prenotazione trovata</div>}
-              {filteredRes.map(r => {
-                const room=ROOMS.find(x=>x.id===r.roomId), sc=STATUS_CFG[r.status];
-                return (
-                  <div key={r.id} className="res-row" onClick={() => openEditReservation(r)}
-                    style={{ display:"grid", gridTemplateColumns:isMobile?"1fr":"110px 1fr 90px 190px 130px 110px", gap:10, alignItems:"center" }}>
-                    <div style={{ fontSize:12, fontWeight:700, color:C.gold }}>{r.id}</div>
-                    <div>
-                      <div style={{ fontWeight:600 }}>{r.guestName}</div>
-                      <div style={{ fontSize:11, color:C.text3 }}>{(r.companions||[]).length>0?`+${r.companions.length} acc.`:""}{!r.guestId?" ⚠ no anagrafica":""}</div>
-                    </div>
-                    <div><div style={{ fontWeight:600 }}>Cam {r.roomId}</div><div style={{ fontSize:11, color:C.text3 }}>{room?.type}</div></div>
-                    <div style={{ fontSize:13 }}>{fmtDate(r.checkIn)} → {fmtDate(r.checkOut)}<div style={{ fontSize:11, color:C.text3 }}>{nights(r.checkIn,r.checkOut)}n</div></div>
-                    <div><div style={{ fontWeight:700, color:C.gold }}>€{calcTotal(r).toFixed(2)}</div>{calcPaid(r)>0&&<div style={{ fontSize:11, color:C.green }}>Pag €{calcPaid(r).toFixed(2)}</div>}</div>
-                    <span className="badge" style={{ background:sc.bg, color:sc.text, border:`1px solid ${sc.border}` }}>{sc.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        {page==="Prenotazioni" && (() => {
+          // ── calcolo split per singola camera del gruppo ──────────
+          const splitCam = (cam, grp) => {
+            const room = ROOMS.find(r=>r.id===parseInt(cam.roomId));
+            const n    = nights(cam.checkIn||grp.checkIn, cam.checkOut||grp.checkOut);
+            const pax  = room?.priceMode==="persona"?((cam.adulti||1)+(cam.bambini||0)):1;
+            const rc   = cam.gratuita?0:(room?room.price*n*pax:0);
+            const svcCost=(cam.services||[]).reduce((s,sid)=>{const sv=SERVICES.find(x=>x.id===sid);return s+(sv?sv.price*n:0);},0);
+            const tot  = rc+svcCost;
+            let az=0, camera=0;
+            const pol  = grp.splitPolicy||"misto";
+            if (pol==="tutto_azienda")      { az=tot; }
+            else if (pol==="per_camera")    { camera=tot; }
+            else {
+              const voci=grp.contoAziendaVoci||[];
+              voci.includes("room")?(az+=rc):(camera+=rc);
+              (cam.services||[]).forEach(sid=>{
+                const sv=SERVICES.find(x=>x.id===sid); if(!sv)return;
+                voci.includes(sid)?(az+=sv.price*n):(camera+=sv.price*n);
+              });
+            }
+            return {az,camera,tot,room,n,pax,rc,svcCost};
+          };
 
-        {/*   ANAGRAFICA   */}
-        {page==="Anagrafica" && (
+          return (
+            <div>
+              {/* ── HEADER ── */}
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:22}}>
+                <div className="page-header">
+                  <div><h1>Prenotazioni</h1>
+                    <div className="page-subtitle">Prenotazioni individuali e di gruppo</div></div>
+                </div>
+                <div style={{display:"flex",gap:8}}>
+                  <button className="btn-secondary" onClick={openNuovoGruppo}
+                    style={{display:"flex",alignItems:"center",gap:6}}>
+                    🏨 Nuovo Gruppo
+                  </button>
+                  <button className="btn-primary" onClick={openNewReservation}>+ Individuale</button>
+                </div>
+              </div>
+              <AiBar pg="Prenotazioni" />
+
+              {/* ── TAB SWITCHER ── */}
+              <div style={{display:"flex",gap:0,marginBottom:18,border:`1px solid ${C.border}`,
+                borderRadius:8,overflow:"hidden",maxWidth:380}}>
+                {[
+                  {k:"lista",  label:"📋 Prenotazioni", n:filteredRes.length},
+                  {k:"gruppi", label:"🏨 Gruppi",        n:gruppi.length},
+                ].map(t=>(
+                  <button key={t.k} onClick={()=>setPrenotazioniTab(t.k)}
+                    style={{flex:1,padding:"9px 14px",border:"none",cursor:"pointer",
+                      fontFamily:"'IBM Plex Sans',sans-serif",fontSize:13,fontWeight:600,
+                      background:prenotazioniTab===t.k?C.navy:"#fff",
+                      color:prenotazioniTab===t.k?"#fff":C.text3,
+                      borderRight:`1px solid ${C.border}`,transition:"all .15s",
+                      display:"flex",alignItems:"center",justifyContent:"center",gap:6}}>
+                    {t.label}
+                    <span style={{fontSize:10,padding:"1px 7px",borderRadius:8,fontWeight:700,
+                      background:prenotazioniTab===t.k?"rgba(255,255,255,.22)":C.surface2,
+                      color:prenotazioniTab===t.k?"#fff":C.text3}}>{t.n}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* ══ TAB 1 — LISTA PRENOTAZIONI ══ */}
+              {prenotazioniTab==="lista" && (
+                <>
+                  <div style={{display:"flex",gap:10,marginBottom:16,flexWrap:"wrap"}}>
+                    <input className="input-field" placeholder="Cerca ospite o n°..."
+                      style={{maxWidth:240}} value={searchQ} onChange={e=>setSearchQ(e.target.value)}/>
+                    <select className="input-field" style={{maxWidth:180}}
+                      value={filterStatus} onChange={e=>setFilterStatus(e.target.value)}>
+                      <option value="all">Tutti gli stati</option>
+                      {Object.entries(STATUS_CFG).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+                    </select>
+                  </div>
+                  <div className="card" style={{padding:0}}>
+                    <div style={{padding:"11px 18px",borderBottom:`1px solid ${C.border}`,display:"grid",
+                      gridTemplateColumns:isMobile?"1fr":"100px 1fr 90px 190px 130px 110px",
+                      gap:10,fontSize:10,fontWeight:700,color:C.text3,textTransform:"uppercase",letterSpacing:.5}}>
+                      <div>N° Pren.</div><div>Ospite</div><div>Camera</div>
+                      <div>Date</div><div>Importo</div><div>Stato</div>
+                    </div>
+                    {filteredRes.length===0 && (
+                      <div style={{padding:"32px",textAlign:"center",color:C.text3}}>
+                        Nessuna prenotazione trovata
+                      </div>
+                    )}
+                    {filteredRes.map(r=>{
+                      const room=ROOMS.find(x=>x.id===r.roomId), sc=STATUS_CFG[r.status];
+                      const grp=r.gruppoId?gruppi.find(g=>g.id===r.gruppoId):null;
+                      return (
+                        <div key={r.id} className="res-row" onClick={()=>openEditReservation(r)}
+                          style={{display:"grid",
+                            gridTemplateColumns:isMobile?"1fr":"100px 1fr 90px 190px 130px 110px",
+                            gap:10,alignItems:"center",padding:"11px 18px",
+                            borderBottom:`1px solid ${C.border}`,cursor:"pointer",
+                            borderLeft:grp?`3px solid ${C.navy}`:"3px solid transparent"}}>
+                          <div>
+                            <div style={{fontSize:12,fontWeight:700,color:C.gold}}>{r.id}</div>
+                            {grp&&<div style={{fontSize:9,color:C.navy,fontWeight:700,marginTop:2,
+                              background:C.navyL,padding:"1px 5px",borderRadius:4,display:"inline-block"}}>
+                              🏨 {grp.id}</div>}
+                          </div>
+                          <div>
+                            <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                              <span style={{fontWeight:600}}>{r.guestName}</span>
+                              {r.gratuita&&<span style={{fontSize:9,padding:"1px 6px",borderRadius:8,
+                                background:"#e6f7ee",color:"#1b7a4a",border:"1px solid #6fcf97",
+                                fontWeight:700}}>🎁 COMP.</span>}
+                            </div>
+                            <div style={{fontSize:11,color:C.text3}}>
+                              {grp?`${grp.nome}${grp.azienda?" · "+grp.azienda:""}`:
+                                (r.companions||[]).length>0?`+${r.companions.length} acc.`:""}
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{fontWeight:600}}>Cam {r.roomId}</div>
+                            <div style={{fontSize:11,color:C.text3}}>{room?.type}</div>
+                          </div>
+                          <div style={{fontSize:13}}>
+                            {fmtDate(r.checkIn)} → {fmtDate(r.checkOut)}
+                            <div style={{fontSize:11,color:C.text3}}>{nights(r.checkIn,r.checkOut)} notti</div>
+                          </div>
+                          <div>
+                            <div style={{fontWeight:700,color:r.gratuita?C.green:C.gold}}>
+                              {r.gratuita?"€ 0 (comp.)":"€"+calcTotal(r).toFixed(2)}
+                            </div>
+                            {calcPaid(r)>0&&<div style={{fontSize:11,color:C.green}}>
+                              pag. €{calcPaid(r).toFixed(2)}</div>}
+                          </div>
+                          <span className="badge" style={{background:sc.bg,color:sc.text,
+                            border:`1px solid ${sc.border}`}}>{sc.label}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+
+              {/* ══ TAB 2 — GRUPPI ══ */}
+              {prenotazioniTab==="gruppi" && (
+                <div>
+                  {/* KPI */}
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:18}}>
+                    {[
+                      {l:"Gruppi totali",   v:gruppi.length,                                    c:C.navy},
+                      {l:"Camere gruppo",   v:reservations.filter(r=>r.gruppoId).length,        c:C.blue},
+                      {l:"Cam. gratuite",   v:reservations.filter(r=>r.gruppoId&&r.gratuita).length, c:C.green},
+                      {l:"Valore totale",   v:"€"+gruppi.reduce((s,g)=>{
+                        return s+reservations.filter(r=>r.gruppoId===g.id)
+                          .reduce((ss,c)=>ss+splitCam(c,g).tot,0);
+                      },0).toLocaleString("it-IT",{minimumFractionDigits:2}),               c:C.gold},
+                    ].map(k=>(
+                      <div key={k.l} className="stat-card" style={{padding:"14px 18px"}}>
+                        <div style={{fontSize:10,fontWeight:700,color:C.text3,textTransform:"uppercase",
+                          letterSpacing:.5,marginBottom:5}}>{k.l}</div>
+                        <div style={{fontSize:22,fontWeight:700,color:k.c}}>{k.v}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {gruppi.length===0 ? (
+                    <div style={{background:"#fff",border:`2px dashed ${C.border}`,borderRadius:10,
+                      padding:48,textAlign:"center",color:C.text3}}>
+                      <div style={{fontSize:40,marginBottom:12}}>🏨</div>
+                      <div style={{fontWeight:600,fontSize:16}}>Nessun gruppo registrato</div>
+                      <button onClick={openNuovoGruppo}
+                        style={{marginTop:16,background:C.navy,color:"#fff",border:"none",
+                          borderRadius:6,padding:"10px 20px",cursor:"pointer",fontSize:13,
+                          fontWeight:600,fontFamily:"'IBM Plex Sans',sans-serif"}}>
+                        + Crea primo gruppo
+                      </button>
+                    </div>
+                  ) : gruppi.map(grp=>{
+                    const camGrp = reservations.filter(r=>r.gruppoId===grp.id);
+                    const totAz  = camGrp.reduce((s,c)=>s+splitCam(c,grp).az,0);
+                    const totCam = camGrp.reduce((s,c)=>s+splitCam(c,grp).camera,0);
+                    const totAll = camGrp.reduce((s,c)=>s+splitCam(c,grp).tot,0);
+                    const nGrat  = camGrp.filter(c=>c.gratuita).length;
+                    const polLabel={tutto_azienda:"🏢 Tutto azienda",misto:"✂️ Split misto",per_camera:"👤 Per camera"};
+                    const pol = grp.splitPolicy||"misto";
+
+                    return (
+                      <div key={grp.id} style={{background:"#fff",
+                        border:`1px solid ${C.border}`,borderRadius:10,
+                        marginBottom:16,overflow:"hidden",
+                        boxShadow:"0 1px 6px rgba(0,0,0,.04)"}}>
+
+                        {/* Header gruppo */}
+                        <div style={{padding:"14px 18px",
+                          background:`linear-gradient(135deg,${C.navyL} 0%,#f0f4ff 100%)`,
+                          borderBottom:`1px solid ${C.navyLb}`,
+                          display:"flex",alignItems:"center",justifyContent:"space-between",
+                          flexWrap:"wrap",gap:10}}>
+                          <div>
+                            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:5,flexWrap:"wrap"}}>
+                              <span style={{fontSize:11,fontWeight:700,color:C.text3,
+                                background:C.navyL,border:`1px solid ${C.navyLb}`,
+                                padding:"2px 8px",borderRadius:6}}>{grp.id}</span>
+                              <span style={{fontSize:16,fontWeight:800,color:C.navy}}>{grp.nome}</span>
+                              <span style={{fontSize:10,padding:"2px 9px",borderRadius:10,fontWeight:700,
+                                background:C.navy,color:"#fff"}}>{polLabel[pol]}</span>
+                            </div>
+                            <div style={{fontSize:12,color:C.text2,display:"flex",gap:14,flexWrap:"wrap"}}>
+                              {grp.azienda&&<span>🏢 {grp.azienda}</span>}
+                              {grp.referente&&<span>👤 {grp.referente}</span>}
+                              {grp.pIva&&<span>P.IVA {grp.pIva}</span>}
+                              <span>📅 {fmtDate(grp.checkIn)} → {fmtDate(grp.checkOut)}</span>
+                              <span>🛏 {camGrp.length} camere</span>
+                              {nGrat>0&&<span style={{color:C.green,fontWeight:700}}>🎁 {nGrat} gratuite</span>}
+                            </div>
+                          </div>
+                          <div style={{display:"flex",gap:8,flexShrink:0,flexWrap:"wrap"}}>
+                            <button onClick={()=>editGruppo(grp.id)}
+                              style={{background:"#fff",border:`1px solid ${C.border}`,
+                                borderRadius:6,padding:"7px 12px",cursor:"pointer",
+                                fontSize:12,fontWeight:600,fontFamily:"'IBM Plex Sans',sans-serif"}}>
+                              ✏️ Modifica
+                            </button>
+                            {pol!=="per_camera"&&(
+                              <button onClick={()=>setGroupInvoice({grp,tipo:"master"})}
+                                style={{background:C.navy,color:"#fff",border:"none",
+                                  borderRadius:6,padding:"7px 12px",cursor:"pointer",
+                                  fontSize:12,fontWeight:600,fontFamily:"'IBM Plex Sans',sans-serif"}}>
+                                🧾 Conto Master Azienda
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Tabella camere */}
+                        <div style={{overflowX:"auto"}}>
+                          <div style={{display:"grid",
+                            gridTemplateColumns:"75px 1fr 70px 110px 110px 110px 110px 100px",
+                            padding:"8px 18px",background:C.surface2,
+                            borderBottom:`1px solid ${C.border}`,
+                            fontSize:10,fontWeight:700,color:C.text3,
+                            textTransform:"uppercase",letterSpacing:.5,gap:8,minWidth:820}}>
+                            <div>Camera</div><div>Ospite</div><div>Notti</div>
+                            <div>Stato</div>
+                            <div style={{textAlign:"right"}}>🏢 Azienda</div>
+                            <div style={{textAlign:"right"}}>👤 Camera</div>
+                            <div style={{textAlign:"right"}}>Totale</div>
+                            <div style={{textAlign:"center"}}>Azioni</div>
+                          </div>
+                          {camGrp.length===0&&(
+                            <div style={{padding:"18px",color:C.text3,fontSize:13}}>
+                              Nessuna camera — usa Modifica per aggiungerne.
+                            </div>
+                          )}
+                          {camGrp.map((cam,ci)=>{
+                            const sp=splitCam(cam,grp);
+                            const sc=STATUS_CFG[cam.status]||STATUS_CFG.reserved;
+                            return (
+                              <div key={cam.id} style={{display:"grid",
+                                gridTemplateColumns:"75px 1fr 70px 110px 110px 110px 110px 100px",
+                                padding:"10px 18px",gap:8,alignItems:"center",
+                                borderBottom:`1px solid ${C.border}`,
+                                background:ci%2===0?"#fff":C.surface2,minWidth:820}}>
+                                <div>
+                                  <div style={{fontWeight:700}}>Cam {cam.roomId}</div>
+                                  <div style={{fontSize:10,color:C.text3}}>{sp.room?.type}</div>
+                                  {cam.gratuita&&<span style={{fontSize:9,padding:"1px 5px",borderRadius:5,
+                                    background:"#e6f7ee",color:"#1b7a4a",fontWeight:700,
+                                    border:"1px solid #6fcf97",marginTop:2,display:"inline-block"}}>
+                                    🎁 COMP.</span>}
+                                </div>
+                                <div>
+                                  <div style={{fontWeight:600,fontSize:13}}>{cam.guestName||"—"}</div>
+                                  {cam.gratuitaMotivo&&<div style={{fontSize:10,color:C.text3}}>{cam.gratuitaMotivo}</div>}
+                                </div>
+                                <div style={{fontSize:12,color:C.text2}}>{sp.n}n</div>
+                                <span className="badge" style={{background:sc.bg,color:sc.text,
+                                  border:`1px solid ${sc.border}`,fontSize:9,width:"fit-content"}}>{sc.label}</span>
+                                <div style={{textAlign:"right",fontWeight:700,color:C.navy}}>
+                                  {sp.az>0?`€${sp.az.toFixed(2)}`:<span style={{color:C.text3}}>—</span>}
+                                </div>
+                                <div style={{textAlign:"right",fontWeight:700}}>
+                                  {sp.camera>0?`€${sp.camera.toFixed(2)}`:<span style={{color:C.text3}}>—</span>}
+                                </div>
+                                <div style={{textAlign:"right",fontWeight:700,
+                                  color:cam.gratuita?C.green:C.gold}}>
+                                  {cam.gratuita?"€ 0":`€${sp.tot.toFixed(2)}`}
+                                  {cam.gratuita&&sp.tot>0&&(
+                                    <div style={{fontSize:9,textDecoration:"line-through",color:C.text3}}>
+                                      €{(sp.rc+sp.svcCost).toFixed(2)}
+                                    </div>
+                                  )}
+                                </div>
+                                <div style={{display:"flex",gap:4,justifyContent:"center"}}>
+                                  <button onClick={e=>{e.stopPropagation();openEditReservation(cam);}}
+                                    title="Modifica prenotazione"
+                                    style={{background:C.surface2,border:`1px solid ${C.border}`,
+                                      borderRadius:4,padding:"4px 7px",cursor:"pointer",fontSize:11}}>✏</button>
+                                  {sp.camera>0&&(
+                                    <button onClick={e=>{e.stopPropagation();setGroupInvoice({grp,tipo:"camera",cam});}}
+                                      title="Conto camera individuale"
+                                      style={{background:C.goldL,color:C.gold,border:`1px solid ${C.goldLb}`,
+                                        borderRadius:4,padding:"4px 7px",cursor:"pointer",fontSize:11,fontWeight:700}}>🧾</button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                          {/* Footer totali */}
+                          {camGrp.length>0&&(
+                            <div style={{display:"grid",
+                              gridTemplateColumns:"75px 1fr 70px 110px 110px 110px 110px 100px",
+                              padding:"11px 18px",gap:8,background:C.navyL,
+                              borderTop:`2px solid ${C.navyLb}`,minWidth:820}}>
+                              <div style={{fontWeight:800,color:C.navy,fontSize:13}}>TOTALE</div>
+                              <div style={{fontSize:12,color:C.text3}}>
+                                {camGrp.length} camere{nGrat>0?` · ${nGrat} gratuite`:""}
+                              </div>
+                              <div/><div/>
+                              <div style={{textAlign:"right",fontWeight:800,color:C.navy,fontSize:14}}>
+                                {totAz>0?`€${totAz.toFixed(2)}`:"—"}
+                              </div>
+                              <div style={{textAlign:"right",fontWeight:800,fontSize:14}}>
+                                {totCam>0?`€${totCam.toFixed(2)}`:"—"}
+                              </div>
+                              <div style={{textAlign:"right",fontWeight:800,color:C.gold,fontSize:14}}>
+                                €{totAll.toFixed(2)}
+                              </div>
+                              <div/>
+                            </div>
+                          )}
+                        </div>
+                        {grp.note&&(
+                          <div style={{padding:"8px 18px 12px",fontSize:12,color:C.text3,
+                            borderTop:`1px solid ${C.border}`}}>📝 {grp.note}</div>
+                        )}
+                        {/* Pagamenti master summary */}
+                        {(grp.masterPagamenti||[]).length>0 && (() => {
+                          const totPag=(grp.masterPagamenti||[]).reduce((s,p)=>s+parseFloat(p.importo||0),0);
+                          const totAz=camGrp.reduce((s,c)=>s+splitCam(c,grp).az,0)*1.10;
+                          const saldo=totAz-totPag;
+                          return (
+                            <div style={{padding:"8px 18px",borderTop:`1px solid ${C.border}`,
+                              background:"#f8faff",display:"flex",gap:20,flexWrap:"wrap",alignItems:"center"}}>
+                              <div style={{fontSize:11,fontWeight:700,color:C.text3,textTransform:"uppercase",letterSpacing:.5}}>
+                                💳 Conto Master
+                              </div>
+                              <div style={{fontSize:12}}>
+                                Azienda: <strong style={{color:C.navy}}>€{totAz.toFixed(2)}</strong>
+                              </div>
+                              <div style={{fontSize:12}}>
+                                Pagato: <strong style={{color:C.green}}>€{totPag.toFixed(2)}</strong>
+                              </div>
+                              <div style={{fontSize:12}}>
+                                Saldo: <strong style={{color:saldo>0.01?C.red:C.green}}>
+                                  {saldo>0.01?`€${saldo.toFixed(2)} DA PAGARE`:"✓ Saldato"}
+                                </strong>
+                              </div>
+                              <div style={{fontSize:11,color:C.text3}}>
+                                {(grp.masterPagamenti||[]).length} pagamento{(grp.masterPagamenti||[]).length>1?"i":""}
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/*   ANAGRAFICA   */}{page==="Anagrafica" && (
           <div>
             {/* Header */}
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:22 }}>
@@ -5247,6 +5766,40 @@ Rispondi in italiano, in modo conciso e professionale.`;
               {modal==="edit-res" && <span className="badge" style={{ background:STATUS_CFG[form.status]?.bg, color:STATUS_CFG[form.status]?.text, border:`1px solid ${STATUS_CFG[form.status]?.border}` }}>{STATUS_CFG[form.status]?.label}</span>}
             </div>
             <div className="modal-body">
+              {/* TIPO PRENOTAZIONE — solo in new */}
+              {modal==="new-res" && (
+                <div style={{ display:"flex", gap:0, marginBottom:16, border:`1px solid ${C.border}`,
+                  borderRadius:8, overflow:"hidden" }}>
+                  {["individuale","gruppo"].map(t=>(
+                    <button key={t} onClick={()=>setForm(f=>({...f,tipo:t}))}
+                      style={{ flex:1, padding:"9px", border:"none", cursor:"pointer",
+                        fontFamily:"'IBM Plex Sans',sans-serif", fontSize:13, fontWeight:600,
+                        background: (form.tipo||"individuale")===t ? C.gold : C.surface2,
+                        color:      (form.tipo||"individuale")===t ? "#fff" : C.text2,
+                        transition:"all .15s" }}>
+                      {t==="individuale"?"👤 Individuale":"🏨 Gruppo (crea wizard)"}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {(form.tipo||"individuale")==="gruppo" && modal==="new-res" && (
+                <div style={{ background:C.navyL, border:`1px solid ${C.navyLb}`, borderRadius:8,
+                  padding:"14px 16px", marginBottom:16 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:C.navy, marginBottom:6 }}>
+                    Usa il Wizard Gruppo per prenotazioni multi-camera
+                  </div>
+                  <div style={{ fontSize:12, color:C.text2, marginBottom:10 }}>
+                    Il wizard permette di: aggiungere più camere, assegnare un ospite per camera,
+                    impostare camere gratuite e configurare lo split conto azienda/camera.
+                  </div>
+                  <button onClick={() => { setModal(null); openNuovoGruppo(); }}
+                    style={{ background:C.navy, color:"#fff", border:"none", borderRadius:6,
+                      padding:"9px 16px", cursor:"pointer", fontSize:13, fontWeight:600,
+                      fontFamily:"'IBM Plex Sans',sans-serif" }}>
+                    🏨 Apri Wizard Gruppo →
+                  </button>
+                </div>
+              )}
               <div className="section-title">Ospite Principale</div>
               <div style={{ display:"flex", gap:8, marginBottom:10 }}>
                 <select className="input-field" value={form.guestId||""} onChange={e=>{const g=guests.find(x=>x.id===e.target.value); setForm(f=>({...f,guestId:e.target.value,guestName:g?`${g.cognome} ${g.nome}`:f.guestName}));}}>
@@ -5388,7 +5941,48 @@ Rispondi in italiano, in modo conciso e professionale.`;
 
               <div><label className="label">Note</label><textarea className="input-field" rows={2} value={form.notes||""} onChange={e=>setForm(f=>({...f,notes:e.target.value}))} style={{ resize:"none" }} /></div>
 
-              {modal==="edit-res" && form.status==="checked-in" && (
+              {/* ── GRATUITÀ (gruppo) ── */}
+              {(form.tipo==="gruppo"||form.gruppoId) && (
+                <div style={{ marginBottom:12 }}>
+                  <hr className="divider"/>
+                  <div className="section-title">Camera Gratuita</div>
+                  <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                    <label style={{ display:"flex", alignItems:"center", gap:8, cursor:"pointer" }}>
+                      <input type="checkbox" checked={!!form.gratuita}
+                        onChange={e=>setForm(f=>({...f,gratuita:e.target.checked}))}
+                        style={{ width:18, height:18, cursor:"pointer" }}/>
+                      <span style={{ fontSize:13, fontWeight:600 }}>
+                        Camera gratuita (complimentary)
+                      </span>
+                    </label>
+                  </div>
+                  {form.gratuita && (
+                    <div style={{ marginTop:8 }}>
+                      <label className="label">Motivazione gratuità</label>
+                      <select className="input-field" value={form.gratuitaMotivo||""}
+                        onChange={e=>setForm(f=>({...f,gratuitaMotivo:e.target.value}))}>
+                        <option value="">— Seleziona —</option>
+                        <option value="1su10">1 camera su 10 prenotate</option>
+                        <option value="1su20">1 camera su 20 prenotate</option>
+                        <option value="organizzatore">Camera organizzatore evento</option>
+                        <option value="speaker">Camera speaker/relatore</option>
+                        <option value="accompagnatore">Camera accompagnatore</option>
+                        <option value="upgrade">Upgrade complimentary</option>
+                        <option value="fidelizzazione">Fidelizzazione cliente</option>
+                        <option value="gestionale">Gestionale/interno</option>
+                        <option value="altro">Altro (vedi note)</option>
+                      </select>
+                      {form.gratuita && (
+                        <div style={{ marginTop:6, fontSize:11, color:C.gold, fontWeight:600 }}>
+                          ⚠ Costo alloggio: €0 — I servizi rimangono fatturabili
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+                            {modal==="edit-res" && form.status==="checked-in" && (
                 <>
                   <hr className="divider"/>
                   <div className="section-title">Extra in Camera</div>
@@ -5403,6 +5997,17 @@ Rispondi in italiano, in modo conciso e professionale.`;
             </div>
             <div className="modal-footer">
               {modal==="edit-res" && !["checked-out","cancelled"].includes(form.status) && <button className="btn-danger" onClick={()=>cancelReservation(form.id)}>Annulla Pren.</button>}
+              {modal==="edit-res" && form.gruppoId && (() => {
+                const grp = gruppi.find(g=>g.id===form.gruppoId);
+                if (!grp) return null;
+                const { azienda, camera } = calcSplitConto(form, grp);
+                return <div style={{ display:"flex", gap:6, alignItems:"center" }}>
+                  <span style={{ fontSize:11, color:C.text3 }}>
+                    Azienda: <b style={{color:C.navy}}>€{azienda.toFixed(2)}</b> |
+                    Camera: <b>€{camera.toFixed(2)}</b>
+                  </span>
+                </div>;
+              })()}
               {modal==="edit-res" && <button className="btn-secondary" onClick={()=>openInvoice(form)}>Conto</button>}
               {modal==="edit-res" && <button className="btn-secondary" style={{ gap:5 }} onClick={()=>{ const g2=guests.find(x=>x.id===form.id); setEmailPreviewRes({...form}); setEmailTo(guests.find(x=>x.id===form.guestId)?.email||""); setEmailCc(""); setEmailTab("preview"); setModal(null); }}>✉ Email Conferma</button>}
               <button className="btn-secondary" onClick={()=>setModal(null)}>Chiudi</button>
@@ -5411,6 +6016,674 @@ Rispondi in italiano, in modo conciso e professionale.`;
           </div>
         </div>
       )}
+
+
+      {/* ══════════════════════════════════════════
+           MODAL WIZARD GRUPPO DI PRENOTAZIONE
+      ══════════════════════════════════════════ */}
+      {gruppoModal && gruppoForm && (
+        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setGruppoModal(false)}>
+          <div className="modal-box" style={{ maxWidth:820, width:"95vw", maxHeight:"92vh", display:"flex", flexDirection:"column" }}>
+            {/* ── HEADER ── */}
+            <div className="modal-header" style={{ flexShrink:0 }}>
+              <div>
+                <div style={{ fontSize:10, fontWeight:700, color:C.text3, letterSpacing:2, textTransform:"uppercase", marginBottom:4 }}>
+                  {gruppoForm.id} · Prenotazione di Gruppo
+                </div>
+                <h2 style={{ fontSize:20, fontWeight:700, margin:0 }}>
+                  {gruppoForm.nome||"Nuovo Gruppo"}
+                </h2>
+              </div>
+              <button onClick={()=>setGruppoModal(false)}
+                style={{ background:"none", border:"none", fontSize:22, cursor:"pointer", color:C.text3 }}>✕</button>
+            </div>
+
+            {/* ── TAB BAR ── */}
+            <div style={{ display:"flex", borderBottom:`2px solid ${C.border}`, flexShrink:0 }}>
+              {[
+                { k:"info",   label:"1 · Info Gruppo",    icon:"🏢" },
+                { k:"camere", label:"2 · Camere",          icon:"🛏️" },
+                { k:"split",  label:"3 · Split Conto",     icon:"💳" },
+              ].map(t=>(
+                <button key={t.k} onClick={()=>setGruppoTab(t.k)}
+                  style={{ padding:"12px 20px", border:"none", cursor:"pointer",
+                    fontFamily:"'IBM Plex Sans',sans-serif", fontSize:13, fontWeight:600,
+                    borderBottom: gruppoTab===t.k ? `2px solid ${C.gold}` : "none",
+                    marginBottom: gruppoTab===t.k ? -2 : 0,
+                    background:"none", color:gruppoTab===t.k?C.gold:C.text3 }}>
+                  {t.icon} {t.label}
+                </button>
+              ))}
+              <div style={{ marginLeft:"auto", padding:"8px 12px", fontSize:11, color:C.text3,
+                display:"flex", alignItems:"center", gap:12 }}>
+                <span>🛏 {gruppoCamere.length} camere</span>
+                <span>🎁 {gruppoCamere.filter(c=>c.gratuita).length} gratuite</span>
+                <span style={{ fontWeight:700, color:C.gold }}>
+                  Tot: €{gruppoCamere.reduce((s,c)=>{
+                    const r=ROOMS.find(x=>x.id===parseInt(c.roomId));
+                    if (!r) return s;
+                    const n=nights(c.checkIn||gruppoForm.checkIn, c.checkOut||gruppoForm.checkOut);
+                    const pax=r.priceMode==="persona"?((c.adulti||1)+(c.bambini||0)):1;
+                    return s + (c.gratuita?0:r.price*n*pax);
+                  },0).toLocaleString("it-IT",{minimumFractionDigits:2})}
+                </span>
+              </div>
+            </div>
+
+            {/* ── BODY ── */}
+            <div className="modal-body" style={{ flex:1, overflowY:"auto" }}>
+
+              {/* ═══ TAB 1: INFO GRUPPO ═══ */}
+              {gruppoTab==="info" && (
+                <div>
+                  <div className="form-grid" style={{ marginBottom:14 }}>
+                    <div style={{ gridColumn:"1/-1" }}>
+                      <label className="label">Nome gruppo / Evento *</label>
+                      <input className="input-field" placeholder="es. Convegno Cardiologia 2026"
+                        value={gruppoForm.nome||""} onChange={e=>setGruppoForm(f=>({...f,nome:e.target.value}))}/>
+                    </div>
+                    <div>
+                      <label className="label">Check-In gruppo *</label>
+                      <input type="date" className="input-field" value={gruppoForm.checkIn||""}
+                        onChange={e=>setGruppoForm(f=>({...f,checkIn:e.target.value}))}/>
+                    </div>
+                    <div>
+                      <label className="label">Check-Out gruppo *</label>
+                      <input type="date" className="input-field" value={gruppoForm.checkOut||""}
+                        onChange={e=>setGruppoForm(f=>({...f,checkOut:e.target.value}))}/>
+                    </div>
+                  </div>
+                  <hr className="divider"/>
+                  <div className="section-title">Azienda / Agenzia organizzatrice</div>
+                  <div className="form-grid" style={{ marginBottom:14 }}>
+                    <div>
+                      <label className="label">Ragione Sociale</label>
+                      <input className="input-field" placeholder="es. Fiera Milano S.p.A."
+                        value={gruppoForm.azienda||""} onChange={e=>setGruppoForm(f=>({...f,azienda:e.target.value}))}/>
+                    </div>
+                    <div>
+                      <label className="label">P.IVA / C.F.</label>
+                      <input className="input-field" placeholder="IT01234567890"
+                        value={gruppoForm.pIva||""} onChange={e=>setGruppoForm(f=>({...f,pIva:e.target.value}))}/>
+                    </div>
+                    <div>
+                      <label className="label">Referente</label>
+                      <input className="input-field" placeholder="Nome cognome referente"
+                        value={gruppoForm.referente||""} onChange={e=>setGruppoForm(f=>({...f,referente:e.target.value}))}/>
+                    </div>
+                    <div>
+                      <label className="label">Email referente</label>
+                      <input type="email" className="input-field"
+                        value={gruppoForm.email||""} onChange={e=>setGruppoForm(f=>({...f,email:e.target.value}))}/>
+                    </div>
+                    <div>
+                      <label className="label">Telefono</label>
+                      <input className="input-field"
+                        value={gruppoForm.telefono||""} onChange={e=>setGruppoForm(f=>({...f,telefono:e.target.value}))}/>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="label">Note interne gruppo</label>
+                    <textarea className="input-field" rows={2}
+                      value={gruppoForm.note||""} onChange={e=>setGruppoForm(f=>({...f,note:e.target.value}))}/>
+                  </div>
+                </div>
+              )}
+
+              {/* ═══ TAB 2: CAMERE ═══ */}
+              {gruppoTab==="camere" && (
+                <div>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+                    <div style={{ fontSize:13, color:C.text3 }}>
+                      Aggiungi le camere del gruppo. Ogni riga = 1 camera / 1 prenotazione.
+                      {gruppoForm.checkIn && gruppoForm.checkOut && (
+                        <span style={{ color:C.navy, fontWeight:600 }}>
+                          {" "}Date default: {gruppoForm.checkIn} → {gruppoForm.checkOut}
+                          {" "}({nights(gruppoForm.checkIn,gruppoForm.checkOut)} notti)
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ display:"flex", gap:8 }}>
+                      <select value={gruppoForm.regolaNGratuita||""} onChange={e=>setGruppoForm(f=>({...f,regolaNGratuita:e.target.value}))}
+                        style={{ border:`1px solid ${C.border}`, borderRadius:6, padding:"7px 12px", fontSize:12,
+                          fontFamily:"'IBM Plex Sans',sans-serif" }}>
+                        <option value="">— Regola gratuità —</option>
+                        <option value="1su5">1 gratuita ogni 5</option>
+                        <option value="1su10">1 gratuita ogni 10</option>
+                        <option value="1su15">1 gratuita ogni 15</option>
+                        <option value="1su20">1 gratuita ogni 20</option>
+                      </select>
+                      {gruppoForm.regolaNGratuita && gruppoCamere.length > 0 && (() => {
+                        const ratio = parseInt(gruppoForm.regolaNGratuita.split("su")[1])||10;
+                        const nGrat = Math.floor(gruppoCamere.length / ratio);
+                        return nGrat > 0 ? (
+                          <button onClick={() => {
+                            // Applica gratuità alle prime nGrat camere non già gratuite
+                            let cnt = 0;
+                            setGruppoCamere(prev => prev.map(c => {
+                              if (!c.gratuita && cnt < nGrat) { cnt++; return {...c, gratuita:true, gratuitaMotivo:"1su"+ratio}; }
+                              return c;
+                            }));
+                          }} style={{ background:C.greenL, color:C.green, border:`1px solid ${C.greenLb}`,
+                            borderRadius:6, padding:"7px 12px", cursor:"pointer", fontSize:12, fontWeight:600,
+                            fontFamily:"'IBM Plex Sans',sans-serif", whiteSpace:"nowrap" }}>
+                            🎁 Applica ({nGrat} gratuita)
+                          </button>
+                        ) : <span style={{fontSize:11,color:C.text3,alignSelf:"center"}}>min {ratio} camere per 1 gratuita</span>;
+                      })()}
+                      <button className="btn-primary" onClick={addCameraGruppo}
+                        style={{ padding:"8px 14px", fontSize:13 }}>+ Aggiungi camera</button>
+                    </div>
+                  </div>
+
+                  {gruppoCamere.length===0 && (
+                    <div style={{ textAlign:"center", padding:"40px 20px", color:C.text3,
+                      border:`2px dashed ${C.border}`, borderRadius:10 }}>
+                      <div style={{ fontSize:36, marginBottom:10 }}>🛏️</div>
+                      <div style={{ fontWeight:600 }}>Nessuna camera aggiunta</div>
+                      <div style={{ fontSize:13, marginTop:4 }}>Clicca "+ Aggiungi camera" per iniziare</div>
+                    </div>
+                  )}
+
+                  {gruppoCamere.map((cam, idx) => {
+                    const room = ROOMS.find(r=>r.id===parseInt(cam.roomId));
+                    const n    = nights(cam.checkIn||gruppoForm.checkIn, cam.checkOut||gruppoForm.checkOut);
+                    const pax  = room?.priceMode==="persona"?((cam.adulti||1)+(cam.bambini||0)):1;
+                    const roomCost = room && n>0 ? (cam.gratuita?0:room.price*n*pax) : 0;
+                    return (
+                      <div key={cam._key} style={{
+                        border:`1px solid ${cam.gratuita?C.greenLb:C.border}`,
+                        borderLeft:`4px solid ${cam.gratuita?"#1b7a4a":C.navyLb}`,
+                        borderRadius:8, marginBottom:12, background:"#fff",
+                        overflow:"hidden" }}>
+                        {/* ── HEADER CAMERA ROW ── */}
+                        <div style={{ padding:"10px 14px", background:cam.gratuita?"#e6f7ee":"#f8faff",
+                          display:"flex", alignItems:"center", gap:10, borderBottom:`1px solid ${C.border}` }}>
+                          <div style={{ width:28, height:28, borderRadius:"50%",
+                            background:cam.gratuita?C.green:C.navy, color:"#fff",
+                            display:"flex", alignItems:"center", justifyContent:"center",
+                            fontSize:13, fontWeight:700, flexShrink:0 }}>{idx+1}</div>
+                          <div style={{ flex:1, fontWeight:700, fontSize:14 }}>
+                            {room ? `Cam ${room.id} · ${room.type}` : "Camera non selezionata"}
+                            {cam.guestName && <span style={{ fontWeight:400, color:C.text2 }}> — {cam.guestName}</span>}
+                          </div>
+                          {cam.gratuita && (
+                            <span style={{ fontSize:11, padding:"2px 8px", borderRadius:10,
+                              background:"#e6f7ee", color:"#1b7a4a", border:"1px solid #6fcf97", fontWeight:700 }}>
+                              🎁 GRATUITA
+                            </span>
+                          )}
+                          <div style={{ fontWeight:700, color:cam.gratuita?C.green:C.gold, fontSize:14 }}>
+                            {cam.gratuita?"€ 0":"€"+roomCost.toFixed(2)}
+                            {cam.gratuita&&room&&n>0 && (
+                              <span style={{ fontSize:10, color:C.text3, textDecoration:"line-through", marginLeft:6 }}>
+                                €{(room.price*n*pax).toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+                          <button onClick={()=>removeCameraGruppo(cam._key)}
+                            style={{ background:"#fdecea", color:C.red, border:"1px solid #ef9a9a",
+                              borderRadius:5, padding:"4px 9px", cursor:"pointer", fontSize:13 }}>✕</button>
+                        </div>
+
+                        {/* ── DETTAGLI CAMERA ── */}
+                        <div style={{ padding:"12px 14px" }}>
+                          <div className="form-grid" style={{ gap:10 }}>
+                            {/* Camera */}
+                            <div>
+                              <label className="label">Camera *</label>
+                              <select className="input-field" value={cam.roomId||""}
+                                onChange={e=>updCameraGruppo(cam._key,{roomId:e.target.value})}>
+                                <option value="">Seleziona...</option>
+                                {ROOMS.map(r=>{
+                                  const ci=cam.checkIn||gruppoForm.checkIn, co=cam.checkOut||gruppoForm.checkOut;
+                                  const ok=ci&&co?roomAvail(r,ci,co,reservations,cam.id):true;
+                                  const pm=r.priceMode==="persona"?"p.p.":"cam";
+                                  return <option key={r.id} value={r.id} disabled={!ok}>
+                                    Cam {r.id} · {r.type} · P{r.floor} · {r.capacity}p · €{r.price}/{pm}/n{!ok?" (occupata)":""}
+                                  </option>;
+                                })}
+                              </select>
+                            </div>
+                            {/* Ospite */}
+                            <div>
+                              <label className="label">Ospite *</label>
+                              <select className="input-field" value={cam.guestId||""}
+                                onChange={e=>{
+                                  const g=guests.find(x=>x.id===e.target.value);
+                                  updCameraGruppo(cam._key,{guestId:e.target.value,
+                                    guestName:g?`${g.cognome} ${g.nome}`:""});
+                                }}>
+                                <option value="">— Seleziona dall'anagrafica —</option>
+                                {guests.map(g=><option key={g.id} value={g.id}>{g.cognome} {g.nome}</option>)}
+                              </select>
+                              {!cam.guestId && (
+                                <input className="input-field" placeholder="Nome manuale ospite"
+                                  value={cam.guestName||""} style={{ marginTop:5 }}
+                                  onChange={e=>updCameraGruppo(cam._key,{guestName:e.target.value})}/>
+                              )}
+                            </div>
+                            {/* Adulti + Bambini */}
+                            <div>
+                              <label className="label">Adulti</label>
+                              <input type="number" className="input-field" min={1} max={8}
+                                value={cam.adulti||1}
+                                onChange={e=>updCameraGruppo(cam._key,{adulti:parseInt(e.target.value)||1})}/>
+                            </div>
+                            <div>
+                              <label className="label">Bambini</label>
+                              <input type="number" className="input-field" min={0} max={6}
+                                value={cam.bambini||0}
+                                onChange={e=>updCameraGruppo(cam._key,{bambini:parseInt(e.target.value)||0})}/>
+                            </div>
+                            {/* Date personalizzate */}
+                            <div>
+                              <label className="label">Check-In (se diverso)</label>
+                              <input type="date" className="input-field"
+                                value={cam.checkIn||""}
+                                onChange={e=>updCameraGruppo(cam._key,{checkIn:e.target.value})}/>
+                            </div>
+                            <div>
+                              <label className="label">Check-Out (se diverso)</label>
+                              <input type="date" className="input-field"
+                                value={cam.checkOut||""}
+                                onChange={e=>updCameraGruppo(cam._key,{checkOut:e.target.value})}/>
+                            </div>
+                            {/* Trattamento */}
+                            <div>
+                              <label className="label">Trattamento</label>
+                              <select className="input-field" value={cam.trattamento||""}
+                                onChange={e=>updCameraGruppo(cam._key,{trattamento:e.target.value})}>
+                                <option value="">— Seleziona —</option>
+                                <option value="RO">RO · Solo Pernottamento</option>
+                                <option value="BB">BB · B&B</option>
+                                <option value="HB">HB · Mezza Pensione</option>
+                                <option value="FB">FB · Pensione Completa</option>
+                              </select>
+                            </div>
+                            {/* Note camera */}
+                            <div>
+                              <label className="label">Note camera</label>
+                              <input className="input-field" placeholder="Richieste speciali..."
+                                value={cam.notes||""} onChange={e=>updCameraGruppo(cam._key,{notes:e.target.value})}/>
+                            </div>
+                          </div>
+
+                          {/* Servizi */}
+                          <div style={{ marginTop:10 }}>
+                            <label className="label" style={{ marginBottom:6, display:"block" }}>Servizi</label>
+                            <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                              {SERVICES.map(s=>{
+                                const sel=(cam.services||[]).includes(s.id);
+                                return <span key={s.id}
+                                  className={`service-chip${sel?" sel":""}`}
+                                  onClick={()=>updCameraGruppo(cam._key,{services:sel?(cam.services||[]).filter(x=>x!==s.id):[...(cam.services||[]),s.id]})}>
+                                  {sel?"✓ ":""}{s.label} <span style={{color:C.text3}}>+€{s.price}/n</span>
+                                </span>;
+                              })}
+                            </div>
+                          </div>
+
+                          {/* GRATUITÀ */}
+                          <div style={{ marginTop:10, padding:"10px 12px",
+                            background:cam.gratuita?"#e6f7ee":"#f8faff",
+                            border:`1px solid ${cam.gratuita?C.greenLb:C.border}`,
+                            borderRadius:7 }}>
+                            <label style={{ display:"flex", alignItems:"center", gap:8, cursor:"pointer" }}>
+                              <input type="checkbox" checked={!!cam.gratuita}
+                                onChange={e=>updCameraGruppo(cam._key,{gratuita:e.target.checked})}
+                                style={{ width:18, height:18, cursor:"pointer" }}/>
+                              <span style={{ fontSize:13, fontWeight:700, color:cam.gratuita?C.green:C.text2 }}>
+                                🎁 Camera gratuita (complimentary) — costo alloggio = €0
+                              </span>
+                            </label>
+                            {cam.gratuita && (
+                              <div style={{ marginTop:8 }}>
+                                <select className="input-field" value={cam.gratuitaMotivo||""}
+                                  onChange={e=>updCameraGruppo(cam._key,{gratuitaMotivo:e.target.value})}>
+                                  <option value="">— Motivazione —</option>
+                                  <option value="1su10">1 su 10 prenotate</option>
+                                  <option value="1su20">1 su 20 prenotate</option>
+                                  <option value="organizzatore">Camera organizzatore</option>
+                                  <option value="speaker">Camera speaker / relatore</option>
+                                  <option value="accompagnatore">Camera accompagnatore</option>
+                                  <option value="upgrade">Upgrade complimentary</option>
+                                  <option value="fidelizzazione">Fidelizzazione cliente</option>
+                                  <option value="gestionale">Uso gestionale interno</option>
+                                  <option value="altro">Altro</option>
+                                </select>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* ═══ TAB 3: SPLIT CONTO ═══ */}
+              {gruppoTab==="split" && (
+                <div>
+                  <div style={{ background:"#e8f0ff", border:"1px solid #b3ccff",
+                    borderRadius:8, padding:"12px 16px", marginBottom:20, fontSize:13, color:"#1565c0" }}>
+                    <strong>Come funziona lo split conto:</strong> Scegli quali voci vanno sul conto master aziendale
+                    e quali rimangono sul conto della singola camera. I servizi selezionati saranno addebitati
+                    all'azienda/agenzia; tutto il resto è a carico del singolo ospite.
+                  </div>
+
+                  {/* Policy */}
+                  <div className="section-title">Politica di fatturazione</div>
+                  <div style={{ display:"flex", gap:0, marginBottom:20, border:`1px solid ${C.border}`,
+                    borderRadius:8, overflow:"hidden" }}>
+                    {[
+                      { k:"tutto_azienda", label:"🏢 Tutto all'azienda",   desc:"Ogni voce va sul master" },
+                      { k:"misto",         label:"✂️ Split misto",          desc:"Scegli voce per voce" },
+                      { k:"per_camera",    label:"👤 Solo camera individuale", desc:"Nessun conto master" },
+                    ].map(p=>(
+                      <button key={p.k} onClick={()=>setGruppoForm(f=>({...f,splitPolicy:p.k}))}
+                        style={{ flex:1, padding:"10px 8px", border:"none", cursor:"pointer",
+                          fontFamily:"'IBM Plex Sans',sans-serif", fontSize:12, fontWeight:600,
+                          background:(gruppoForm.splitPolicy||"misto")===p.k?C.navy:"#fff",
+                          color:(gruppoForm.splitPolicy||"misto")===p.k?"#fff":C.text3,
+                          borderRight:`1px solid ${C.border}`, transition:"all .15s",
+                          textAlign:"center" }}>
+                        <div>{p.label}</div>
+                        <div style={{ fontSize:10, fontWeight:400, marginTop:2 }}>{p.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Voci split (solo in "misto") */}
+                  {(gruppoForm.splitPolicy||"misto")==="misto" && (
+                    <div>
+                      <div className="section-title">Voci sul conto aziendale</div>
+                      <div style={{ fontSize:12, color:C.text3, marginBottom:12 }}>
+                        Seleziona le voci che vuoi addebitare all'azienda/agenzia.
+                        Le voci non selezionate rimangono sul conto camera individuale.
+                      </div>
+                      <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                        {/* Alloggio */}
+                        {[
+                          { id:"room",      label:"🛏️ Alloggio (pernottamento)", always:false },
+                          ...SERVICES.map(s=>({ id:s.id, label:`${s.label} (+€${s.price}/n)`, always:false })),
+                        ].map(voce=>{
+                          const sel=(gruppoForm.contoAziendaVoci||[]).includes(voce.id);
+                          return (
+                            <label key={voce.id} style={{ display:"flex", alignItems:"center", gap:10,
+                              padding:"10px 14px", border:`1px solid ${sel?C.navyLb:C.border}`,
+                              borderRadius:7, cursor:"pointer",
+                              background:sel?"#e3f0ff":"#fff", transition:"all .12s" }}>
+                              <input type="checkbox" checked={sel}
+                                onChange={e=>setGruppoForm(f=>({...f,contoAziendaVoci:
+                                  e.target.checked?[...(f.contoAziendaVoci||[]),voce.id]
+                                  :(f.contoAziendaVoci||[]).filter(x=>x!==voce.id)
+                                }))}
+                                style={{ width:18, height:18, cursor:"pointer" }}/>
+                              <span style={{ fontSize:13, fontWeight:sel?700:400, color:sel?C.navy:C.text }}>
+                                {voce.label}
+                              </span>
+                              <span style={{ marginLeft:"auto", fontSize:11, fontWeight:700,
+                                color:sel?C.navy:C.text3 }}>
+                                {sel?"→ 🏢 Azienda":"→ 👤 Camera"}
+                              </span>
+                            </label>
+                          );
+                        })}
+                        <div style={{ padding:"10px 14px", border:`1px solid ${C.border}`, borderRadius:7,
+                          background:C.surface2, fontSize:12, color:C.text3 }}>
+                          📦 Extra in camera (room service, minibar, ecc.) — sempre sul conto camera individuale
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Riepilogo per camera */}
+                  {gruppoCamere.length>0 && (
+                    <div style={{ marginTop:24 }}>
+                      <div className="section-title">Riepilogo per camera</div>
+                      <div style={{ border:`1px solid ${C.border}`, borderRadius:8, overflow:"hidden" }}>
+                        <div style={{ display:"grid", gridTemplateColumns:"1fr 120px 120px 100px",
+                          padding:"9px 14px", background:C.surface2,
+                          borderBottom:`1px solid ${C.border}`,
+                          fontSize:10, fontWeight:700, color:C.text3, textTransform:"uppercase", gap:10 }}>
+                          <div>Camera / Ospite</div>
+                          <div style={{ textAlign:"right" }}>🏢 Azienda</div>
+                          <div style={{ textAlign:"right" }}>👤 Camera</div>
+                          <div style={{ textAlign:"right" }}>Totale</div>
+                        </div>
+                        {gruppoCamere.map((cam,i) => {
+                          const room=ROOMS.find(r=>r.id===parseInt(cam.roomId));
+                          const n=nights(cam.checkIn||gruppoForm.checkIn,cam.checkOut||gruppoForm.checkOut);
+                          const pax=room?.priceMode==="persona"?((cam.adulti||1)+(cam.bambini||0)):1;
+                          const totCam = room&&n>0 ? (cam.gratuita?0:room.price*n*pax)
+                            + (cam.services||[]).reduce((s,sid)=>{const sv=SERVICES.find(x=>x.id===sid);return s+(sv?sv.price*n:0);},0) : 0;
+
+                          let az=0, camera=0;
+                          if ((gruppoForm.splitPolicy||"misto")==="tutto_azienda") { az=totCam; }
+                          else if (gruppoForm.splitPolicy==="per_camera") { camera=totCam; }
+                          else { // misto
+                            const policy=gruppoForm.contoAziendaVoci||[];
+                            const rc=cam.gratuita?0:(room?room.price*n*pax:0);
+                            policy.includes("room")?(az+=rc):(camera+=rc);
+                            (cam.services||[]).forEach(sid=>{
+                              const sv=SERVICES.find(x=>x.id===sid);
+                              if(!sv)return;
+                              policy.includes(sid)?(az+=sv.price*n):(camera+=sv.price*n);
+                            });
+                          }
+
+                          return (
+                            <div key={cam._key} style={{ display:"grid",
+                              gridTemplateColumns:"1fr 120px 120px 100px",
+                              padding:"10px 14px", gap:10, alignItems:"center",
+                              borderBottom:i<gruppoCamere.length-1?`1px solid ${C.border}`:"none",
+                              background:i%2===0?"#fff":C.surface2 }}>
+                              <div>
+                                <div style={{ fontWeight:600, fontSize:13 }}>
+                                  {room?`Cam ${room.id} · ${room.type}`:"—"}
+                                  {cam.gratuita && <span style={{ marginLeft:6, fontSize:10, padding:"1px 6px",
+                                    borderRadius:8, background:"#e6f7ee", color:C.green, fontWeight:700 }}>GRATUITA</span>}
+                                </div>
+                                <div style={{ fontSize:11, color:C.text3 }}>{cam.guestName||"—"}</div>
+                              </div>
+                              <div style={{ textAlign:"right", fontWeight:700, color:C.navy }}>€{az.toFixed(2)}</div>
+                              <div style={{ textAlign:"right", fontWeight:700 }}>€{camera.toFixed(2)}</div>
+                              <div style={{ textAlign:"right", fontWeight:700, color:C.gold }}>€{totCam.toFixed(2)}</div>
+                            </div>
+                          );
+                        })}
+                        {/* TOTALI */}
+                        {(() => {
+                          let totAz=0, totCam=0, totAll=0;
+                          gruppoCamere.forEach(cam=>{
+                            const room=ROOMS.find(r=>r.id===parseInt(cam.roomId));
+                            const n=nights(cam.checkIn||gruppoForm.checkIn,cam.checkOut||gruppoForm.checkOut);
+                            const pax=room?.priceMode==="persona"?((cam.adulti||1)+(cam.bambini||0)):1;
+                            const tc = room&&n>0 ? (cam.gratuita?0:room.price*n*pax)
+                              + (cam.services||[]).reduce((s,sid)=>{const sv=SERVICES.find(x=>x.id===sid);return s+(sv?sv.price*n:0);},0) : 0;
+                            totAll+=tc;
+                            if ((gruppoForm.splitPolicy||"misto")==="tutto_azienda"){totAz+=tc;}
+                            else if(gruppoForm.splitPolicy==="per_camera"){totCam+=tc;}
+                            else {
+                              const policy=gruppoForm.contoAziendaVoci||[];
+                              const rc=cam.gratuita?0:(room?room.price*n*pax:0);
+                              let az=policy.includes("room")?rc:0, ca=policy.includes("room")?0:rc;
+                              (cam.services||[]).forEach(sid=>{const sv=SERVICES.find(x=>x.id===sid);if(!sv)return;policy.includes(sid)?(az+=sv.price*n):(ca+=sv.price*n);});
+                              totAz+=az;totCam+=ca;
+                            }
+                          });
+                          return (
+                            <div style={{ display:"grid", gridTemplateColumns:"1fr 120px 120px 100px",
+                              padding:"12px 14px", gap:10, background:C.navyL,
+                              borderTop:`2px solid ${C.navyLb}` }}>
+                              <div style={{ fontWeight:800, color:C.navy }}>TOTALE GRUPPO</div>
+                              <div style={{ textAlign:"right", fontWeight:800, color:C.navy, fontSize:15 }}>€{totAz.toFixed(2)}</div>
+                              <div style={{ textAlign:"right", fontWeight:800, fontSize:15 }}>€{totCam.toFixed(2)}</div>
+                              <div style={{ textAlign:"right", fontWeight:800, color:C.gold, fontSize:15 }}>€{totAll.toFixed(2)}</div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ═══ PAGAMENTI CONTO MASTER AZIENDA ═══ */}
+              {gruppoTab==="split" && (
+                <div style={{ marginTop:24 }}>
+                  <div className="section-title">💳 Pagamenti conto master azienda</div>
+                  <div style={{ fontSize:12, color:C.text3, marginBottom:12 }}>
+                    Registra gli acconti e i pagamenti ricevuti dall'azienda/agenzia sul conto master.
+                    I pagamenti individuali di ogni camera vanno nella sezione Cassa.
+                  </div>
+
+                  {/* Lista pagamenti */}
+                  <div style={{ border:`1px solid ${C.border}`, borderRadius:8, overflow:"hidden", marginBottom:12 }}>
+                    <div style={{ display:"grid", gridTemplateColumns:"90px 1fr 100px 120px 30px",
+                      padding:"8px 14px", background:C.surface2, borderBottom:`1px solid ${C.border}`,
+                      fontSize:10, fontWeight:700, color:C.text3, textTransform:"uppercase", gap:8 }}>
+                      <div>Data</div><div>Note</div><div>Metodo</div><div style={{textAlign:"right"}}>Importo</div><div/>
+                    </div>
+                    {(gruppoForm.masterPagamenti||[]).length===0 && (
+                      <div style={{ padding:"14px", color:C.text3, fontSize:12, fontStyle:"italic" }}>
+                        Nessun pagamento registrato
+                      </div>
+                    )}
+                    {(gruppoForm.masterPagamenti||[]).map((p,i)=>(
+                      <div key={p.id} style={{ display:"grid", gridTemplateColumns:"90px 1fr 100px 120px 30px",
+                        padding:"9px 14px", gap:8, alignItems:"center",
+                        borderBottom:i<(gruppoForm.masterPagamenti||[]).length-1?`1px solid ${C.border}`:"none",
+                        background:i%2===0?"#fff":C.surface2 }}>
+                        <div style={{ fontSize:12 }}>{p.data}</div>
+                        <div style={{ fontSize:12 }}>{p.note||"—"}</div>
+                        <div style={{ fontSize:12, color:C.text2 }}>{p.metodo}</div>
+                        <div style={{ textAlign:"right", fontWeight:700, color:C.green }}>€{parseFloat(p.importo||0).toFixed(2)}</div>
+                        <button onClick={()=>setGruppoForm(f=>({...f,masterPagamenti:(f.masterPagamenti||[]).filter(x=>x.id!==p.id)}))}
+                          style={{ background:"none", border:"none", cursor:"pointer", color:C.red, fontSize:14, padding:0 }}>✕</button>
+                      </div>
+                    ))}
+                    {/* Totale pagato */}
+                    {(gruppoForm.masterPagamenti||[]).length>0 && (() => {
+                      const totPag=(gruppoForm.masterPagamenti||[]).reduce((s,p)=>s+parseFloat(p.importo||0),0);
+                      // Calcola totale azienda
+                      let totAz=0;
+                      gruppoCamere.forEach(cam=>{
+                        const room=ROOMS.find(r=>r.id===parseInt(cam.roomId));
+                        const n=nights(cam.checkIn||gruppoForm.checkIn,cam.checkOut||gruppoForm.checkOut);
+                        const pax=room?.priceMode==="persona"?((cam.adulti||1)+(cam.bambini||0)):1;
+                        const rc=cam.gratuita?0:(room?room.price*n*pax:0);
+                        const svc=(cam.services||[]).reduce((s,sid)=>{const sv=SERVICES.find(x=>x.id===sid);return s+(sv?sv.price*n:0);},0);
+                        const tc=rc+svc;
+                        const pol=gruppoForm.splitPolicy||"misto";
+                        if(pol==="tutto_azienda"){totAz+=tc;}
+                        else if(pol==="misto"){
+                          const voci=gruppoForm.contoAziendaVoci||[];
+                          const azR=voci.includes("room")?rc:0;
+                          const azS=(cam.services||[]).reduce((s,sid)=>{const sv=SERVICES.find(x=>x.id===sid);if(!sv)return s;return s+(voci.includes(sid)?sv.price*n:0);},0);
+                          totAz+=azR+azS;
+                        }
+                      });
+                      const totConIva = totAz*1.10;
+                      const saldo = totConIva - totPag;
+                      return (
+                        <div style={{ padding:"10px 14px", background:C.navyL, borderTop:`2px solid ${C.navyLb}`,
+                          display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8 }}>
+                          <div>
+                            <div style={{fontSize:10,color:C.text3,textTransform:"uppercase",letterSpacing:.5}}>Tot. conto master</div>
+                            <div style={{fontWeight:800,color:C.navy,fontSize:14}}>€{totConIva.toFixed(2)}</div>
+                          </div>
+                          <div>
+                            <div style={{fontSize:10,color:C.text3,textTransform:"uppercase",letterSpacing:.5}}>Pagato</div>
+                            <div style={{fontWeight:800,color:C.green,fontSize:14}}>€{totPag.toFixed(2)}</div>
+                          </div>
+                          <div>
+                            <div style={{fontSize:10,color:C.text3,textTransform:"uppercase",letterSpacing:.5}}>Saldo</div>
+                            <div style={{fontWeight:800,color:saldo>0.01?C.red:C.green,fontSize:14}}>
+                              {saldo>0.01?`€${saldo.toFixed(2)} DA PAGARE`:"✓ SALDATO"}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Form aggiunta pagamento */}
+                  {(() => {
+                    const [mpForm, setMpForm] = useState({ data:new Date().toISOString().slice(0,10), importo:"", metodo:"Bonifico", note:"" });
+                    const addMp = () => {
+                      if (!mpForm.importo || parseFloat(mpForm.importo)<=0) return;
+                      setGruppoForm(f=>({...f, masterPagamenti:[
+                        ...(f.masterPagamenti||[]),
+                        { id:"MP"+Date.now().toString().slice(-6), ...mpForm, importo:parseFloat(mpForm.importo) }
+                      ]}));
+                      setMpForm({ data:new Date().toISOString().slice(0,10), importo:"", metodo:"Bonifico", note:"" });
+                    };
+                    return (
+                      <div style={{ display:"flex", gap:8, alignItems:"flex-end", flexWrap:"wrap" }}>
+                        <div>
+                          <label style={{fontSize:10,color:C.text3,fontWeight:700,textTransform:"uppercase",letterSpacing:.5,display:"block",marginBottom:4}}>Data</label>
+                          <input type="date" value={mpForm.data} onChange={e=>setMpForm(f=>({...f,data:e.target.value}))}
+                            style={{border:`1px solid ${C.border}`,borderRadius:5,padding:"7px 10px",fontSize:12,fontFamily:"'IBM Plex Sans',sans-serif"}}/>
+                        </div>
+                        <div>
+                          <label style={{fontSize:10,color:C.text3,fontWeight:700,textTransform:"uppercase",letterSpacing:.5,display:"block",marginBottom:4}}>Importo €</label>
+                          <input type="number" min="0" step="0.01" value={mpForm.importo} onChange={e=>setMpForm(f=>({...f,importo:e.target.value}))}
+                            placeholder="0.00" style={{width:100,border:`1px solid ${C.border}`,borderRadius:5,padding:"7px 10px",fontSize:12,fontFamily:"'IBM Plex Sans',sans-serif"}}/>
+                        </div>
+                        <div>
+                          <label style={{fontSize:10,color:C.text3,fontWeight:700,textTransform:"uppercase",letterSpacing:.5,display:"block",marginBottom:4}}>Metodo</label>
+                          <select value={mpForm.metodo} onChange={e=>setMpForm(f=>({...f,metodo:e.target.value}))}
+                            style={{border:`1px solid ${C.border}`,borderRadius:5,padding:"7px 10px",fontSize:12,fontFamily:"'IBM Plex Sans',sans-serif"}}>
+                            {["Bonifico","Carta di Credito","Contanti","Assegno","Credito note"].map(m=><option key={m} value={m}>{m}</option>)}
+                          </select>
+                        </div>
+                        <div style={{flex:1,minWidth:140}}>
+                          <label style={{fontSize:10,color:C.text3,fontWeight:700,textTransform:"uppercase",letterSpacing:.5,display:"block",marginBottom:4}}>Note</label>
+                          <input value={mpForm.note} onChange={e=>setMpForm(f=>({...f,note:e.target.value}))}
+                            placeholder="es. Acconto 30%"
+                            style={{width:"100%",border:`1px solid ${C.border}`,borderRadius:5,padding:"7px 10px",fontSize:12,fontFamily:"'IBM Plex Sans',sans-serif",outline:"none",boxSizing:"border-box"}}/>
+                        </div>
+                        <button onClick={addMp}
+                          style={{background:C.green,color:"#fff",border:"none",borderRadius:6,padding:"9px 16px",cursor:"pointer",fontSize:13,fontWeight:600,fontFamily:"'IBM Plex Sans',sans-serif",whiteSpace:"nowrap"}}>
+                          + Registra
+                        </button>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+
+            {/* ── FOOTER ── */}
+            <div className="modal-footer" style={{ flexShrink:0 }}>
+              <div style={{ fontSize:12, color:C.text3 }}>
+                {gruppoCamere.length} camere · {gruppoCamere.filter(c=>c.gratuita).length} gratuite ·{" "}
+                {gruppoForm.azienda && <span>🏢 {gruppoForm.azienda}</span>}
+              </div>
+              <div style={{ display:"flex", gap:8 }}>
+                {gruppoTab!=="info" && (
+                  <button className="btn-secondary" onClick={()=>setGruppoTab(gruppoTab==="camere"?"info":"camere")}>
+                    ← Indietro
+                  </button>
+                )}
+                {gruppoTab!=="split" && (
+                  <button className="btn-secondary"
+                    onClick={()=>setGruppoTab(gruppoTab==="info"?"camere":"split")}>
+                    Avanti →
+                  </button>
+                )}
+                <button className="btn-secondary" onClick={()=>setGruppoModal(false)}>Chiudi</button>
+                <button className="btn-primary" onClick={saveGruppo}>
+                  💾 Salva Gruppo ({gruppoCamere.length} camere)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/*   MODAL: CHECKOUT   */}
       {modal==="checkout" && form && (() => {
@@ -5944,6 +7217,264 @@ Rispondi in italiano, in modo conciso e professionale.`;
             </div>
           </div>
         );
+      })()}
+
+      {/* ══════════════════════════════════════════
+           MODAL: CONTO GRUPPO (master azienda / per camera)
+      ══════════════════════════════════════════ */}
+      {groupInvoice && (() => {
+        const {grp, tipo, cam} = groupInvoice;
+        const camGrp = reservations.filter(r=>r.gruppoId===grp.id);
+        const oggi   = new Date().toLocaleDateString("it-IT");
+        const HOTEL  = "HOTEL GASPARINI";
+        const TAX    = 0.10;
+
+        const sp = (c) => {
+          const room=ROOMS.find(r=>r.id===parseInt(c.roomId));
+          const n=nights(c.checkIn||grp.checkIn,c.checkOut||grp.checkOut);
+          const pax=room?.priceMode==="persona"?((c.adulti||1)+(c.bambini||0)):1;
+          const rc=c.gratuita?0:(room?room.price*n*pax:0);
+          const svcCost=(c.services||[]).reduce((s,sid)=>{const sv=SERVICES.find(x=>x.id===sid);return s+(sv?sv.price*n:0);},0);
+          const tot=rc+svcCost;
+          let az=0,camera=0;
+          const pol=grp.splitPolicy||"misto";
+          if(pol==="tutto_azienda"){az=tot;}
+          else if(pol==="per_camera"){camera=tot;}
+          else{
+            const voci=grp.contoAziendaVoci||[];
+            voci.includes("room")?(az+=rc):(camera+=rc);
+            (c.services||[]).forEach(sid=>{const sv=SERVICES.find(x=>x.id===sid);if(!sv)return;voci.includes(sid)?(az+=sv.price*n):(camera+=sv.price*n);});
+          }
+          return {az,camera,tot,room,n,pax,rc,svcCost};
+        };
+
+        if (tipo==="master") {
+          const righe=camGrp.map(c=>({...sp(c),cam:c})).filter(s=>s.az>0);
+          const sub=righe.reduce((s,r)=>s+r.az,0);
+          const iva=sub*TAX, tot=sub+iva;
+          const polLabel={tutto_azienda:"Tutto azienda",misto:"Split misto",per_camera:"Per camera"};
+          return (
+            <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setGroupInvoice(null)}>
+              <div className="modal-box" style={{maxWidth:720}}>
+                <div className="modal-header no-print">
+                  <div>
+                    <h2 style={{fontSize:20,fontWeight:700,margin:0}}>🏢 Conto Master Azienda</h2>
+                    <div style={{fontSize:12,color:C.text3,marginTop:2}}>{grp.nome} · {grp.id}</div>
+                  </div>
+                  <div style={{display:"flex",gap:7}}>
+                    <button className="btn-secondary" onClick={()=>window.print()}>🖨 Stampa</button>
+                    <button className="btn-secondary" onClick={()=>setGroupInvoice(null)}>✕</button>
+                  </div>
+                </div>
+                <div className="modal-body">
+                  <div className="invoice-paper">
+                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:18,borderBottom:"2px solid #1a1a1a",paddingBottom:14}}>
+                      <div>
+                        <div style={{fontSize:23,fontWeight:700,letterSpacing:3,fontFamily:"IBM Plex Sans,sans-serif"}}>{HOTEL}</div>
+                        <div style={{fontSize:10,color:"#666",letterSpacing:2}}>Via della Repubblica, 1 · Venezia (VE)</div>
+                        <div style={{fontSize:11,color:"#444",marginTop:4}}>P.IVA: IT01234567890 · Tel: +39 041 1234567</div>
+                      </div>
+                      <div style={{textAlign:"right"}}>
+                        <div style={{fontSize:15,fontWeight:700,color:"#003580"}}>CONTO MASTER AZIENDA</div>
+                        <div style={{fontSize:11,color:"#666"}}>Gruppo {grp.id} · {oggi}</div>
+                        <div style={{fontSize:10,color:"#888",marginTop:3}}>🗂 {polLabel[grp.splitPolicy||"misto"]}</div>
+                      </div>
+                    </div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
+                      <div>
+                        <div style={{fontSize:9,letterSpacing:2,textTransform:"uppercase",color:"#888",marginBottom:2}}>Intestato a</div>
+                        <div style={{fontWeight:700,fontSize:15}}>{grp.azienda||"—"}</div>
+                        {grp.pIva&&<div style={{fontSize:11,color:"#555"}}>P.IVA: {grp.pIva}</div>}
+                        {grp.referente&&<div style={{fontSize:11,color:"#555"}}>{grp.referente}</div>}
+                        {grp.email&&<div style={{fontSize:11,color:"#555"}}>{grp.email}</div>}
+                      </div>
+                      <div>
+                        <div style={{fontSize:9,letterSpacing:2,textTransform:"uppercase",color:"#888",marginBottom:2}}>Evento</div>
+                        <div style={{fontWeight:600,fontSize:13}}>{grp.nome}</div>
+                        <div style={{fontSize:11,color:"#555"}}>{fmtDate(grp.checkIn)} → {fmtDate(grp.checkOut)} · {nights(grp.checkIn,grp.checkOut)} notti</div>
+                        <div style={{fontSize:10,color:"#888"}}>{camGrp.length} camere · {camGrp.filter(c=>c.gratuita).length} gratuite</div>
+                      </div>
+                    </div>
+                    <div style={{background:"#f0f4ff",padding:"7px 10px",fontWeight:700,fontSize:11,
+                      display:"grid",gridTemplateColumns:"70px 1fr 45px 80px 100px",gap:8,color:"#003580",marginBottom:1}}>
+                      <div>Camera</div><div>Ospite / Voci</div><div>Notti</div><div>Tipo</div><div style={{textAlign:"right"}}>Importo</div>
+                    </div>
+                    {righe.length===0?(
+                      <div style={{padding:"14px 10px",color:"#888",fontStyle:"italic",fontSize:12}}>
+                        Nessuna voce addebitata all'azienda con la politica "{polLabel[grp.splitPolicy||"misto"]}".
+                      </div>
+                    ):righe.map((s,i)=>{
+                      const pol=grp.splitPolicy||"misto";
+                      const voci=grp.contoAziendaVoci||[];
+                      const desc=[];
+                      if(pol==="tutto_azienda"||voci.includes("room"))
+                        if(s.rc>0) desc.push(`Alloggio €${s.rc.toFixed(2)}`);
+                      (s.cam.services||[]).forEach(sid=>{
+                        if(pol==="tutto_azienda"||(pol==="misto"&&voci.includes(sid))){
+                          const sv=SERVICES.find(x=>x.id===sid);
+                          if(sv) desc.push(`${sv.label} €${(sv.price*s.n).toFixed(2)}`);
+                        }
+                      });
+                      return (
+                        <div key={s.cam.id} style={{display:"grid",gridTemplateColumns:"70px 1fr 45px 80px 100px",
+                          padding:"8px 10px",gap:8,borderBottom:"1px solid #e8edf3",
+                          background:i%2===0?"#fff":"#fafbfc",fontSize:12}}>
+                          <div style={{fontWeight:600}}>Cam {s.cam.roomId}</div>
+                          <div>
+                            <div>{s.cam.guestName||"—"}</div>
+                            <div style={{fontSize:10,color:"#888"}}>{desc.join(", ")}</div>
+                          </div>
+                          <div style={{textAlign:"center",color:"#555"}}>{s.n}</div>
+                          <div style={{fontSize:11,color:"#555"}}>{s.room?.type}</div>
+                          <div style={{textAlign:"right",fontWeight:700,color:"#003580"}}>€{s.az.toFixed(2)}</div>
+                        </div>
+                      );
+                    })}
+                    {camGrp.filter(c=>c.gratuita).length>0&&(
+                      <div style={{margin:"6px 0",background:"#e6f7ee",border:"1px solid #6fcf97",
+                        borderRadius:5,padding:"6px 10px",fontSize:11,color:"#1b7a4a"}}>
+                        🎁 Gratuite non incluse: {camGrp.filter(c=>c.gratuita).map(c=>`Cam ${c.roomId} (${c.gratuitaMotivo||"comp."})`).join(", ")}
+                      </div>
+                    )}
+                    <div className="invoice-line" style={{color:"#666",marginTop:8}}>
+                      <span>Subtotale</span><span>€{sub.toFixed(2)}</span>
+                    </div>
+                    <div className="invoice-line" style={{color:"#666"}}>
+                      <span>IVA 10%</span><span>€{iva.toFixed(2)}</span>
+                    </div>
+                    <div style={{display:"flex",justifyContent:"space-between",padding:"10px 0",
+                      fontSize:17,fontWeight:700,borderTop:"2px solid #1a1a1a",marginTop:4}}>
+                      <span>TOTALE CONTO AZIENDA</span>
+                      <span style={{color:"#003580"}}>€{tot.toFixed(2)}</span>
+                    </div>
+                    <div style={{marginTop:14,fontSize:10,color:"#aaa",textAlign:"center",borderTop:"1px solid #eee",paddingTop:8}}>
+                      Documento generato il {oggi} · Hotel Gasparini PMS · Non ha valore fiscale.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        if (tipo==="camera" && cam) {
+          const s=sp(cam);
+          const room=s.room;
+          const n=s.n;
+          const pol=grp.splitPolicy||"misto";
+          const voci=grp.contoAziendaVoci||[];
+          const rows=[];
+          if(!cam.gratuita && room){
+            const showAllog = pol==="per_camera"||(pol==="misto"&&!voci.includes("room"))||(pol==="tutto_azienda"&&false);
+            if(showAllog){
+              const u=room.priceMode==="persona"?` × ${s.pax}p`:"";
+              rows.push({desc:`Camera ${cam.roomId} (${room.type}) — ${n} notti × €${room.price}${u}`,amt:s.rc});
+            }
+          }
+          (cam.services||[]).forEach(sid=>{
+            const onCamera=pol==="per_camera"||(pol==="misto"&&!voci.includes(sid));
+            if(onCamera){const sv=SERVICES.find(x=>x.id===sid);if(sv)rows.push({desc:`${sv.label} — ${n} notti`,amt:sv.price*n});}
+          });
+          (cam.roomServiceItems||[]).forEach(item=>rows.push({desc:`Extra: ${item.desc}`,amt:item.price}));
+          const sub=rows.reduce((s,r)=>s+r.amt,0);
+          const iva=sub*TAX, tot=sub+iva;
+          const paid=calcPaid(cam), bal=tot-paid;
+          return (
+            <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setGroupInvoice(null)}>
+              <div className="modal-box" style={{maxWidth:600}}>
+                <div className="modal-header no-print">
+                  <div>
+                    <h2 style={{fontSize:20,fontWeight:700,margin:0}}>👤 Conto Camera — {cam.guestName}</h2>
+                    <div style={{fontSize:12,color:C.text3,marginTop:2}}>Cam {cam.roomId} · Gruppo {grp.id} · {grp.nome}</div>
+                  </div>
+                  <div style={{display:"flex",gap:7}}>
+                    <button className="btn-secondary" onClick={()=>window.print()}>🖨 Stampa</button>
+                    <button className="btn-secondary" onClick={()=>setGroupInvoice(null)}>✕</button>
+                  </div>
+                </div>
+                <div className="modal-body">
+                  <div className="no-print" style={{background:C.blueL,border:`1px solid ${C.blueLb}`,
+                    borderRadius:7,padding:"9px 14px",marginBottom:14,fontSize:12,color:C.navy}}>
+                    <strong>Quota a carico ospite</strong> — Le voci aziendali sono nel Conto Master ({grp.azienda||grp.id}).
+                  </div>
+                  <div className="invoice-paper">
+                    <div style={{display:"flex",justifyContent:"space-between",marginBottom:18,borderBottom:"2px solid #1a1a1a",paddingBottom:14}}>
+                      <div>
+                        <div style={{fontSize:22,fontWeight:700,letterSpacing:3,fontFamily:"IBM Plex Sans,sans-serif"}}>{HOTEL}</div>
+                        <div style={{fontSize:10,color:"#666",letterSpacing:2}}>Via della Repubblica, 1 · Venezia (VE)</div>
+                        <div style={{fontSize:11,color:"#444",marginTop:4}}>P.IVA: IT01234567890 · Tel: +39 041 1234567</div>
+                      </div>
+                      <div style={{textAlign:"right"}}>
+                        <div style={{fontSize:15,fontWeight:700,color:"#003580"}}>CONTO CAMERA</div>
+                        <div style={{fontSize:11,color:"#666"}}>Gruppo {grp.id} · {oggi}</div>
+                        <div style={{fontSize:10,color:"#888",marginTop:3}}>Quota ospite individuale</div>
+                      </div>
+                    </div>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
+                      <div>
+                        <div style={{fontSize:9,letterSpacing:2,textTransform:"uppercase",color:"#888",marginBottom:2}}>Ospite</div>
+                        <div style={{fontWeight:700,fontSize:15}}>{cam.guestName}</div>
+                        {cam.trattamento&&<div style={{fontSize:11,color:"#555"}}>{cam.trattamento}</div>}
+                      </div>
+                      <div>
+                        <div style={{fontSize:9,letterSpacing:2,textTransform:"uppercase",color:"#888",marginBottom:2}}>Soggiorno</div>
+                        <div style={{fontSize:13}}>Camera {cam.roomId} — {room?.type}</div>
+                        <div style={{fontSize:11,color:"#555"}}>{fmtDate(cam.checkIn||grp.checkIn)} → {fmtDate(cam.checkOut||grp.checkOut)} · {n} notti</div>
+                        <div style={{fontSize:10,color:"#888"}}>Gruppo: {grp.nome}</div>
+                      </div>
+                    </div>
+                    <div style={{background:"#f0f4ff",padding:"7px 10px",fontWeight:700,fontSize:11,
+                      display:"flex",justifyContent:"space-between",color:"#003580",marginBottom:1}}>
+                      <span>Voci a carico ospite</span><span>Importo</span>
+                    </div>
+                    {rows.length===0?(
+                      <div style={{padding:"12px 10px",color:"#888",fontStyle:"italic",fontSize:12}}>
+                        Tutte le voci sono a carico dell'azienda.
+                      </div>
+                    ):rows.map((v,i)=>(
+                      <div key={i} className="invoice-line" style={{background:i%2===0?"#fff":"#fafbfc"}}>
+                        <span>{v.desc}</span><span>€{v.amt.toFixed(2)}</span>
+                      </div>
+                    ))}
+                    {cam.gratuita&&(
+                      <div style={{margin:"6px 0",background:"#e6f7ee",border:"1px solid #6fcf97",
+                        borderRadius:5,padding:"6px 10px",fontSize:11,color:"#1b7a4a"}}>
+                        🎁 Alloggio gratuito (complimentary) — {cam.gratuitaMotivo||"comp."} — non incluso nel conto.
+                      </div>
+                    )}
+                    <div className="invoice-line" style={{color:"#666",marginTop:8}}>
+                      <span>Subtotale</span><span>€{sub.toFixed(2)}</span>
+                    </div>
+                    <div className="invoice-line" style={{color:"#666"}}>
+                      <span>IVA 10%</span><span>€{iva.toFixed(2)}</span>
+                    </div>
+                    <div style={{display:"flex",justifyContent:"space-between",padding:"10px 0",
+                      fontSize:16,fontWeight:700,borderTop:"2px solid #1a1a1a",marginTop:4}}>
+                      <span>TOTALE CAMERA</span>
+                      <span style={{color:C.gold}}>€{tot.toFixed(2)}</span>
+                    </div>
+                    {paid>0&&(
+                      <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid #eee"}}>
+                        <div className="invoice-line" style={{color:"#1b7a4a",fontWeight:700}}>
+                          <span>Pagato</span><span>-€{paid.toFixed(2)}</span>
+                        </div>
+                        <div style={{display:"flex",justifyContent:"space-between",padding:"6px 0",
+                          fontSize:13,fontWeight:700,color:bal<=0?"#1b7a4a":"#c62828"}}>
+                          <span>{bal<=0?"✓ SALDATO":"SALDO RIMANENTE"}</span>
+                          <span>€{Math.abs(bal).toFixed(2)}</span>
+                        </div>
+                      </div>
+                    )}
+                    <div style={{marginTop:14,fontSize:10,color:"#aaa",textAlign:"center",borderTop:"1px solid #eee",paddingTop:8}}>
+                      Documento generato il {oggi} · Hotel Gasparini PMS · Non ha valore fiscale.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+        return null;
       })()}
 
         {/*   API & INTEGRAZIONI   */}
