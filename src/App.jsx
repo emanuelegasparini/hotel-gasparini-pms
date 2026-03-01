@@ -7109,6 +7109,910 @@ ${ev.noteCliente?`<div style="padding:0 48px 28px"><div class="conditions">${ev.
 
 
 // ─── PALETTE (speculare a App.jsx) ──────────────────────────────
+
+// ═══════════════════════════════════════════════════════════════════
+//  PLANNING MEETING ROOMS — griglia oraria giornaliera/settimanale
+//  ORDINI DI SERVIZIO — creazione e gestione ordini operativi
+// ═══════════════════════════════════════════════════════════════════
+
+// ─── SLOT ORE DISPONIBILI ──────────────────────────────────────────
+const HOURS_START = 7;
+const HOURS_END   = 22;
+const SLOT_MIN    = 30; // minuti per slot
+const TOTAL_SLOTS = ((HOURS_END - HOURS_START) * 60) / SLOT_MIN;
+
+const slotLabel = (slot) => {
+  const totalMin = HOURS_START * 60 + slot * SLOT_MIN;
+  const h = String(Math.floor(totalMin / 60)).padStart(2, "0");
+  const m = String(totalMin % 60).padStart(2, "0");
+  return `${h}:${m}`;
+};
+
+const timeToSlot = (timeStr) => {
+  if (!timeStr) return 0;
+  const [h, m] = timeStr.split(":").map(Number);
+  return Math.max(0, Math.round(((h * 60 + m) - HOURS_START * 60) / SLOT_MIN));
+};
+
+const slotToTime = (slot) => slotLabel(slot);
+
+// ─── STATO ORDINE DI SERVIZIO ──────────────────────────────────────
+const OS_STATI = {
+  bozza:      { label:"Bozza",       color:"#8896a8", bg:"#f5f7fa", border:"#dde3ec" },
+  inviato:    { label:"Inviato",     color:"#0f62fe", bg:"#e8f0ff", border:"#b3ccff" },
+  in_corso:   { label:"In lavorazione", color:"#e65100", bg:"#fff3e0", border:"#ffcc80" },
+  completato: { label:"Completato",  color:"#1b7a4a", bg:"#e6f7ee", border:"#6fcf97" },
+  annullato:  { label:"Annullato",   color:"#c62828", bg:"#fdecea", border:"#ef9a9a" },
+};
+
+const OS_REPARTI = ["F&B / Cucina", "Bar & Beverage", "Tecnico AV", "Pulizie", "Allestimento", "Reception", "Sicurezza"];
+
+const OS_CATEGORIE = [
+  { id:"setup",    label:"Allestimento sala",   icon:"🪑" },
+  { id:"av",       label:"Audio/Video",          icon:"🎛️" },
+  { id:"fb",       label:"F&B / Catering",       icon:"☕" },
+  { id:"pulizie",  label:"Pulizie",              icon:"🧹" },
+  { id:"extra",    label:"Extra / Altro",         icon:"📦" },
+];
+
+const DEMO_ORDINI = [
+  {
+    id:"OS001", prevId:"MICE001", sala:"S3", data:"2026-03-15",
+    titolo:"Board Meeting – Allestimento boardroom",
+    categoria:"setup", reparto:"Allestimento", stato:"completato",
+    oraEsecuzione:"08:00", oraScadenza:"09:00",
+    referente:"Maria Rossi", telefono:"",
+    voci:[
+      { desc:"Disposizione tavolo U-shape 14 posti", qty:1, um:"servizio", note:"" },
+      { desc:"Blocco note + penna per ogni posto", qty:14, um:"pz", note:"" },
+      { desc:"Bottiglia acqua naturale/frizzante", qty:14, um:"pz", note:"una per persona" },
+    ],
+    note:"Sala da preparare prima delle 09:00. Nessun accesso esterno durante il meeting.",
+    creatoIl:"2026-03-10", creatoDA:"Front Office",
+  },
+  {
+    id:"OS002", prevId:"MICE001", sala:"S3", data:"2026-03-15",
+    titolo:"Board Meeting – Coffee Break mattina",
+    categoria:"fb", reparto:"F&B / Cucina", stato:"completato",
+    oraEsecuzione:"10:30", oraScadenza:"11:00",
+    referente:"Chef Marco", telefono:"int. 201",
+    voci:[
+      { desc:"Coffee Break Classico", qty:12, um:"persona", note:"" },
+      { desc:"Frutta fresca di stagione", qty:1, um:"vassoio", note:"aggiunto dal cliente" },
+    ],
+    note:"Servire direttamente nella sala, non nel corridoio.",
+    creatoIl:"2026-03-10", creatoDA:"MICE Coordinator",
+  },
+  {
+    id:"OS003", prevId:"MICE002", sala:"S1", data:"2026-04-10",
+    titolo:"Convegno Produttori – Setup teatro 65p",
+    categoria:"setup", reparto:"Allestimento", stato:"inviato",
+    oraEsecuzione:"07:30", oraScadenza:"09:00",
+    referente:"", telefono:"",
+    voci:[
+      { desc:"Allestimento theatre 65 sedie", qty:65, um:"sedia", note:"" },
+      { desc:"Podio relatore con microfono", qty:1, um:"pz", note:"" },
+      { desc:"Tavolo presidenza 5 posti", qty:1, um:"servizio", note:"" },
+      { desc:"Allestimento area espositiva 8 stand corridoio", qty:8, um:"stand", note:"Solo tavolo+tovaglia" },
+    ],
+    note:"Attenzione: sala va divisa per accogliere 8 espositori nel corridoio antistante.",
+    creatoIl:"2026-03-20", creatoDA:"MICE Coordinator",
+  },
+];
+
+// ─── EXTRA DEMO PREVENTIVI per il planning (date 2026) ─────────────
+// Questi vengono iniettati via prop, non definiti qui globalmente.
+// Il componente li riceve già tramite preventivi prop.
+
+// ═══════════════════════════════════════════════════════════════════
+//  PlanningMeeting
+// ═══════════════════════════════════════════════════════════════════
+function PlanningMeeting({ preventivi = [], sale = [], onNuovoPreventivo }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const [dataSelezionata, setData] = useState(today);
+  const [modalPrenotazione, setModalPren] = useState(null); // { salaId, slotStart }
+  const [tooltip, setTooltip] = useState(null);
+
+  // ─── slot occupati per sala nella data ────────────────────────
+  const prenotazioniGiorno = useMemo(() => {
+    const map = {}; // salaId → array di { prev, slotStart, slotEnd }
+    preventivi
+      .filter(p => !["annullato","rifiutato"].includes(p.stato))
+      .forEach(p => {
+        const ev = p.evento;
+        if (!ev) return;
+        // Evento multi-giorno: mostra in tutti i giorni compresi
+        if (ev.dataInizio <= dataSelezionata && ev.dataFine >= dataSelezionata) {
+          const sid = p.sala?.id;
+          if (!sid) return;
+          if (!map[sid]) map[sid] = [];
+          map[sid].push({
+            prev: p,
+            slotStart: timeToSlot(ev.oraInizio || "09:00"),
+            slotEnd:   timeToSlot(ev.oraFine   || "18:00"),
+          });
+        }
+      });
+    return map;
+  }, [preventivi, dataSelezionata]);
+
+  const navigaGiorno = (delta) => {
+    const d = new Date(dataSelezionata);
+    d.setDate(d.getDate() + delta);
+    setData(d.toISOString().slice(0, 10));
+  };
+
+  const fmt = (d) => new Date(d + "T12:00:00").toLocaleDateString("it-IT", {
+    weekday:"long", day:"2-digit", month:"long", year:"numeric"
+  });
+
+  const statoColori = {
+    bozza:      { bg:"#f5f7fa", text:"#8896a8", border:"#dde3ec" },
+    inviato:    { bg:"#e8f0ff", text:"#0f62fe", border:"#b3ccff" },
+    confermato: { bg:"#e6f7ee", text:"#1b7a4a", border:"#6fcf97" },
+    in_corso:   { bg:"#fff3e0", text:"#e65100", border:"#ffcc80" },
+    completato: { bg:"#eceff1", text:"#546e7a", border:"#b0bec5" },
+  };
+
+  const CELL_H  = 28;
+  const HEAD_W  = 160;
+  const TIME_W  = 52;
+
+  // Genera etichette ore (ogni ora)
+  const hourLabels = Array.from({ length: HOURS_END - HOURS_START + 1 }, (_, i) =>
+    String(HOURS_START + i).padStart(2, "0") + ":00"
+  );
+
+  const saleAttive = sale.filter(s => s.attiva);
+
+  return (
+    <div>
+      <style>{`
+        .plan-cell { transition: background .1s; }
+        .plan-cell:hover { background: #e8f0ff !important; cursor: pointer; }
+        .plan-block { border-radius:4px; padding:3px 6px; overflow:hidden;
+          border-left:3px solid; font-size:11px; line-height:1.3;
+          cursor:pointer; transition:box-shadow .1s; }
+        .plan-block:hover { box-shadow:0 2px 8px rgba(0,0,0,.18); }
+        .plan-tooltip { position:fixed; background:#1a2535; color:#fff; border-radius:8px;
+          padding:10px 14px; font-size:12px; z-index:9999; max-width:260px;
+          box-shadow:0 4px 20px rgba(0,0,0,.3); pointer-events:none;
+          animation:fadeIn .12s ease; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+      `}</style>
+
+      {/* ── TOOLBAR ── */}
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between",
+        marginBottom:20, flexWrap:"wrap", gap:12 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <button onClick={() => navigaGiorno(-1)}
+            style={{ background:"#fff", border:`1px solid ${MC.border}`, borderRadius:6,
+              padding:"7px 12px", cursor:"pointer", fontSize:16, lineHeight:1 }}>‹</button>
+          <div style={{ textAlign:"center" }}>
+            <div style={{ fontSize:16, fontWeight:700, color:MC.text, textTransform:"capitalize" }}>
+              {fmt(dataSelezionata)}
+            </div>
+            {dataSelezionata === today && (
+              <div style={{ fontSize:10, color:MC.blue, fontWeight:700, letterSpacing:.5 }}>OGGI</div>
+            )}
+          </div>
+          <button onClick={() => navigaGiorno(1)}
+            style={{ background:"#fff", border:`1px solid ${MC.border}`, borderRadius:6,
+              padding:"7px 12px", cursor:"pointer", fontSize:16, lineHeight:1 }}>›</button>
+          <button onClick={() => setData(today)}
+            style={{ background:MC.blueL, color:MC.blue, border:`1px solid ${MC.blueLb}`,
+              borderRadius:6, padding:"7px 12px", cursor:"pointer", fontSize:12, fontWeight:600 }}>
+            Oggi
+          </button>
+          <input type="date" value={dataSelezionata} onChange={e => setData(e.target.value)}
+            style={{ border:`1px solid ${MC.border}`, borderRadius:6, padding:"7px 10px",
+              fontSize:12, fontFamily:"'IBM Plex Sans',sans-serif" }}/>
+        </div>
+        <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+          {/* Legenda */}
+          {Object.entries({ confermato:"Confermato", inviato:"In attesa", bozza:"Bozza" }).map(([k,l]) => (
+            <div key={k} style={{ display:"flex", alignItems:"center", gap:4 }}>
+              <div style={{ width:10, height:10, borderRadius:2,
+                background:statoColori[k]?.bg, border:`2px solid ${statoColori[k]?.border}` }}/>
+              <span style={{ fontSize:10, color:MC.text3 }}>{l}</span>
+            </div>
+          ))}
+          <button onClick={() => onNuovoPreventivo && onNuovoPreventivo()}
+            style={{ background:MC.blue, color:"#fff", border:"none", borderRadius:6,
+              padding:"8px 14px", cursor:"pointer", fontSize:12, fontWeight:600,
+              fontFamily:"'IBM Plex Sans',sans-serif" }}>
+            + Prenota sala
+          </button>
+        </div>
+      </div>
+
+      {/* ── KPI giornata ── */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:18 }}>
+        {[
+          { l:"Sale occupate", v:`${Object.keys(prenotazioniGiorno).length}/${saleAttive.length}`, c:MC.blue },
+          { l:"Prenotazioni", v:Object.values(prenotazioniGiorno).reduce((s,a)=>s+a.length,0), c:MC.navy },
+          { l:"Ore prenotate", v:Object.values(prenotazioniGiorno).reduce((s,a)=>s+a.reduce((ss,x)=>ss+(x.slotEnd-x.slotStart)*SLOT_MIN/60,0),0).toFixed(1)+"h", c:MC.amber },
+          { l:"Libere", v:saleAttive.filter(s=>!prenotazioniGiorno[s.id]).length, c:MC.green },
+        ].map(k => (
+          <div key={k.l} style={{ background:"#fff", border:`1px solid ${MC.border}`,
+            borderRadius:8, padding:"12px 16px" }}>
+            <div style={{ fontSize:10, fontWeight:700, color:MC.text3, textTransform:"uppercase",
+              letterSpacing:.5, marginBottom:4 }}>{k.l}</div>
+            <div style={{ fontSize:22, fontWeight:700, color:k.c }}>{k.v}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── GRIGLIA PLANNING ── */}
+      <div style={{ background:"#fff", border:`1px solid ${MC.border}`, borderRadius:10,
+        overflow:"hidden", overflowX:"auto" }}>
+
+        {/* Header: colonne ore */}
+        <div style={{ display:"flex", borderBottom:`2px solid ${MC.border}`, background:MC.surface2,
+          position:"sticky", top:0, zIndex:10 }}>
+          <div style={{ width:HEAD_W, minWidth:HEAD_W, padding:"10px 14px",
+            fontSize:11, fontWeight:700, color:MC.text3, textTransform:"uppercase",
+            letterSpacing:.5, borderRight:`1px solid ${MC.border}`, flexShrink:0 }}>
+            Sala
+          </div>
+          <div style={{ flex:1, display:"flex", position:"relative", overflow:"hidden" }}>
+            {hourLabels.map((h, i) => (
+              <div key={h} style={{ position:"absolute",
+                left: `${(i / (HOURS_END - HOURS_START)) * 100}%`,
+                fontSize:10, fontWeight:700, color:MC.text3,
+                borderLeft: i > 0 ? `1px solid ${MC.border}` : "none",
+                paddingLeft:4, lineHeight:"38px", height:38 }}>
+                {h}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Righe sale */}
+        {saleAttive.map(sala => {
+          const prenSala = prenotazioniGiorno[sala.id] || [];
+          const slotWidth = 100 / TOTAL_SLOTS;
+
+          return (
+            <div key={sala.id} style={{ display:"flex",
+              borderBottom:`1px solid ${MC.border}`, minHeight:CELL_H + 12 }}>
+              {/* Header sala */}
+              <div style={{ width:HEAD_W, minWidth:HEAD_W, padding:"8px 14px",
+                borderRight:`1px solid ${MC.border}`, flexShrink:0,
+                background:MC.surface2, display:"flex", alignItems:"center", gap:8 }}>
+                <div style={{ width:10, height:10, borderRadius:2, flexShrink:0,
+                  background:sala.colore, border:`1px solid ${sala.colore}88` }}/>
+                <div>
+                  <div style={{ fontSize:12, fontWeight:700, color:MC.text }}>{sala.nome}</div>
+                  <div style={{ fontSize:10, color:MC.text3 }}>P{sala.piano} · {sala.mq}mq</div>
+                </div>
+              </div>
+
+              {/* Colonne ore cliccabili */}
+              <div style={{ flex:1, position:"relative", minHeight:CELL_H + 12 }}>
+                {/* Sfondo celle per ore */}
+                <div style={{ position:"absolute", inset:0, display:"flex" }}>
+                  {Array.from({ length: TOTAL_SLOTS }).map((_, s) => (
+                    <div key={s} className="plan-cell"
+                      onClick={() => setModalPren({ salaId: sala.id, slotStart: s, data: dataSelezionata })}
+                      style={{ flex:1, height:"100%",
+                        borderRight: s % 2 === 1 ? `1px solid ${MC.border}` : "none",
+                        background: s % 4 < 2 ? "#fff" : "#fafbfc" }}/>
+                  ))}
+                </div>
+
+                {/* Blocchi prenotazione */}
+                {prenSala.map(({ prev, slotStart, slotEnd }, bi) => {
+                  const sc = statoColori[prev.stato] || statoColori.bozza;
+                  const left   = `${(slotStart / TOTAL_SLOTS) * 100}%`;
+                  const width  = `${Math.max(1, (slotEnd - slotStart) / TOTAL_SLOTS) * 100}%`;
+                  const durata = (slotEnd - slotStart) * SLOT_MIN;
+                  return (
+                    <div key={bi}
+                      className="plan-block"
+                      style={{ position:"absolute", top:4, bottom:4,
+                        left, width, overflow:"hidden",
+                        background:sc.bg, borderLeftColor:sala.colore,
+                        color:sc.text }}
+                      onMouseEnter={e => setTooltip({ prev, sala, x: e.clientX, y: e.clientY })}
+                      onMouseLeave={() => setTooltip(null)}
+                      onClick={e => { e.stopPropagation(); setTooltip(null); }}>
+                      <div style={{ fontWeight:700, whiteSpace:"nowrap",
+                        overflow:"hidden", textOverflow:"ellipsis" }}>
+                        {slotToTime(slotStart)}–{slotToTime(slotEnd)} · {prev.evento?.titolo}
+                      </div>
+                      <div style={{ fontSize:10, opacity:.8, whiteSpace:"nowrap",
+                        overflow:"hidden", textOverflow:"ellipsis" }}>
+                        {prev.cliente?.azienda || prev.cliente?.cognome} · {durata}min
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Linea "ora corrente" */}
+                {dataSelezionata === today && (() => {
+                  const now = new Date();
+                  const cur = timeToSlot(`${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`);
+                  if (cur < 0 || cur > TOTAL_SLOTS) return null;
+                  return <div style={{ position:"absolute", top:0, bottom:0,
+                    left:`${(cur/TOTAL_SLOTS)*100}%`, width:2,
+                    background:"#f44336", zIndex:5, opacity:.7 }}/>;
+                })()}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Tooltip prenotazione */}
+      {tooltip && (
+        <div className="plan-tooltip"
+          style={{ top: tooltip.y + 14, left: Math.min(tooltip.x + 10, window.innerWidth - 280) }}>
+          <div style={{ fontWeight:700, marginBottom:4 }}>{tooltip.prev.evento?.titolo}</div>
+          <div style={{ opacity:.85, marginBottom:2 }}>
+            🏛️ {tooltip.sala?.nome} · {tooltip.prev.sala?.layout}
+          </div>
+          <div style={{ opacity:.85, marginBottom:2 }}>
+            🕐 {tooltip.prev.evento?.oraInizio} – {tooltip.prev.evento?.oraFine}
+          </div>
+          <div style={{ opacity:.85, marginBottom:2 }}>
+            👤 {tooltip.prev.cliente?.cognome} · {tooltip.prev.cliente?.azienda}
+          </div>
+          <div style={{ marginTop:6 }}>
+            <span style={{ background:"rgba(255,255,255,.15)", borderRadius:4, padding:"2px 8px",
+              fontSize:10, fontWeight:700 }}>{tooltip.prev.stato?.toUpperCase()}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Modal click su cella libera */}
+      {modalPrenotazione && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(10,25,41,.6)",
+          zIndex:500, display:"flex", alignItems:"center", justifyContent:"center" }}
+          onClick={() => setModalPren(null)}>
+          <div onClick={e => e.stopPropagation()}
+            style={{ background:"#fff", borderRadius:12, padding:24, width:340,
+              boxShadow:"0 8px 32px rgba(0,0,0,.2)" }}>
+            <div style={{ fontSize:16, fontWeight:700, marginBottom:8 }}>Nuova prenotazione</div>
+            <div style={{ fontSize:13, color:MC.text3, marginBottom:16 }}>
+              📅 {fmt(modalPrenotazione.data)}<br/>
+              🏛️ {sale.find(s=>s.id===modalPrenotazione.salaId)?.nome}<br/>
+              🕐 Da: {slotToTime(modalPrenotazione.slotStart)}
+            </div>
+            <div style={{ display:"flex", gap:8 }}>
+              <button onClick={() => { setModalPren(null); onNuovoPreventivo?.(); }}
+                style={{ flex:1, background:MC.blue, color:"#fff", border:"none",
+                  borderRadius:6, padding:"10px", cursor:"pointer", fontWeight:600,
+                  fontFamily:"'IBM Plex Sans',sans-serif", fontSize:13 }}>
+                Crea preventivo
+              </button>
+              <button onClick={() => setModalPren(null)}
+                style={{ padding:"10px 14px", background:MC.surface2, border:`1px solid ${MC.border}`,
+                  borderRadius:6, cursor:"pointer", fontSize:13,
+                  fontFamily:"'IBM Plex Sans',sans-serif" }}>
+                Annulla
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  OrdiniServizio
+// ═══════════════════════════════════════════════════════════════════
+function OrdiniServizio({ preventivi = [], sale = [] }) {
+  const [ordini, setOrdini]           = useState(DEMO_ORDINI);
+  const [filtroStato, setFiltroStato] = useState("tutti");
+  const [filtroReparto, setFiltroReparto] = useState("tutti");
+  const [filtroData, setFiltroData]   = useState("");
+  const [formOS, setFormOS]           = useState(null);   // null | ordine in editing
+  const [expanded, setExpanded]       = useState(null);   // id ordine espanso
+  const [toast, setToast]             = useState(null);
+
+  const showToast = (msg) => { setToast(msg); setTimeout(()=>setToast(null), 2500); };
+
+  const emptyOrdine = () => ({
+    id: "OS" + Date.now().toString().slice(-6),
+    prevId: "", sala: "", data: "",
+    titolo: "", categoria: "setup", reparto: OS_REPARTI[0], stato: "bozza",
+    oraEsecuzione: "08:00", oraScadenza: "",
+    referente: "", telefono: "",
+    voci: [{ desc:"", qty:1, um:"servizio", note:"" }],
+    note: "",
+    creatoIl: new Date().toISOString().slice(0,10),
+    creatoDA: "Utente",
+  });
+
+  const salvaOrdine = (o) => {
+    setOrdini(prev => {
+      const idx = prev.findIndex(x => x.id === o.id);
+      return idx >= 0 ? prev.map(x => x.id === o.id ? o : x) : [...prev, o];
+    });
+    setFormOS(null);
+    showToast("Ordine di servizio salvato ✓");
+  };
+
+  const eliminaOrdine = (id) => {
+    if (!confirm("Eliminare questo ordine?")) return;
+    setOrdini(prev => prev.filter(x => x.id !== id));
+    showToast("Ordine eliminato");
+  };
+
+  const cambiaStato = (id, newStato) => {
+    setOrdini(prev => prev.map(x => x.id === id ? { ...x, stato: newStato } : x));
+  };
+
+  // ── Filtri
+  const ordiniVis = ordini.filter(o => {
+    if (filtroStato !== "tutti" && o.stato !== filtroStato) return false;
+    if (filtroReparto !== "tutti" && o.reparto !== filtroReparto) return false;
+    if (filtroData && o.data !== filtroData) return false;
+    return true;
+  }).sort((a,b) => {
+    const orden = ["inviato","in_corso","bozza","completato","annullato"];
+    return (orden.indexOf(a.stato) - orden.indexOf(b.stato)) || a.data.localeCompare(b.data) || a.oraEsecuzione.localeCompare(b.oraEsecuzione);
+  });
+
+  // ── KPI
+  const kpi = {
+    totale:    ordini.length,
+    inviati:   ordini.filter(o=>o.stato==="inviato").length,
+    in_corso:  ordini.filter(o=>o.stato==="in_corso").length,
+    completati:ordini.filter(o=>o.stato==="completato").length,
+  };
+
+  const fmtData = d => d ? new Date(d+"T12:00:00").toLocaleDateString("it-IT") : "—";
+  const catIcona = (cat) => OS_CATEGORIE.find(c=>c.id===cat)?.icon || "📦";
+  const prevNome = (prevId) => {
+    const p = preventivi.find(x=>x.id===prevId);
+    return p ? `${p.id} · ${p.evento?.titolo}` : prevId || "—";
+  };
+
+  // ── FORM ORDINE ────────────────────────────────────────────────
+  if (formOS) {
+    const upd = (k, v) => setFormOS(f => ({ ...f, [k]: v }));
+    const updVoce = (i, k, v) => setFormOS(f => {
+      const voci = [...f.voci];
+      voci[i] = { ...voci[i], [k]: v };
+      return { ...f, voci };
+    });
+    const addVoce = () => setFormOS(f => ({ ...f, voci: [...f.voci, { desc:"", qty:1, um:"servizio", note:"" }] }));
+    const delVoce = (i) => setFormOS(f => ({ ...f, voci: f.voci.filter((_,j)=>j!==i) }));
+
+    return (
+      <div>
+        <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:20 }}>
+          <button onClick={() => setFormOS(null)}
+            style={{ background:MC.surface2, border:`1px solid ${MC.border}`, borderRadius:6,
+              padding:"7px 12px", cursor:"pointer", fontSize:13,
+              fontFamily:"'IBM Plex Sans',sans-serif" }}>← Torna</button>
+          <h2 style={{ fontSize:20, fontWeight:700, margin:0 }}>
+            {ordini.find(x=>x.id===formOS.id) ? "Modifica" : "Nuovo"} Ordine di Servizio
+          </h2>
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, maxWidth:800 }}>
+          {/* Preventivo collegato */}
+          <div style={{ gridColumn:"1/-1" }}>
+            <label style={{ fontSize:11, fontWeight:700, color:MC.text3, textTransform:"uppercase",
+              letterSpacing:.5, display:"block", marginBottom:5 }}>Preventivo / Evento collegato</label>
+            <select value={formOS.prevId} onChange={e=>{
+              const p = preventivi.find(x=>x.id===e.target.value);
+              upd("prevId", e.target.value);
+              if (p) { upd("sala", p.sala?.id||""); upd("data", p.evento?.dataInizio||""); }
+            }} style={{ width:"100%", border:`1px solid ${MC.border2}`, borderRadius:6,
+              padding:"8px 12px", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>
+              <option value="">— Nessun collegamento —</option>
+              {preventivi.map(p => (
+                <option key={p.id} value={p.id}>{p.id} · {p.evento?.titolo} · {p.cliente?.azienda||p.cliente?.cognome}</option>
+              ))}
+            </select>
+          </div>
+          {/* Titolo */}
+          <div style={{ gridColumn:"1/-1" }}>
+            <label style={{ fontSize:11, fontWeight:700, color:MC.text3, textTransform:"uppercase",
+              letterSpacing:.5, display:"block", marginBottom:5 }}>Titolo ordine *</label>
+            <input value={formOS.titolo} onChange={e=>upd("titolo",e.target.value)}
+              placeholder="es. Allestimento sala per..."
+              style={{ width:"100%", border:`1px solid ${MC.border2}`, borderRadius:6,
+                padding:"8px 12px", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif",
+                outline:"none", boxSizing:"border-box" }}/>
+          </div>
+          {/* Categoria + Reparto */}
+          <div>
+            <label style={{ fontSize:11, fontWeight:700, color:MC.text3, textTransform:"uppercase",
+              letterSpacing:.5, display:"block", marginBottom:5 }}>Categoria</label>
+            <select value={formOS.categoria} onChange={e=>upd("categoria",e.target.value)}
+              style={{ width:"100%", border:`1px solid ${MC.border2}`, borderRadius:6,
+                padding:"8px 12px", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>
+              {OS_CATEGORIE.map(c=><option key={c.id} value={c.id}>{c.icon} {c.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize:11, fontWeight:700, color:MC.text3, textTransform:"uppercase",
+              letterSpacing:.5, display:"block", marginBottom:5 }}>Reparto destinatario</label>
+            <select value={formOS.reparto} onChange={e=>upd("reparto",e.target.value)}
+              style={{ width:"100%", border:`1px solid ${MC.border2}`, borderRadius:6,
+                padding:"8px 12px", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>
+              {OS_REPARTI.map(r=><option key={r} value={r}>{r}</option>)}
+            </select>
+          </div>
+          {/* Sala + Data */}
+          <div>
+            <label style={{ fontSize:11, fontWeight:700, color:MC.text3, textTransform:"uppercase",
+              letterSpacing:.5, display:"block", marginBottom:5 }}>Sala</label>
+            <select value={formOS.sala} onChange={e=>upd("sala",e.target.value)}
+              style={{ width:"100%", border:`1px solid ${MC.border2}`, borderRadius:6,
+                padding:"8px 12px", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif" }}>
+              <option value="">— Seleziona —</option>
+              {sale.map(s=><option key={s.id} value={s.id}>{s.nome}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize:11, fontWeight:700, color:MC.text3, textTransform:"uppercase",
+              letterSpacing:.5, display:"block", marginBottom:5 }}>Data esecuzione</label>
+            <input type="date" value={formOS.data} onChange={e=>upd("data",e.target.value)}
+              style={{ width:"100%", border:`1px solid ${MC.border2}`, borderRadius:6,
+                padding:"8px 12px", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif",
+                boxSizing:"border-box" }}/>
+          </div>
+          {/* Ora esecuzione + scadenza */}
+          <div>
+            <label style={{ fontSize:11, fontWeight:700, color:MC.text3, textTransform:"uppercase",
+              letterSpacing:.5, display:"block", marginBottom:5 }}>Ora esecuzione</label>
+            <input type="time" value={formOS.oraEsecuzione} onChange={e=>upd("oraEsecuzione",e.target.value)}
+              style={{ width:"100%", border:`1px solid ${MC.border2}`, borderRadius:6,
+                padding:"8px 12px", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif",
+                boxSizing:"border-box" }}/>
+          </div>
+          <div>
+            <label style={{ fontSize:11, fontWeight:700, color:MC.text3, textTransform:"uppercase",
+              letterSpacing:.5, display:"block", marginBottom:5 }}>Completare entro</label>
+            <input type="time" value={formOS.oraScadenza} onChange={e=>upd("oraScadenza",e.target.value)}
+              style={{ width:"100%", border:`1px solid ${MC.border2}`, borderRadius:6,
+                padding:"8px 12px", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif",
+                boxSizing:"border-box" }}/>
+          </div>
+          {/* Referente */}
+          <div>
+            <label style={{ fontSize:11, fontWeight:700, color:MC.text3, textTransform:"uppercase",
+              letterSpacing:.5, display:"block", marginBottom:5 }}>Referente reparto</label>
+            <input value={formOS.referente} onChange={e=>upd("referente",e.target.value)}
+              placeholder="Nome responsabile"
+              style={{ width:"100%", border:`1px solid ${MC.border2}`, borderRadius:6,
+                padding:"8px 12px", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif",
+                outline:"none", boxSizing:"border-box" }}/>
+          </div>
+          <div>
+            <label style={{ fontSize:11, fontWeight:700, color:MC.text3, textTransform:"uppercase",
+              letterSpacing:.5, display:"block", marginBottom:5 }}>Telefono / interno</label>
+            <input value={formOS.telefono} onChange={e=>upd("telefono",e.target.value)}
+              placeholder="int. 201 / +39..."
+              style={{ width:"100%", border:`1px solid ${MC.border2}`, borderRadius:6,
+                padding:"8px 12px", fontSize:13, fontFamily:"'IBM Plex Sans',sans-serif",
+                outline:"none", boxSizing:"border-box" }}/>
+          </div>
+          {/* Voci ordine */}
+          <div style={{ gridColumn:"1/-1" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+              <label style={{ fontSize:11, fontWeight:700, color:MC.text3, textTransform:"uppercase", letterSpacing:.5 }}>
+                Voci ordine ({formOS.voci.length})
+              </label>
+              <button onClick={addVoce}
+                style={{ background:MC.blueL, color:MC.blue, border:`1px solid ${MC.blueLb}`,
+                  borderRadius:5, padding:"4px 10px", cursor:"pointer", fontSize:12, fontWeight:600,
+                  fontFamily:"'IBM Plex Sans',sans-serif" }}>+ Aggiungi voce</button>
+            </div>
+            <div style={{ border:`1px solid ${MC.border}`, borderRadius:8, overflow:"hidden" }}>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 60px 80px 120px 30px",
+                padding:"7px 12px", background:MC.surface2,
+                borderBottom:`1px solid ${MC.border}`,
+                fontSize:10, fontWeight:700, color:MC.text3, textTransform:"uppercase", gap:8 }}>
+                {["Descrizione","Qtà","U.M.","Note",""].map(h=><div key={h}>{h}</div>)}
+              </div>
+              {formOS.voci.map((v, i) => (
+                <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 60px 80px 120px 30px",
+                  gap:8, padding:"8px 12px",
+                  borderBottom: i < formOS.voci.length-1 ? `1px solid ${MC.border}` : "none",
+                  background: i%2===0?"#fff":MC.surface2 }}>
+                  <input value={v.desc} onChange={e=>updVoce(i,"desc",e.target.value)}
+                    placeholder="Descrizione voce"
+                    style={{ border:`1px solid ${MC.border}`, borderRadius:4, padding:"5px 8px",
+                      fontSize:12, fontFamily:"'IBM Plex Sans',sans-serif", outline:"none" }}/>
+                  <input type="number" value={v.qty} onChange={e=>updVoce(i,"qty",e.target.value)} min={1}
+                    style={{ border:`1px solid ${MC.border}`, borderRadius:4, padding:"5px 8px",
+                      fontSize:12, textAlign:"center", fontFamily:"'IBM Plex Sans',sans-serif", outline:"none" }}/>
+                  <input value={v.um} onChange={e=>updVoce(i,"um",e.target.value)}
+                    placeholder="pz / persona..."
+                    style={{ border:`1px solid ${MC.border}`, borderRadius:4, padding:"5px 8px",
+                      fontSize:12, fontFamily:"'IBM Plex Sans',sans-serif", outline:"none" }}/>
+                  <input value={v.note} onChange={e=>updVoce(i,"note",e.target.value)}
+                    placeholder="Note"
+                    style={{ border:`1px solid ${MC.border}`, borderRadius:4, padding:"5px 8px",
+                      fontSize:12, fontFamily:"'IBM Plex Sans',sans-serif", outline:"none" }}/>
+                  <button onClick={()=>delVoce(i)}
+                    style={{ background:MC.redL, color:MC.red, border:"none", borderRadius:4,
+                      cursor:"pointer", fontSize:14, lineHeight:1, padding:0 }}>✕</button>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Note generali */}
+          <div style={{ gridColumn:"1/-1" }}>
+            <label style={{ fontSize:11, fontWeight:700, color:MC.text3, textTransform:"uppercase",
+              letterSpacing:.5, display:"block", marginBottom:5 }}>Note operative</label>
+            <textarea value={formOS.note} onChange={e=>upd("note",e.target.value)}
+              rows={3} placeholder="Istruzioni speciali, attenzioni particolari..."
+              style={{ width:"100%", border:`1px solid ${MC.border2}`, borderRadius:6,
+                padding:"8px 12px", fontSize:13, resize:"vertical",
+                fontFamily:"'IBM Plex Sans',sans-serif", outline:"none", boxSizing:"border-box" }}/>
+          </div>
+        </div>
+        {/* Azioni */}
+        <div style={{ display:"flex", gap:10, marginTop:20 }}>
+          <button onClick={() => salvaOrdine({ ...formOS, stato: "bozza" })}
+            style={{ padding:"10px 20px", background:MC.surface2, border:`1px solid ${MC.border}`,
+              borderRadius:6, cursor:"pointer", fontSize:13, fontWeight:600,
+              fontFamily:"'IBM Plex Sans',sans-serif" }}>Salva bozza</button>
+          <button onClick={() => salvaOrdine({ ...formOS, stato: "inviato" })}
+            style={{ padding:"10px 20px", background:MC.blue, color:"#fff", border:"none",
+              borderRadius:6, cursor:"pointer", fontSize:13, fontWeight:600,
+              fontFamily:"'IBM Plex Sans',sans-serif" }}>📤 Invia al reparto</button>
+          <button onClick={() => setFormOS(null)}
+            style={{ padding:"10px 14px", background:MC.surface2, border:`1px solid ${MC.border}`,
+              borderRadius:6, cursor:"pointer", fontSize:13,
+              fontFamily:"'IBM Plex Sans',sans-serif" }}>Annulla</button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── LISTA ORDINI ───────────────────────────────────────────────
+  return (
+    <div>
+      {/* KPI */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginBottom:20 }}>
+        {[
+          { l:"Totale",      v:kpi.totale,    c:MC.navy  },
+          { l:"Da inviare",  v:kpi.inviati,   c:MC.blue  },
+          { l:"In lavorazione",v:kpi.in_corso,c:MC.amber },
+          { l:"Completati",  v:kpi.completati,c:MC.green },
+        ].map(k=>(
+          <div key={k.l} style={{ background:"#fff", border:`1px solid ${MC.border}`,
+            borderRadius:8, padding:"12px 16px" }}>
+            <div style={{ fontSize:10, fontWeight:700, color:MC.text3, textTransform:"uppercase",
+              letterSpacing:.5, marginBottom:4 }}>{k.l}</div>
+            <div style={{ fontSize:24, fontWeight:700, color:k.c }}>{k.v}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filtri + azioni */}
+      <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:16, flexWrap:"wrap" }}>
+        <select value={filtroStato} onChange={e=>setFiltroStato(e.target.value)}
+          style={{ border:`1px solid ${MC.border}`, borderRadius:6, padding:"7px 12px",
+            fontSize:12, fontFamily:"'IBM Plex Sans',sans-serif" }}>
+          <option value="tutti">Tutti gli stati</option>
+          {Object.entries(OS_STATI).map(([k,s])=><option key={k} value={k}>{s.label}</option>)}
+        </select>
+        <select value={filtroReparto} onChange={e=>setFiltroReparto(e.target.value)}
+          style={{ border:`1px solid ${MC.border}`, borderRadius:6, padding:"7px 12px",
+            fontSize:12, fontFamily:"'IBM Plex Sans',sans-serif" }}>
+          <option value="tutti">Tutti i reparti</option>
+          {OS_REPARTI.map(r=><option key={r} value={r}>{r}</option>)}
+        </select>
+        <input type="date" value={filtroData} onChange={e=>setFiltroData(e.target.value)}
+          style={{ border:`1px solid ${MC.border}`, borderRadius:6, padding:"7px 10px",
+            fontSize:12, fontFamily:"'IBM Plex Sans',sans-serif" }}/>
+        {filtroData && (
+          <button onClick={()=>setFiltroData("")}
+            style={{ padding:"7px 10px", background:MC.surface2, border:`1px solid ${MC.border}`,
+              borderRadius:6, cursor:"pointer", fontSize:12,
+              fontFamily:"'IBM Plex Sans',sans-serif" }}>✕ Reset</button>
+        )}
+        <div style={{ marginLeft:"auto" }}>
+          <button onClick={() => setFormOS(emptyOrdine())}
+            style={{ background:MC.blue, color:"#fff", border:"none", borderRadius:6,
+              padding:"8px 16px", cursor:"pointer", fontSize:13, fontWeight:600,
+              fontFamily:"'IBM Plex Sans',sans-serif" }}>
+            + Nuovo ordine di servizio
+          </button>
+        </div>
+      </div>
+
+      {/* Lista ordini */}
+      <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+        {ordiniVis.length === 0 && (
+          <div style={{ background:"#fff", border:`1px solid ${MC.border}`, borderRadius:10,
+            padding:40, textAlign:"center", color:MC.text3 }}>
+            <div style={{ fontSize:36, marginBottom:10 }}>📋</div>
+            <div style={{ fontWeight:600 }}>Nessun ordine trovato</div>
+            <div style={{ fontSize:13, marginTop:4 }}>Modifica i filtri o crea un nuovo ordine</div>
+          </div>
+        )}
+        {ordiniVis.map(o => {
+          const st  = OS_STATI[o.stato] || OS_STATI.bozza;
+          const sal = sale.find(s=>s.id===o.sala);
+          const isExp = expanded === o.id;
+
+          return (
+            <div key={o.id} style={{ background:"#fff", border:`1px solid ${isExp?MC.border2:MC.border}`,
+              borderRadius:10, overflow:"hidden",
+              boxShadow: isExp ? "0 2px 12px rgba(15,98,254,.08)" : "none",
+              transition:"box-shadow .15s" }}>
+              {/* Header card */}
+              <div style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 16px",
+                cursor:"pointer" }}
+                onClick={() => setExpanded(isExp ? null : o.id)}>
+                {/* Categoria icona */}
+                <div style={{ fontSize:24, flexShrink:0 }}>{catIcona(o.categoria)}</div>
+                {/* Info principale */}
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:3, flexWrap:"wrap" }}>
+                    <span style={{ fontWeight:700, fontSize:14, color:MC.text }}>{o.titolo}</span>
+                    <span style={{ background:st.bg, color:st.color, border:`1px solid ${st.border}`,
+                      padding:"2px 9px", borderRadius:10, fontSize:10, fontWeight:700 }}>
+                      {st.label}
+                    </span>
+                  </div>
+                  <div style={{ fontSize:11, color:MC.text3, display:"flex", gap:12, flexWrap:"wrap" }}>
+                    <span>📅 {fmtData(o.data)}</span>
+                    <span>🕐 {o.oraEsecuzione}{o.oraScadenza?` → ${o.oraScadenza}`:""}</span>
+                    {sal && <span>🏛️ {sal.nome}</span>}
+                    <span>👥 {o.reparto}</span>
+                    {o.referente && <span>👤 {o.referente}</span>}
+                    {o.prevId && <span style={{ color:MC.blue }}>📋 {o.prevId}</span>}
+                  </div>
+                </div>
+                {/* Azioni rapide */}
+                <div style={{ display:"flex", gap:6, flexShrink:0 }}
+                  onClick={e=>e.stopPropagation()}>
+                  {o.stato === "bozza" && (
+                    <button onClick={()=>cambiaStato(o.id,"inviato")}
+                      style={{ background:MC.blueL, color:MC.blue, border:`1px solid ${MC.blueLb}`,
+                        borderRadius:5, padding:"5px 10px", cursor:"pointer", fontSize:11, fontWeight:600,
+                        fontFamily:"'IBM Plex Sans',sans-serif" }}>
+                      📤 Invia
+                    </button>
+                  )}
+                  {o.stato === "inviato" && (
+                    <button onClick={()=>cambiaStato(o.id,"in_corso")}
+                      style={{ background:MC.amberL, color:MC.amber, border:`1px solid ${MC.amberLb}`,
+                        borderRadius:5, padding:"5px 10px", cursor:"pointer", fontSize:11, fontWeight:600,
+                        fontFamily:"'IBM Plex Sans',sans-serif" }}>
+                      ▶ In lavorazione
+                    </button>
+                  )}
+                  {o.stato === "in_corso" && (
+                    <button onClick={()=>cambiaStato(o.id,"completato")}
+                      style={{ background:MC.greenL, color:MC.green, border:`1px solid ${MC.greenLb}`,
+                        borderRadius:5, padding:"5px 10px", cursor:"pointer", fontSize:11, fontWeight:600,
+                        fontFamily:"'IBM Plex Sans',sans-serif" }}>
+                      ✓ Completato
+                    </button>
+                  )}
+                  <button onClick={()=>setFormOS({...JSON.parse(JSON.stringify(o))})}
+                    style={{ background:MC.surface2, border:`1px solid ${MC.border}`,
+                      borderRadius:5, padding:"5px 9px", cursor:"pointer", fontSize:12,
+                      fontFamily:"'IBM Plex Sans',sans-serif" }}>✏</button>
+                  <button onClick={()=>eliminaOrdine(o.id)}
+                    style={{ background:MC.redL, color:MC.red, border:`1px solid ${MC.redLb}`,
+                      borderRadius:5, padding:"5px 9px", cursor:"pointer", fontSize:12,
+                      fontFamily:"'IBM Plex Sans',sans-serif" }}>✕</button>
+                </div>
+                <span style={{ color:MC.text3, fontSize:16, marginLeft:4 }}>{isExp?"▴":"▾"}</span>
+              </div>
+
+              {/* Corpo espanso */}
+              {isExp && (
+                <div style={{ borderTop:`1px solid ${MC.border}`, padding:"16px" }}>
+                  {/* Voci ordine */}
+                  <div style={{ marginBottom:14 }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:MC.text3, textTransform:"uppercase",
+                      letterSpacing:.5, marginBottom:8 }}>Voci ordine ({o.voci.length})</div>
+                    <div style={{ border:`1px solid ${MC.border}`, borderRadius:8, overflow:"hidden" }}>
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 60px 80px 1fr",
+                        padding:"7px 14px", background:MC.surface2,
+                        borderBottom:`1px solid ${MC.border}`,
+                        fontSize:10, fontWeight:700, color:MC.text3, textTransform:"uppercase", gap:12 }}>
+                        {["Descrizione","Qtà","U.M.","Note"].map(h=><div key={h}>{h}</div>)}
+                      </div>
+                      {o.voci.map((v,i)=>(
+                        <div key={i} style={{ display:"grid",
+                          gridTemplateColumns:"1fr 60px 80px 1fr",
+                          padding:"9px 14px", gap:12,
+                          borderBottom: i<o.voci.length-1?`1px solid ${MC.border}`:"none",
+                          background:i%2===0?"#fff":MC.surface2 }}>
+                          <div style={{ fontWeight:500, fontSize:13 }}>{v.desc}</div>
+                          <div style={{ fontSize:13, fontWeight:700, color:MC.navy, textAlign:"center" }}>{v.qty}</div>
+                          <div style={{ fontSize:12, color:MC.text2 }}>{v.um}</div>
+                          <div style={{ fontSize:12, color:MC.text3, fontStyle:v.note?"normal":"italic" }}>
+                            {v.note || "—"}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Note */}
+                  {o.note && (
+                    <div style={{ background:"#fffde7", border:"1px solid #f9e04b",
+                      borderRadius:6, padding:"8px 12px", fontSize:12, color:"#795548" }}>
+                      📝 {o.note}
+                    </div>
+                  )}
+                  {/* Preventivo collegato */}
+                  {o.prevId && (() => {
+                    const p = preventivi.find(x=>x.id===o.prevId);
+                    if (!p) return null;
+                    return (
+                      <div style={{ marginTop:12, background:MC.blueL, border:`1px solid ${MC.blueLb}`,
+                        borderRadius:6, padding:"8px 12px", fontSize:12, color:MC.navy }}>
+                        🔗 Collegato a: <strong>{p.id}</strong> · {p.evento?.titolo} ·{" "}
+                        {p.evento?.dataInizio} {p.evento?.oraInizio}–{p.evento?.oraFine}
+                      </div>
+                    );
+                  })()}
+                  {/* Footer: creato da + stampa */}
+                  <div style={{ display:"flex", justifyContent:"space-between", marginTop:12,
+                    fontSize:11, color:MC.text3, alignItems:"center" }}>
+                    <span>Creato il {fmtData(o.creatoIl)} da {o.creatoDA}</span>
+                    <button onClick={()=>{
+                      const sal=sale.find(s=>s.id===o.sala);
+                      const win=window.open("","_blank");
+                      win.document.write(`<html><head><title>Ordine ${o.id}</title>
+                        <style>body{font-family:'IBM Plex Sans',Arial,sans-serif;padding:32px;color:#1a2535}
+                        h1{font-size:22px}h2{font-size:14px;margin-top:20px;text-transform:uppercase;color:#888}
+                        table{width:100%;border-collapse:collapse;margin-top:12px}
+                        th,td{border:1px solid #dde3ec;padding:8px 12px;text-align:left}th{background:#f5f7fa}
+                        .badge{background:#e8f0ff;color:#0f62fe;padding:2px 10px;border-radius:10px;font-weight:700}
+                        .note{background:#fffde7;border:1px solid #f9e04b;padding:10px;border-radius:6px;margin-top:12px}
+                        @media print{button{display:none}}</style></head><body>
+                        <h1>Ordine di Servizio — ${o.id}</h1>
+                        <div>
+                          <strong>${o.titolo}</strong><br/>
+                          Data: ${o.data} · Ora: ${o.oraEsecuzione}${o.oraScadenza?` → ${o.oraScadenza}`:""}
+                          ${sal?`<br/>Sala: ${sal.nome}`:""}${o.prevId?`<br/>Preventivo: ${o.prevId}`:""}
+                          <br/>Reparto: <span class="badge">${o.reparto}</span>
+                          ${o.referente?`<br/>Referente: ${o.referente}${o.telefono?" · "+o.telefono:""}`: ""}
+                        </div>
+                        <h2>Voci ordine</h2>
+                        <table><tr><th>Descrizione</th><th>Qtà</th><th>U.M.</th><th>Note</th></tr>
+                        ${o.voci.map(v=>`<tr><td>${v.desc}</td><td style="text-align:center">${v.qty}</td><td>${v.um}</td><td>${v.note||""}</td></tr>`).join("")}
+                        </table>
+                        ${o.note?`<div class="note">📝 ${o.note}</div>`:""}
+                        <div style="margin-top:28px;font-size:11px;color:#888">
+                        Creato il ${o.creatoIl} da ${o.creatoDA} · Stato: ${OS_STATI[o.stato]?.label||o.stato}
+                        </div>
+                        <script>window.print();</script></body></html>`);
+                    }} style={{ background:MC.surface2, border:`1px solid ${MC.border}`,
+                      borderRadius:5, padding:"5px 12px", cursor:"pointer", fontSize:11,
+                      fontFamily:"'IBM Plex Sans',sans-serif" }}>
+                      🖨 Stampa
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Toast */}
+      {toast && (
+        <div style={{ position:"fixed", bottom:24, right:24, zIndex:9999,
+          background:MC.green, color:"#fff", borderRadius:8, padding:"12px 20px",
+          fontSize:13, fontWeight:600, boxShadow:"0 4px 20px rgba(0,0,0,.2)",
+          animation:"slideInRight .3s ease" }}>
+          ✓ {toast}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 const MC = {
   bg: "#f0f3f7", surface: "#ffffff", surface2: "#f5f7fa",
   border: "#dde3ec", border2: "#c4cdd9",
@@ -7288,6 +8192,46 @@ const DEMO_PREV = [
     creatoIl:"2025-02-24", inviatoIl:null, confermatoIl:null,
     sconto:0,
   },
+  {
+    id:"MICE004", stato:"confermato",
+    cliente:{ nome:"", cognome:"Giulia Contin", azienda:"Regione Veneto – Formazione", email:"g.contin@regione.veneto.it", tel:"+39 041 279 3200" },
+    evento:{ titolo:"Workshop Innovazione PA", tipo:"training", dataInizio:"2026-03-10", dataFine:"2026-03-10", oraInizio:"09:00", oraFine:"13:00", partecipanti:25 },
+    sala:{ id:"S2", layout:"classroom", allestimento:"Standard" },
+    attrezzature:[{ id:"AV04", qty:1 }],
+    fb:[{ id:"CB01", qty:25, momento:"Mattina" }],
+    note:"Solo mattina. Pranzo non richiesto.",
+    creatoIl:"2026-02-15", inviatoIl:"2026-02-16", confermatoIl:"2026-02-20", sconto:0,
+  },
+  {
+    id:"MICE005", stato:"confermato",
+    cliente:{ nome:"Avv.", cognome:"Pietro Morosini", azienda:"Studio Morosini & Partners", email:"morosini@studiomorosini.it", tel:"+39 041 523 4567" },
+    evento:{ titolo:"Arbitrato Commerciale", tipo:"meeting", dataInizio:"2026-03-12", dataFine:"2026-03-12", oraInizio:"10:00", oraFine:"17:00", partecipanti:10 },
+    sala:{ id:"S3", layout:"boardroom", allestimento:"Standard" },
+    attrezzature:[{ id:"AV04", qty:1 }],
+    fb:[{ id:"CB01", qty:10, momento:"Mattina" },{ id:"PZ02", qty:10, momento:"Pranzo" }],
+    note:"Massima riservatezza. Vietato l'accesso al personale non autorizzato.",
+    creatoIl:"2026-02-28", inviatoIl:"2026-02-28", confermatoIl:"2026-03-01", sconto:0,
+  },
+  {
+    id:"MICE006", stato:"inviato",
+    cliente:{ nome:"", cognome:"Beatrice Zanon", azienda:"Fondazione Teatro La Fenice", email:"b.zanon@fenice.it", tel:"+39 041 786 511" },
+    evento:{ titolo:"Gala Dinner Beneficenza", tipo:"banquet", dataInizio:"2026-03-15", dataFine:"2026-03-15", oraInizio:"19:30", oraFine:"24:00", partecipanti:70 },
+    sala:{ id:"S1", layout:"banquet", allestimento:"Premium" },
+    attrezzature:[{ id:"AV01", qty:1 },{ id:"AV05", qty:4 }],
+    fb:[{ id:"AP02", qty:70, momento:"Sera" },{ id:"CE01", qty:70, momento:"Sera" }],
+    note:"Cena di gala con orchestra live. Coordinare con staff per palco musicisti.",
+    creatoIl:"2026-02-20", inviatoIl:"2026-02-21", confermatoIl:null, sconto:5,
+  },
+  {
+    id:"MICE007", stato:"confermato",
+    cliente:{ nome:"", cognome:"Marco Trevisan", azienda:"Veneto Banca Holding", email:"m.trevisan@venetobanca.it", tel:"+39 0423 273000" },
+    evento:{ titolo:"CDA Trimestrale", tipo:"meeting", dataInizio:"2026-03-15", dataFine:"2026-03-15", oraInizio:"14:00", oraFine:"18:30", partecipanti:16 },
+    sala:{ id:"S3", layout:"boardroom", allestimento:"Premium" },
+    attrezzature:[{ id:"AV04", qty:1 },{ id:"AV06", qty:8 }],
+    fb:[{ id:"CB02", qty:16, momento:"Pomeriggio" }],
+    note:"",
+    creatoIl:"2026-03-01", inviatoIl:"2026-03-01", confermatoIl:"2026-03-01", sconto:0,
+  },
 ];
 
 // ════════════════════════════════════════════════════════════════
@@ -7432,6 +8376,8 @@ function MICEModule({ reservations=[], setReservations=()=>{}, guests=[] }) {
         {[
           { k:"dashboard", icon:"📊", label:"Dashboard" },
           { k:"lista",     icon:"📋", label:"Preventivi" },
+          { k:"planning",  icon:"🗓️", label:"Planning Sale" },
+          { k:"ordini",    icon:"📑", label:"Ordini Servizio" },
           { k:"sale",      icon:"🏛️", label:"Sale" },
         ].map(n => (
           <button key={n.k} onClick={() => setView(n.k)} style={{
@@ -7458,6 +8404,8 @@ function MICEModule({ reservations=[], setReservations=()=>{}, guests=[] }) {
         {view === "lista"      && <ListaPreventivi preventivi={listFiltrata} sale={sale} calcTotale={calcTotale} filterStato={filterStato} setFilterStato={setFilterStato} searchQ={searchQ} setSearchQ={setSearchQ} onNew={nuovoPreventivo} onEdit={editPreventivo} onView={p=>{setSelected(p);setView("dettaglio");}} onStato={cambiaStato} onDelete={eliminaPreventivo} />}
         {view === "form"       && formData && <FormPreventivo data={formData} setData={setFormData} sale={sale} calcTotale={calcTotale} activeTab={activeTab} setActiveTab={setActiveTab} onSave={salvaPreventivo} onCancel={() => setView("lista")} reservations={reservations} />}
         {view === "dettaglio"  && selected && <DettaglioPreventivo prev={selected} sale={sale} calcTotale={calcTotale} onEdit={() => editPreventivo(selected)} onStato={cambiaStato} onDelete={eliminaPreventivo} onBack={() => setView("lista")} reservations={reservations} setReservations={setReservations} guests={guests} />}
+        {view === "planning"  && <PlanningMeeting preventivi={preventivi} sale={sale} onNuovoPreventivo={nuovoPreventivo} />}
+        {view === "ordini"    && <OrdiniServizio preventivi={preventivi} sale={sale} />}
         {view === "sale"       && <GestioneSale sale={sale} preventivi={preventivi} onSalva={salvaSala} />}
       </div>
 
