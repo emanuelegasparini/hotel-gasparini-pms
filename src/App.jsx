@@ -1447,6 +1447,8 @@ export default function HotelPMS() {
         const osp = await sb.select("ospiti", "?select=*&order=cognome");
         // Carica prenotazioni + pagamenti + extra
         const pren = await sb.select("prenotazioni", "?select=*&order=created_at.desc");
+        const grpDB= await sb.select("gruppi",        "?select=*&order=creato_il.desc");
+        const miceDB=await sb.select("eventi_mice",   "?select=*&order=created_at.desc");
         const pag  = await sb.select("pagamenti",    "?select=*");
         const ext  = await sb.select("extra",        "?select=*");
         // Carica regole pricing
@@ -1487,17 +1489,46 @@ export default function HotelPMS() {
           })));
         }
 
+        // Merge eventi MICE
+        if (miceDB?.length > 0) { setMiceEvents(miceDB.map(e=>({
+          id:e.id, nome:e.nome||"", tipo:e.tipo||"conference", stato:e.stato||"bozza",
+          salaId:e.sala_id, checkIn:e.check_in, checkOut:e.check_out,
+          dataSetup:e.data_setup||"", dataTeardown:e.data_teardown||"",
+          pax:e.pax||0, oreSetup:e.ore_setup||4,
+          organizzatore:e.organizzatore||"", organizzatoreEmail:e.organizzatore_email||"",
+          azienda:e.azienda||"", pIva:e.p_iva||"",
+          contattoNome:e.contatto_nome||"", contattoEmail:e.contatto_email||"", contattoTel:e.contatto_tel||"",
+          layout:e.layout||null, attrezzature:e.attrezzature||[], fbPackages:e.fb_packages||[],
+          camereIds:e.camere_ids||[], accontoPerc:e.acconto_perc||30, scontoPerc:e.sconto_perc||0,
+          note:e.note||"", noteInterne:e.note_interne||"",
+          canale:e.canale||"", mercato:e.mercato||"", segmento:e.segmento||"",
+          creatoIl:e.creato_il||"", updatedAt:e.updated_at||"",
+        }))); }
+
         // Merge prenotazioni con pagamenti ed extra annidati
         if (pren.length > 0) {
           setReservations(pren.map(r => ({
-            id: r.id, roomId: r.camera_id, guestId: r.ospite_id,
-            guestName: r.ospite_nome, checkIn: r.check_in, checkOut: r.check_out,
-            guests: r.guests||1, adulti: r.adulti||1, bambini: r.bambini||0,
-            status: r.status, services: r.servizi||[],
-            psInviato: r.ps_inviato, checkInTime: r.check_in_time,
-            checkOutTime: r.check_out_time, note: r.note||"", fonte: r.fonte||"diretta",
-            payments: pag.filter(p=>p.prenotazione_id===r.id).map(p=>({ amount:parseFloat(p.importo), method:p.metodo, date:p.data, _id:p.id })),
-            roomServiceItems: ext.filter(e=>e.prenotazione_id===r.id).map(e=>({ desc:e.descrizione, price:parseFloat(e.importo), date:e.data, _id:e.id })),
+            id:r.id, roomId:r.camera_id, guestId:r.ospite_id,
+            guestName:r.ospite_nome, checkIn:r.check_in, checkOut:r.check_out,
+            guests:r.guests||1, adulti:r.adulti||1, bambini:r.bambini||0,
+            status:r.status||"reserved", services:r.servizi||[],
+            psInviato:r.ps_inviato, istatRegistrato:r.istat_registrato||false,
+            checkInTime:r.check_in_time, checkOutTime:r.check_out_time,
+            notes:r.note||"", note:r.note||"", fonte:r.fonte||"diretta",
+            // Segmentazione
+            canale:r.canale||"", mercato:r.mercato||"",
+            segmento:r.segmento||"", motivoSoggiorno:r.motivo_soggiorno||"",
+            linguaOspite:r.lingua_ospite||"", trattamento:r.trattamento||"BB",
+            // Gruppo
+            tipo:r.tipo||"individuale", gruppoId:r.gruppo_id||null,
+            // Pricing
+            prezzoOverride:r.prezzo_override||null,
+            // Gratuità
+            gratuita:r.gratuita||false, gratuitaMotivo:r.gratuita_motivo||"",
+            // Pagamenti ed extra
+            payments:pag.filter(p=>p.prenotazione_id===r.id).map(p=>({amount:parseFloat(p.importo),method:p.metodo,date:p.data?.slice(0,10)||""})),
+            roomServiceItems:ext.filter(e=>e.prenotazione_id===r.id).map(e=>({desc:e.descrizione,price:parseFloat(e.importo),ts:e.created_at})),
+            room_service_items:r.room_service_items||[],
           })));
         }
 
@@ -1520,6 +1551,27 @@ export default function HotelPMS() {
         // Merge webhooks
         if (wh.length > 0) setWebhooks(wh.map(w=>({ id:w.id, url:w.url, events:w.eventi||[], secret:w.segreto||"", active:w.attivo, calls:w.chiamate||0 })));
 
+        // Merge gruppi
+        if (grpDB?.length > 0) { setGruppi(grpDB.map(g=>({
+          id:g.id, nome:g.nome, stato:g.stato||"opzione",
+          checkIn:g.check_in, checkOut:g.check_out,
+          contattoId:g.contatto_id, contattoNome:g.contatto_nome, contattoEmail:g.contatto_email, contattoTel:g.contatto_tel,
+          aziendaId:g.azienda_id, aziendaNome:g.azienda_nome||"", aziendaPIva:g.azienda_piva||"", aziendaEmail:g.azienda_email||"",
+          agenziaId:g.agenzia_id, agenziaNome:g.agenzia_nome||"", agenziaIata:g.agenzia_iata||"",
+          agenziaCommissione:g.agenzia_commissione||0, agenziaEmail:g.agenzia_email||"",
+          depositoRichiesto:g.deposito_richiesto||0, depositoRicevuto:g.deposito_ricevuto||0,
+          depositoScadenza:g.deposito_scadenza||"", depositoMetodo:g.deposito_metodo||"",
+          garanziaType:g.garanzia_tipo||"", garanziaNote:g.garanzia_note||"",
+          canale:g.canale||"", motivoSoggiorno:g.motivo_soggiorno||"", mercato:g.mercato||"", segmento:g.segmento||"",
+          blocco:g.blocco||[], roomingList:g.rooming_list||[],
+          roomingToken:g.rooming_token||"", roomingPublished:g.rooming_published||false, roomingDeadline:g.rooming_deadline||"",
+          splitPolicy:g.split_policy||"misto", contoAziendaVoci:g.conto_azienda_voci||[], masterPagamenti:g.master_pagamenti||[],
+          note:g.note||"", noteInterne:g.note_interne||"", creatoIl:g.creato_il||"",
+          // campi legacy
+          azienda:g.azienda_nome||"", pIva:g.azienda_piva||"", referente:g.contatto_nome||"",
+          email:g.contatto_email||"", telefono:g.contatto_tel||"",
+        }))); }
+
         setDbStatus("ok");
       } catch(e) {
         console.error("Supabase boot error:", e);
@@ -1531,19 +1583,48 @@ export default function HotelPMS() {
 
   // - DB helpers: wrap delle operazioni di scrittura -
   const dbSaveGuest = async (g) => {
-    const row = { id:g.id, cognome:g.cognome, nome:g.nome, data_nascita:g.dataNascita||null,
-      luogo_nascita:g.luogoNascita||null, nazionalita:g.nazionalita, tipo_doc:g.tipoDoc,
-      num_doc:g.numDoc||null, scadenza_doc:g.scadenzaDoc||null, indirizzo:g.indirizzo||null,
-      citta:g.citta||null, cap:g.cap||null, email:g.email||null, telefono:g.telefono||null, note:g.note||null };
+    const row = { id:g.id, cognome:g.cognome||null, nome:g.nome||null,
+      data_nascita:g.dataNascita||null, luogo_nascita:g.luogoNascita||null,
+      nazionalita:g.nazionalita||null, tipo_doc:g.tipoDoc||null,
+      num_doc:g.numDoc||null, scadenza_doc:g.scadenzaDoc||null,
+      indirizzo:g.indirizzo||null, citta:g.citta||null, cap:g.cap||null,
+      email:g.email||null, telefono:g.telefono||null, note:g.note||null,
+      // Campi azienda / agenzia
+      tipo:g.tipo||"individuale",
+      ragione_sociale:g.ragioneSociale||null,
+      p_iva:g.pIva||null,
+      iata:g.iata||null,
+      commissione:g.commissione||null,
+      lingua:g.linguaOspite||null,
+    };
     return await sb.upsert("ospiti", row);
   };
 
   const dbSaveReservation = async (r) => {
-    const row = { id:r.id, camera_id:r.roomId, ospite_id:r.guestId||null, ospite_nome:r.guestName,
-      check_in:r.checkIn, check_out:r.checkOut, guests:r.guests, adulti:r.adulti||1, bambini:r.bambini||0,
-      status:r.status, servizi:r.services||[], ps_inviato:r.psInviato||false,
+    const row = {
+      id:r.id, camera_id:r.roomId, ospite_id:r.guestId||null, ospite_nome:r.guestName||null,
+      check_in:r.checkIn, check_out:r.checkOut,
+      guests:r.guests||1, adulti:r.adulti||1, bambini:r.bambini||0,
+      status:r.status||"reserved",
+      servizi:r.services||[], ps_inviato:r.psInviato||false,
+      istat_registrato:r.istatRegistrato||false,
       check_in_time:r.checkInTime||null, check_out_time:r.checkOutTime||null,
-      note:r.note||null, fonte:r.fonte||"diretta" };
+      note:r.notes||r.note||null,
+      fonte:r.fonte||"diretta",
+      // Segmentazione
+      canale:r.canale||null, mercato:r.mercato||null,
+      segmento:r.segmento||null, motivo_soggiorno:r.motivoSoggiorno||null,
+      lingua_ospite:r.linguaOspite||null,
+      trattamento:r.trattamento||null,
+      // Gruppo
+      tipo:r.tipo||"individuale", gruppo_id:r.gruppoId||null,
+      // Pricing
+      prezzo_override:r.prezzoOverride||null,
+      // Gratuità
+      gratuita:r.gratuita||false, gratuita_motivo:r.gratuitaMotivo||null,
+      // Extra in camera (JSON)
+      room_service_items:r.roomServiceItems||[],
+    };
     return await sb.upsert("prenotazioni", row);
   };
 
@@ -1566,6 +1647,59 @@ export default function HotelPMS() {
 
   const dbSavePrecomanda = async (pc) => {
     return await sb.upsert("precomande", { id:pc.id, servizio:pc.servizio, data:pc.data, righe:pc.righe, note:pc.note||null, inviata:pc.inviata||false });
+  };
+  const dbSaveGruppo = async (g) => {
+    const row = {
+      id:g.id, nome:g.nome||null, stato:g.stato||"opzione",
+      check_in:g.checkIn||null, check_out:g.checkOut||null,
+      contatto_id:g.contattoId||null, contatto_nome:g.contattoNome||null,
+      contatto_email:g.contattoEmail||null, contatto_tel:g.contattoTel||null,
+      azienda_id:g.aziendaId||null, azienda_nome:g.aziendaNome||g.azienda||null,
+      azienda_piva:g.aziendaPIva||g.pIva||null, azienda_email:g.aziendaEmail||null,
+      agenzia_id:g.agenziaId||null, agenzia_nome:g.agenziaNome||null,
+      agenzia_iata:g.agenziaIata||null, agenzia_commissione:g.agenziaCommissione||0,
+      agenzia_email:g.agenziaEmail||null,
+      deposito_richiesto:g.depositoRichiesto||0, deposito_scadenza:g.depositoScadenza||null,
+      deposito_ricevuto:g.depositoRicevuto||0, deposito_metodo:g.depositoMetodo||null,
+      garanzia_tipo:g.garanziaType||null, garanzia_note:g.garanziaNote||null,
+      canale:g.canale||null, motivo_soggiorno:g.motivoSoggiorno||null,
+      mercato:g.mercato||null, segmento:g.segmento||null,
+      blocco:g.blocco||[], rooming_list:g.roomingList||[],
+      rooming_token:g.roomingToken||null, rooming_published:g.roomingPublished||false,
+      rooming_deadline:g.roomingDeadline||null,
+      split_policy:g.splitPolicy||"misto", conto_azienda_voci:g.contoAziendaVoci||[],
+      master_pagamenti:g.masterPagamenti||[],
+      note:g.note||null, note_interne:g.noteInterne||null,
+      creato_il:g.creatoIl||new Date().toISOString().slice(0,10),
+    };
+    return await sb.upsert("gruppi", row);
+  };
+  const dbSaveMiceEvent = async (ev) => {
+    const row = {
+      id:ev.id, nome:ev.nome||null, tipo:ev.tipo||null,
+      stato:ev.stato||"bozza", sala_id:ev.salaId||null,
+      check_in:ev.checkIn||null, check_out:ev.checkOut||null,
+      data_setup:ev.dataSetup||null, data_teardown:ev.dataTeardown||null,
+      pax:ev.pax||0, ore_setup:ev.oreSetup||4,
+      // Contatto / azienda
+      organizzatore:ev.organizzatore||null, organizzatore_email:ev.organizzatoreEmail||null,
+      azienda:ev.azienda||null, p_iva:ev.pIva||null,
+      contatto_nome:ev.contattoNome||null, contatto_email:ev.contattoEmail||null, contatto_tel:ev.contattoTel||null,
+      // Layout e attrezzature (JSON)
+      layout:ev.layout||null, attrezzature:ev.attrezzature||[],
+      // F&B (JSON)
+      fb_packages:ev.fbPackages||[],
+      // Camere collegate
+      camere_ids:ev.camereIds||[],
+      // Finanziario
+      acconto_perc:ev.accontoPerc||30, sconto_perc:ev.scontoPerc||0,
+      // Note
+      note:ev.note||null, note_interne:ev.noteInterne||null,
+      // Segmentazione
+      canale:ev.canale||null, mercato:ev.mercato||null, segmento:ev.segmento||null,
+      creato_il:ev.creatoIl||new Date().toISOString(),
+    };
+    return await sb.upsert("eventi_mice", row);
   };
 
   const dbSaveCameraPrice = async (id, prezzo) => {
@@ -1874,6 +2008,8 @@ Rispondi in italiano, in modo conciso e professionale.`;
   const saveMiceEvent = (ev) => {
     const upd = { ...ev, updatedAt: new Date().toISOString() };
     setMiceEvents(prev => prev.find(e => e.id === ev.id) ? prev.map(e => e.id===ev.id ? upd : e) : [...prev, upd]);
+    // ── Persiste su Supabase ──────────────────────────────────────────
+    dbSaveMiceEvent(upd).catch(()=>{});
     setMiceForm(null);
     showToast("Evento salvato ✓");
   };
@@ -2015,6 +2151,8 @@ Rispondi in italiano, in modo conciso e professionale.`;
       const idx = prev.findIndex(g=>g.id===gruppoForm.id);
       return idx>=0 ? prev.map(g=>g.id===gruppoForm.id?gruppoForm:g) : [...prev, gruppoForm];
     });
+    // ── Persiste gruppo su Supabase ───────────────────────────────────
+    dbSaveGruppo(gruppoForm).catch(()=>{});
 
     // ── genera prenotazioni dalla rooming list compilata ───────────────
     // Solo slot con camera assegnata E ospite: diventa una prenotazione reale
@@ -2051,6 +2189,8 @@ Rispondi in italiano, in modo conciso e professionale.`;
         };
       });
       setReservations(prev=>[...prev.filter(r=>r.gruppoId!==gruppoForm.id), ...nuoveRes]);
+      // ── Persiste ogni prenotazione del gruppo su Supabase ─────────
+      nuoveRes.forEach(r => dbSaveReservation(r).catch(()=>{}));
     }
 
     const nBl = (gruppoForm.blocco||[]).reduce((s,b)=>s+(b.qty||0),0);
@@ -2097,6 +2237,9 @@ Rispondi in italiano, in modo conciso e professionale.`;
     if (modal==="new-res") { setReservations(p => [...p, saved]); showToast("Prenotazione creata! ✓"); setModal(null); setEmailPreviewRes(saved); const _g2=guests.find(x=>x.id===saved.guestId); setEmailTo(_g2?.email||""); setEmailCc(""); setEmailTab("preview"); }
     else                   { setReservations(p => p.map(r => r.id===form.id ? saved : r)); showToast("Prenotazione aggiornata!"); setModal(null); }
   };
+    // ── Persiste su Supabase ──────────────────────────────────────────
+    dbSaveReservation(saved).catch(()=>{});
+
 
   // ─── Genera HTML email di conferma prenotazione ───
   const buildConfirmEmail = (res, guestObj) => {
