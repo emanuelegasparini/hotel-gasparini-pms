@@ -217,16 +217,29 @@ const DEMO_GRUPPI = [
   {
     id: "GRP001",
     nome: "Convegno Cardiologia 2026",
-    azienda: "Società Italiana Cardiologia",
-    pIva: "IT03456789012",
-    referente: "Dott. Andrea Visentin",
-    email: "a.visentin@sicardio.it",
+    stato: "garantita",
+    contattoNome: "Dott. Andrea Visentin",
+    contattoEmail: "a.visentin@sicardio.it",
+    contattoTel: "+39 041 512 3456",
+    aziendaNome: "Società Italiana Cardiologia",
+    aziendaPIva: "IT03456789012",
+    agenziaNome: "", agenziaIata: "", agenziaCommissione: 0,
+    azienda: "Società Italiana Cardiologia", pIva: "IT03456789012",
+    referente: "Dott. Andrea Visentin", email: "a.visentin@sicardio.it",
     telefono: "+39 041 512 3456",
     checkIn: "2026-04-14",
     checkOut: "2026-04-17",
+    canale: "mice", motivoSoggiorno: "congresso", mercato: "IT-nord", segmento: "mice",
     note: "Gruppo di 18 medici. Cena di gala giovedì sera.",
+    noteInterne: "Richiesti 4 letti matrimoniali king. Allergie alimentari 2 partecipanti.",
     splitPolicy: "misto",
     contoAziendaVoci: ["room","colazione"],
+    blocco: [
+      {tipo:"Superior",qty:3,prezzoCampo:"listino",prezzoManuale:130,trattamento:"BB",gratuitaQty:0,gratuitaMotivo:""},
+      {tipo:"Deluxe",qty:2,prezzoCampo:"manuale",prezzoManuale:160,trattamento:"BB",gratuitaQty:1,gratuitaMotivo:"organizzatore"},
+    ],
+    roomingList: [], roomingPublished: false, roomingToken: "", roomingDeadline: "",
+    garanziaType: "lettera", garanziaNote: "Lettera credito SIC n.2026/14",
     regolaNGratuita: "1su10",
     masterPagamenti: [
       { id:"MP001", data:"2026-03-10", importo:1200, metodo:"Bonifico", note:"Acconto 30%" },
@@ -1412,7 +1425,7 @@ export default function HotelPMS() {
   const [gruppi, setGruppi]               = useState(DEMO_GRUPPI);
   const [gruppoModal, setGruppoModal]     = useState(false);         // wizard gruppo aperto
   const [gruppoForm, setGruppoForm]       = useState(null);          // master dati gruppo
-  const [gruppoTab, setGruppoTab]         = useState("info");        // info | camere | split
+  const [gruppoTab, setGruppoTab]         = useState("contatti");   // contatti | prenotazione | blocco | rooming | split
   const [gruppoCamere, setGruppoCamere]   = useState([]);            // righe camere nel wizard
   const [prenotazioniTab, setPrenotazioniTab] = useState("lista");  // lista | gruppi
   const [meetingRooms, setMeetingRooms]     = useState(MEETING_ROOMS.map(r=>({...r})));
@@ -1945,13 +1958,27 @@ Rispondi in italiano, in modo conciso e professionale.`;
   };
   const openNuovoGruppo = () => {
     const gid = genGrpId();
-    setGruppoForm({ id:gid, nome:"", azienda:"", pIva:"", referente:"", email:"",
-      telefono:"", checkIn:"", checkOut:"", note:"",
+    setGruppoForm({
+      id:gid, nome:"", stato:"opzione",
+      // contatti
+      contattoId:"", contattoNome:"", contattoEmail:"", contattoTel:"",
+      aziendaId:"", aziendaNome:"", aziendaPIva:"", aziendaEmail:"",
+      agenziaId:"", agenziaNome:"", agenziaIata:"", agenziaCommissione:0, agenziaEmail:"",
+      // prenotazione
+      checkIn:"", checkOut:"",
+      depositoRichiesto:0, depositoScadenza:"", depositoRicevuto:0, depositoMetodo:"",
+      garanziaType:"", garanziaNote:"",
+      canale:"", motivoSoggiorno:"", mercato:"", segmento:"",
+      note:"", noteInterne:"",
+      // blocco e rooming
+      blocco:[], roomingList:[], roomingToken:"", roomingPublished:false, roomingDeadline:"",
+      // fatturazione
       splitPolicy:"misto", contoAziendaVoci:["room","colazione"],
-      regolaNGratuita:"", masterPagamenti:[],
-      creatoIl:new Date().toISOString().slice(0,10) });
+      masterPagamenti:[],
+      creatoIl:new Date().toISOString().slice(0,10),
+    });
     setGruppoCamere([]);
-    setGruppoTab("info");
+    setGruppoTab("contatti");
     setGruppoModal(true);
   };
   const addCameraGruppo = () => {
@@ -2013,11 +2040,21 @@ Rispondi in italiano, in modo conciso e professionale.`;
   };
   const editGruppo = (grpId) => {
     const grp = gruppi.find(g=>g.id===grpId);
-    const camereGrp = reservations.filter(r=>r.gruppoId===grpId);
     if (!grp) return;
-    setGruppoForm({...grp});
+    const camereGrp = reservations.filter(r=>r.gruppoId===grpId);
+    // ensure new fields exist with defaults
+    setGruppoForm({
+      stato:"garantita", blocco:[], roomingList:[], roomingToken:"", roomingPublished:false,
+      roomingDeadline:"", contattoId:"", contattoNome:grp.referente||"", contattoEmail:grp.email||"",
+      contattoTel:grp.telefono||"", aziendaId:"", aziendaNome:grp.azienda||"", aziendaPIva:grp.pIva||"",
+      aziendaEmail:"", agenziaId:"", agenziaNome:"", agenziaIata:"", agenziaCommissione:0, agenziaEmail:"",
+      depositoRichiesto:0, depositoScadenza:"", depositoRicevuto:0, depositoMetodo:"",
+      garanziaType:"", garanziaNote:"", canale:"", motivoSoggiorno:"", mercato:"", segmento:"",
+      noteInterne:"", splitPolicy:"misto", contoAziendaVoci:["room"],
+      ...grp,
+    });
     setGruppoCamere(camereGrp.map((c,idx)=>({...c, _key:c.id||("k_"+Date.now()+"_"+idx)})));
-    setGruppoTab("info");
+    setGruppoTab("contatti");
     setGruppoModal(true);
   };
   const openEditReservation = (res) => { setForm({...res, services:[...(res.services||[])]}); setModal("edit-res"); };
@@ -2397,7 +2434,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
         || grp?.azienda?.toLowerCase().includes(q);
   });
   const filteredGuests = guests.filter(g => {
-    if (g.tipo === "azienda") return false;
+    if (g.tipo === "azienda" || g.tipo === "agenzia") return false;
     const q = guestSearch.toLowerCase();
     return !q || `${g.cognome} ${g.nome}`.toLowerCase().includes(q) || g.numDoc?.toLowerCase().includes(q) || g.email?.toLowerCase().includes(q);
   });
@@ -3494,12 +3531,22 @@ Rispondi in italiano, in modo conciso e professionale.`;
                                 background:C.navy,color:"#fff"}}>{polLabel[pol]}</span>
                             </div>
                             <div style={{fontSize:12,color:C.text2,display:"flex",gap:14,flexWrap:"wrap"}}>
-                              {grp.azienda&&<span>🏢 {grp.azienda}</span>}
-                              {grp.referente&&<span>👤 {grp.referente}</span>}
-                              {grp.pIva&&<span>P.IVA {grp.pIva}</span>}
+                              {grp.aziendaNome&&<span>🏢 {grp.aziendaNome}</span>}
+                              {!grp.aziendaNome&&grp.azienda&&<span>🏢 {grp.azienda}</span>}
+                              {grp.agenziaNome&&<span>✈️ {grp.agenziaNome}{grp.agenziaCommissione>0?` (${grp.agenziaCommissione}%)`:""}</span>}
+                              {grp.contattoNome&&<span>👤 {grp.contattoNome}</span>}
+                              {!grp.contattoNome&&grp.referente&&<span>👤 {grp.referente}</span>}
+                              {(grp.aziendaPIva||grp.pIva)&&<span>P.IVA {grp.aziendaPIva||grp.pIva}</span>}
                               <span>📅 {fmtDate(grp.checkIn)} → {fmtDate(grp.checkOut)}</span>
-                              <span>🛏 {camGrp.length} camere</span>
+                              {camGrp.length>0&&<span>🛏 {camGrp.length} cam</span>}
+                              {(grp.blocco||[]).length>0&&<span style={{color:C.blue}}>📋 {(grp.blocco||[]).reduce((s,b)=>s+(b.qty||0),0)} cam. blocco</span>}
                               {nGrat>0&&<span style={{color:C.green,fontWeight:700}}>🎁 {nGrat} gratuite</span>}
+                              {{opzione:"🔵 Opzione",opzione_deposito:"🟡 Op.+Deposito",garantita:"🟢 Garantita"}[grp.stato]&&(
+                                <span style={{fontWeight:700,
+                                  color:{opzione:C.navy,opzione_deposito:C.amber,garantita:C.green}[grp.stato]}}>
+                                  {{opzione:"🔵 Opzione",opzione_deposito:"🟡 Op.+Deposito",garantita:"🟢 Garantita"}[grp.stato]}
+                                </span>
+                              )}
                             </div>
                           </div>
                           <div style={{display:"flex",gap:8,flexShrink:0,flexWrap:"wrap"}}>
@@ -6052,984 +6099,1059 @@ Rispondi in italiano, in modo conciso e professionale.`;
       )}
 
 
+
       {/* ══════════════════════════════════════════
-           MODAL WIZARD GRUPPO DI PRENOTAZIONE
+           MODAL WIZARD GRUPPO DI PRENOTAZIONE (v2)
       ══════════════════════════════════════════ */}
-      {gruppoModal && gruppoForm && (
-        <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setGruppoModal(false)}>
-          <div className="modal-box" style={{ maxWidth:820, width:"95vw", maxHeight:"92vh", display:"flex", flexDirection:"column" }}>
-            {/* ── HEADER ── */}
-            <div className="modal-header" style={{ flexShrink:0 }}>
-              <div>
-                <div style={{ fontSize:10, fontWeight:700, color:C.text3, letterSpacing:2, textTransform:"uppercase", marginBottom:4 }}>
-                  {gruppoForm.id} · Prenotazione di Gruppo
-                </div>
-                <h2 style={{ fontSize:20, fontWeight:700, margin:0 }}>
-                  {gruppoForm.nome||"Nuovo Gruppo"}
-                </h2>
-              </div>
-              <button onClick={()=>setGruppoModal(false)}
-                style={{ background:"none", border:"none", fontSize:22, cursor:"pointer", color:C.text3 }}>✕</button>
-            </div>
+      {gruppoModal && gruppoForm && (() => {
+        // ── helpers locali ──────────────────────────────────────────
+        const n = nights(gruppoForm.checkIn, gruppoForm.checkOut) || 0;
+        const STATI_GRP = [
+          { k:"opzione",          label:"🔵 Opzione",              desc:"Blocco temporaneo senza garanzia" },
+          { k:"opzione_deposito", label:"🟡 Opzione con deposito",  desc:"Caparra o deposito richiesto" },
+          { k:"garantita",        label:"🟢 Garantita",             desc:"Garanzia ricevuta" },
+        ];
+        const ROOM_TYPE_LIST = [...new Set(ROOMS.map(r=>r.type))];
+        // calcola prezzo base per tipo
+        const basePriceForType = (tipo) => ROOMS.find(r=>r.type===tipo)?.price || 0;
+        // blocco corrente
+        const blocco = gruppoForm.blocco || [];
+        const totCamere = blocco.reduce((s,b)=>s+(b.qty||0),0);
+        const totGratuite = blocco.reduce((s,b)=>s+(b.gratuitaQty||0),0);
+        const totValore = blocco.reduce((s,b)=>{
+          const p = b.prezzoCampo==="manuale"?(b.prezzoManuale||0):basePriceForType(b.tipo);
+          return s + p*n*(b.qty||0);
+        },0);
+        // aziende e agenzie dall'anagrafica
+        const aziende = guests.filter(g=>g.tipo==="azienda");
+        const agenzie = guests.filter(g=>g.tipo==="agenzia");
+        const individui= guests.filter(g=>g.tipo!=="azienda"&&g.tipo!=="agenzia");
+        // aggiorna campo blocco
+        const updBlocco=(tipo,fields)=>setGruppoForm(f=>({...f,
+          blocco:(f.blocco||[]).map(b=>b.tipo===tipo?{...b,...fields}:b)}));
+        const addBloccoTipo=(tipo)=>{
+          if((gruppoForm.blocco||[]).find(b=>b.tipo===tipo))return;
+          setGruppoForm(f=>({...f,blocco:[...(f.blocco||[]),
+            {tipo,qty:1,prezzoCampo:"listino",prezzoManuale:basePriceForType(tipo),
+             trattamento:"BB",gratuitaQty:0,gratuitaMotivo:""}]}));
+        };
+        const removeBloccoTipo=(tipo)=>setGruppoForm(f=>({...f,
+          blocco:(f.blocco||[]).filter(b=>b.tipo!==tipo)}));
+        // rooming list helpers
+        const rooming = gruppoForm.roomingList || [];
+        const updRooming=(idx,fields)=>setGruppoForm(f=>({...f,
+          roomingList:(f.roomingList||[]).map((r,i)=>i===idx?{...r,...fields}:r)}));
+        const generaRooming=()=>{
+          // genera slot da blocco
+          const slots=[];
+          (gruppoForm.blocco||[]).forEach(b=>{
+            for(let i=0;i<(b.qty||0);i++){
+              slots.push({
+                _key:Date.now()+"_"+slots.length,
+                tipo:b.tipo, roomId:"", guestName:"", guestId:"",
+                adulti:1, bambini:0,
+                checkIn:"", checkOut:"",
+                trattamento:b.trattamento||"BB",
+                gratuita: i < (b.gratuitaQty||0),
+                gratuitaMotivo: i < (b.gratuitaQty||0) ? (b.gratuitaMotivo||"") : "",
+                note:"", stato:"da_compilare",
+              });
+            }
+          });
+          setGruppoForm(f=>({...f, roomingList:slots}));
+        };
+        const roomingToken = gruppoForm.roomingToken || ("RL"+gruppoForm.id+Math.random().toString(36).slice(2,8).toUpperCase());
+        const roomingUrl   = `${window.location.origin}/rooming?token=${roomingToken}`;
+        const compilate    = rooming.filter(r=>r.guestName).length;
 
-            {/* ── TAB BAR ── */}
-            <div style={{ display:"flex", borderBottom:`2px solid ${C.border}`, flexShrink:0 }}>
-              {[
-                { k:"info",   label:"1 · Info Gruppo",    icon:"🏢" },
-                { k:"camere", label:"2 · Camere",          icon:"🛏️" },
-                { k:"split",  label:"3 · Split Conto",     icon:"💳" },
-              ].map(t=>(
-                <button key={t.k} onClick={()=>setGruppoTab(t.k)}
-                  style={{ padding:"12px 20px", border:"none", cursor:"pointer",
-                    fontFamily:"'IBM Plex Sans',sans-serif", fontSize:13, fontWeight:600,
-                    borderBottom: gruppoTab===t.k ? `2px solid ${C.gold}` : "none",
-                    marginBottom: gruppoTab===t.k ? -2 : 0,
-                    background:"none", color:gruppoTab===t.k?C.gold:C.text3 }}>
-                  {t.icon} {t.label}
-                </button>
-              ))}
-              <div style={{ marginLeft:"auto", padding:"8px 12px", fontSize:11, color:C.text3,
-                display:"flex", alignItems:"center", gap:12 }}>
-                <span>🛏 {gruppoCamere.length} camere</span>
-                <span>🎁 {gruppoCamere.filter(c=>c.gratuita).length} gratuite</span>
-                <span style={{ fontWeight:700, color:C.gold }}>
-                  Tot: €{gruppoCamere.reduce((s,c)=>{
-                    const r=ROOMS.find(x=>x.id===parseInt(c.roomId));
-                    if (!r) return s;
-                    const n=nights(c.checkIn||gruppoForm.checkIn, c.checkOut||gruppoForm.checkOut);
-                    const pax=r.priceMode==="persona"?((c.adulti||1)+(c.bambini||0)):1;
-                    return s + (c.gratuita?0:r.price*n*pax);
-                  },0).toLocaleString("it-IT",{minimumFractionDigits:2})}
-                </span>
-              </div>
-            </div>
+        const TABS = [
+          {k:"contatti",    label:"1 · Contatti",      icon:"👥"},
+          {k:"prenotazione",label:"2 · Prenotazione",   icon:"📋"},
+          {k:"blocco",      label:"3 · Blocco Camere",  icon:"🛏️"},
+          {k:"rooming",     label:"4 · Rooming List",   icon:"📝"},
+          {k:"split",       label:"5 · Fatturazione",   icon:"💳"},
+        ];
+        const tabIdx = TABS.findIndex(t=>t.k===gruppoTab);
 
-            {/* ── BODY ── */}
-            <div className="modal-body" style={{ flex:1, overflowY:"auto" }}>
+        return (
+          <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setGruppoModal(false)}>
+            <div className="modal-box" style={{maxWidth:920,width:"96vw",maxHeight:"93vh",
+              display:"flex",flexDirection:"column"}}>
 
-              {/* ═══ TAB 1: INFO GRUPPO ═══ */}
-              {gruppoTab==="info" && (
+              {/* ── HEADER ── */}
+              <div className="modal-header" style={{flexShrink:0}}>
                 <div>
-                  <div className="form-grid" style={{ marginBottom:14 }}>
-                    <div style={{ gridColumn:"1/-1" }}>
-                      <label className="label">Nome gruppo / Evento *</label>
-                      <input className="input-field" placeholder="es. Convegno Cardiologia 2026"
-                        value={gruppoForm.nome||""} onChange={e=>setGruppoForm(f=>({...f,nome:e.target.value}))}/>
-                    </div>
-                    <div>
-                      <label className="label">Check-In gruppo *</label>
-                      <input type="date" className="input-field" value={gruppoForm.checkIn||""}
-                        onChange={e=>setGruppoForm(f=>({...f,checkIn:e.target.value}))}/>
-                    </div>
-                    <div>
-                      <label className="label">Check-Out gruppo *</label>
-                      <input type="date" className="input-field" value={gruppoForm.checkOut||""}
-                        onChange={e=>setGruppoForm(f=>({...f,checkOut:e.target.value}))}/>
-                    </div>
+                  <div style={{fontSize:10,fontWeight:700,color:C.text3,letterSpacing:2,
+                    textTransform:"uppercase"}}>
+                    {gruppoForm.id} · Prenotazione Gruppo
                   </div>
-                  <hr className="divider"/>
-                  <div className="section-title">Azienda / Agenzia organizzatrice</div>
-                  <div className="form-grid" style={{ marginBottom:14 }}>
-                    <div>
-                      <label className="label">Ragione Sociale</label>
-                      <input className="input-field" placeholder="es. Fiera Milano S.p.A."
-                        value={gruppoForm.azienda||""} onChange={e=>setGruppoForm(f=>({...f,azienda:e.target.value}))}/>
-                    </div>
-                    <div>
-                      <label className="label">P.IVA / C.F.</label>
-                      <input className="input-field" placeholder="IT01234567890"
-                        value={gruppoForm.pIva||""} onChange={e=>setGruppoForm(f=>({...f,pIva:e.target.value}))}/>
-                    </div>
-                    <div>
-                      <label className="label">Referente</label>
-                      <input className="input-field" placeholder="Nome cognome referente"
-                        value={gruppoForm.referente||""} onChange={e=>setGruppoForm(f=>({...f,referente:e.target.value}))}/>
-                    </div>
-                    <div>
-                      <label className="label">Email referente</label>
-                      <input type="email" className="input-field"
-                        value={gruppoForm.email||""} onChange={e=>setGruppoForm(f=>({...f,email:e.target.value}))}/>
-                    </div>
-                    <div>
-                      <label className="label">Telefono</label>
-                      <input className="input-field"
-                        value={gruppoForm.telefono||""} onChange={e=>setGruppoForm(f=>({...f,telefono:e.target.value}))}/>
-                    </div>
-                  </div>
+                  <h2 style={{fontSize:19,fontWeight:700,margin:0}}>
+                    {gruppoForm.nome||"Nuovo Gruppo"}
+                    {gruppoForm.stato && (
+                      <span style={{fontSize:11,marginLeft:10,padding:"2px 8px",borderRadius:8,
+                        background:{opzione:"#e3f0ff",opzione_deposito:"#fff8e1",garantita:"#e6f7ee"}[gruppoForm.stato]||"#f5f5f5",
+                        color:{opzione:C.navy,opzione_deposito:"#e65100",garantita:C.green}[gruppoForm.stato]||C.text3,
+                        fontWeight:700}}>
+                        {{opzione:"Opzione",opzione_deposito:"Opzione+Deposito",garantita:"Garantita"}[gruppoForm.stato]}
+                      </span>
+                    )}
+                  </h2>
+                </div>
+                <button onClick={()=>setGruppoModal(false)}
+                  style={{background:"none",border:"none",fontSize:22,cursor:"pointer",color:C.text3}}>✕</button>
+              </div>
+
+              {/* ── TAB NAV ── */}
+              <div style={{display:"flex",borderBottom:`2px solid ${C.border}`,
+                overflowX:"auto",flexShrink:0,background:C.surface2}}>
+                {TABS.map((t,i)=>(
+                  <button key={t.k} onClick={()=>setGruppoTab(t.k)}
+                    style={{padding:"11px 18px",border:"none",cursor:"pointer",whiteSpace:"nowrap",
+                      fontFamily:"'IBM Plex Sans',sans-serif",fontSize:12,fontWeight:600,
+                      background:"none",
+                      color:gruppoTab===t.k?C.navy:C.text3,
+                      borderBottom:gruppoTab===t.k?`2px solid ${C.navy}`:"2px solid transparent",
+                      marginBottom:-2}}>
+                    {t.icon} {t.label}
+                    {t.k==="blocco"&&totCamere>0&&(
+                      <span style={{marginLeft:6,background:C.navyL,color:C.navy,
+                        borderRadius:8,padding:"1px 6px",fontSize:10,fontWeight:700}}>{totCamere}</span>
+                    )}
+                    {t.k==="rooming"&&rooming.length>0&&(
+                      <span style={{marginLeft:6,background:compilate===rooming.length?C.greenL:C.goldL,
+                        color:compilate===rooming.length?C.green:C.gold,
+                        borderRadius:8,padding:"1px 6px",fontSize:10,fontWeight:700}}>
+                        {compilate}/{rooming.length}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* ── BODY ── */}
+              <div className="modal-body" style={{flex:1,overflowY:"auto"}}>
+
+                {/* ═══ TAB 1: CONTATTI ═══ */}
+                {gruppoTab==="contatti" && (
                   <div>
-                    <label className="label">Note interne gruppo</label>
-                    <textarea className="input-field" rows={2}
-                      value={gruppoForm.note||""} onChange={e=>setGruppoForm(f=>({...f,note:e.target.value}))}/>
-                  </div>
-                </div>
-              )}
+                    <div style={{marginBottom:6,color:C.text3,fontSize:12}}>
+                      Collega il gruppo all'anagrafica per la reportistica di produzione, bednights e cancellazioni.
+                    </div>
 
-              {/* ═══ TAB 2: CAMERE ═══ */}
-              {gruppoTab==="camere" && (
-                <div>
-                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
-                    <div style={{ fontSize:13, color:C.text3 }}>
-                      Ogni riga = 1 camera / 1 prenotazione.
-                      {(!gruppoForm.checkIn || !gruppoForm.checkOut) ? (
-                        <span style={{ color:C.red, fontWeight:600, marginLeft:6 }}>
-                          ⚠️ Imposta le date nel Tab 1 prima di aggiungere camere
-                        </span>
-                      ) : (
-                        <span style={{ color:C.navy, fontWeight:600 }}>
-                          {" "}Date: {gruppoForm.checkIn} → {gruppoForm.checkOut}
-                          {" "}({nights(gruppoForm.checkIn,gruppoForm.checkOut)} notti)
-                        </span>
+                    {/* Nome evento */}
+                    <div className="form-grid" style={{marginBottom:16}}>
+                      <div style={{gridColumn:"1/-1"}}>
+                        <label className="label">Nome Evento / Gruppo *</label>
+                        <input className="input-field" placeholder="es. Convegno Cardiologia 2026"
+                          value={gruppoForm.nome||""} onChange={e=>setGruppoForm(f=>({...f,nome:e.target.value}))}/>
+                      </div>
+                    </div>
+
+                    <hr className="divider"/>
+
+                    {/* ── Contatto principale ── */}
+                    <div className="section-title" style={{marginBottom:10}}>👤 Contatto Principale</div>
+                    <div className="form-grid" style={{marginBottom:14}}>
+                      <div>
+                        <label className="label">Cerca in anagrafica</label>
+                        <select className="input-field"
+                          value={gruppoForm.contattoId||""}
+                          onChange={e=>{
+                            const g=guests.find(x=>x.id===e.target.value);
+                            setGruppoForm(f=>({...f,
+                              contattoId:e.target.value,
+                              contattoNome:g?`${g.cognome} ${g.nome}`:"",
+                              contattoEmail:g?.email||f.contattoEmail,
+                              contattoTel:g?.telefono||f.contattoTel,
+                            }));
+                          }}>
+                          <option value="">— Seleziona ospite —</option>
+                          {individui.map(g=><option key={g.id} value={g.id}>{g.cognome} {g.nome} — {g.email||g.numDoc||""}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="label">Nome (se non in anagrafica)</label>
+                        <input className="input-field" placeholder="Cognome Nome"
+                          value={gruppoForm.contattoNome||""}
+                          onChange={e=>setGruppoForm(f=>({...f,contattoNome:e.target.value,contattoId:""}))}/>
+                      </div>
+                      <div>
+                        <label className="label">Email contatto</label>
+                        <input type="email" className="input-field"
+                          value={gruppoForm.contattoEmail||""}
+                          onChange={e=>setGruppoForm(f=>({...f,contattoEmail:e.target.value}))}/>
+                      </div>
+                      <div>
+                        <label className="label">Telefono contatto</label>
+                        <input className="input-field"
+                          value={gruppoForm.contattoTel||""}
+                          onChange={e=>setGruppoForm(f=>({...f,contattoTel:e.target.value}))}/>
+                      </div>
+                    </div>
+
+                    <hr className="divider"/>
+
+                    {/* ── Azienda ── */}
+                    <div className="section-title" style={{marginBottom:10}}>🏢 Azienda</div>
+                    <div className="form-grid" style={{marginBottom:14}}>
+                      <div>
+                        <label className="label">Cerca in anagrafica aziende</label>
+                        <select className="input-field"
+                          value={gruppoForm.aziendaId||""}
+                          onChange={e=>{
+                            const az=aziende.find(x=>x.id===e.target.value);
+                            setGruppoForm(f=>({...f,
+                              aziendaId:e.target.value,
+                              aziendaNome:az?.ragioneSociale||az?.nome||"",
+                              aziendaPIva:az?.pIva||"",
+                              aziendaEmail:az?.email||"",
+                            }));
+                          }}>
+                          <option value="">— Seleziona azienda —</option>
+                          {aziende.map(a=><option key={a.id} value={a.id}>{a.ragioneSociale||a.nome} — {a.pIva||""}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="label">Ragione Sociale</label>
+                        <input className="input-field" placeholder="es. Fiera Milano S.p.A."
+                          value={gruppoForm.aziendaNome||""}
+                          onChange={e=>setGruppoForm(f=>({...f,aziendaNome:e.target.value,aziendaId:""}))}/>
+                      </div>
+                      <div>
+                        <label className="label">P.IVA / C.F.</label>
+                        <input className="input-field" placeholder="IT01234567890"
+                          value={gruppoForm.aziendaPIva||""}
+                          onChange={e=>setGruppoForm(f=>({...f,aziendaPIva:e.target.value}))}/>
+                      </div>
+                      <div>
+                        <label className="label">Email fatturazione</label>
+                        <input type="email" className="input-field"
+                          value={gruppoForm.aziendaEmail||""}
+                          onChange={e=>setGruppoForm(f=>({...f,aziendaEmail:e.target.value}))}/>
+                      </div>
+                    </div>
+
+                    <hr className="divider"/>
+
+                    {/* ── Agenzia ── */}
+                    <div className="section-title" style={{marginBottom:10}}>✈️ Agenzia di Viaggi / TO</div>
+                    <div className="form-grid" style={{marginBottom:14}}>
+                      <div>
+                        <label className="label">Cerca in anagrafica agenzie</label>
+                        <select className="input-field"
+                          value={gruppoForm.agenziaId||""}
+                          onChange={e=>{
+                            const ag=agenzie.find(x=>x.id===e.target.value);
+                            setGruppoForm(f=>({...f,
+                              agenziaId:e.target.value,
+                              agenziaNome:ag?.ragioneSociale||ag?.nome||"",
+                              agenziaIata:ag?.iata||"",
+                              agenziaCommissione:ag?.commissione||f.agenziaCommissione,
+                              agenziaEmail:ag?.email||"",
+                            }));
+                          }}>
+                          <option value="">— Seleziona agenzia —</option>
+                          {agenzie.map(a=><option key={a.id} value={a.id}>{a.ragioneSociale||a.nome}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="label">Nome Agenzia / Tour Operator</label>
+                        <input className="input-field" placeholder="es. Kuoni Italia S.r.l."
+                          value={gruppoForm.agenziaNome||""}
+                          onChange={e=>setGruppoForm(f=>({...f,agenziaNome:e.target.value,agenziaId:""}))}/>
+                      </div>
+                      <div>
+                        <label className="label">Codice IATA</label>
+                        <input className="input-field" placeholder="es. 12345678"
+                          value={gruppoForm.agenziaIata||""}
+                          onChange={e=>setGruppoForm(f=>({...f,agenziaIata:e.target.value}))}/>
+                      </div>
+                      <div>
+                        <label className="label">Commissione (%)</label>
+                        <input type="number" className="input-field" min={0} max={30} step={0.5}
+                          placeholder="0"
+                          value={gruppoForm.agenziaCommissione||""}
+                          onChange={e=>setGruppoForm(f=>({...f,agenziaCommissione:parseFloat(e.target.value)||0}))}/>
+                      </div>
+                      <div>
+                        <label className="label">Email agenzia</label>
+                        <input type="email" className="input-field"
+                          value={gruppoForm.agenziaEmail||""}
+                          onChange={e=>setGruppoForm(f=>({...f,agenziaEmail:e.target.value}))}/>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ═══ TAB 2: PRENOTAZIONE ═══ */}
+                {gruppoTab==="prenotazione" && (
+                  <div>
+                    {/* Date e stato */}
+                    <div className="section-title">Date e Stato Prenotazione</div>
+                    <div className="form-grid" style={{marginBottom:14}}>
+                      <div>
+                        <label className="label">Check-In *</label>
+                        <input type="date" className="input-field"
+                          value={gruppoForm.checkIn||""}
+                          onChange={e=>setGruppoForm(f=>({...f,checkIn:e.target.value}))}/>
+                      </div>
+                      <div>
+                        <label className="label">Check-Out *</label>
+                        <input type="date" className="input-field"
+                          value={gruppoForm.checkOut||""}
+                          onChange={e=>setGruppoForm(f=>({...f,checkOut:e.target.value}))}/>
+                      </div>
+                      {gruppoForm.checkIn&&gruppoForm.checkOut&&(
+                        <div style={{display:"flex",alignItems:"flex-end",paddingBottom:6}}>
+                          <span style={{fontSize:13,fontWeight:700,color:C.navy}}>
+                            {n} notti · {totCamere} camere · {totCamere*n} bednights
+                          </span>
+                        </div>
                       )}
                     </div>
-                    <div style={{ display:"flex", gap:8 }}>
-                      <select value={gruppoForm.regolaNGratuita||""} onChange={e=>setGruppoForm(f=>({...f,regolaNGratuita:e.target.value}))}
-                        style={{ border:`1px solid ${C.border}`, borderRadius:6, padding:"7px 12px", fontSize:12,
-                          fontFamily:"'IBM Plex Sans',sans-serif" }}>
-                        <option value="">— Regola gratuità —</option>
-                        <option value="1su5">1 gratuita ogni 5</option>
-                        <option value="1su10">1 gratuita ogni 10</option>
-                        <option value="1su15">1 gratuita ogni 15</option>
-                        <option value="1su20">1 gratuita ogni 20</option>
-                      </select>
-                      {gruppoForm.regolaNGratuita && gruppoCamere.length > 0 && (() => {
-                        const ratio = parseInt(gruppoForm.regolaNGratuita.split("su")[1])||10;
-                        const nGrat = Math.floor(gruppoCamere.length / ratio);
-                        return nGrat > 0 ? (
-                          <button onClick={() => {
-                            // Applica gratuità alle prime nGrat camere non già gratuite
-                            let cnt = 0;
-                            setGruppoCamere(prev => prev.map(c => {
-                              if (!c.gratuita && cnt < nGrat) { cnt++; return {...c, gratuita:true, gratuitaMotivo:"1su"+ratio}; }
-                              return c;
-                            }));
-                          }} style={{ background:C.greenL, color:C.green, border:`1px solid ${C.greenLb}`,
-                            borderRadius:6, padding:"7px 12px", cursor:"pointer", fontSize:12, fontWeight:600,
-                            fontFamily:"'IBM Plex Sans',sans-serif", whiteSpace:"nowrap" }}>
-                            🎁 Applica ({nGrat} gratuita)
-                          </button>
-                        ) : <span style={{fontSize:11,color:C.text3,alignSelf:"center"}}>min {ratio} camere per 1 gratuita</span>;
-                      })()}
-                      <button className="btn-primary" onClick={addCameraGruppo}
-                        style={{ padding:"8px 14px", fontSize:13 }}>+ Aggiungi camera</button>
+
+                    {/* Stato */}
+                    <div style={{marginBottom:18}}>
+                      <label className="label">Stato Prenotazione *</label>
+                      <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:6}}>
+                        {STATI_GRP.map(s=>(
+                          <div key={s.k} onClick={()=>setGruppoForm(f=>({...f,stato:s.k}))}
+                            style={{flex:1,minWidth:180,border:`2px solid ${gruppoForm.stato===s.k?C.navy:C.border}`,
+                              borderRadius:8,padding:"12px 14px",cursor:"pointer",
+                              background:gruppoForm.stato===s.k?C.navyL:"#fff",
+                              transition:"all .15s"}}>
+                            <div style={{fontWeight:700,fontSize:13,color:gruppoForm.stato===s.k?C.navy:C.text}}>
+                              {s.label}
+                            </div>
+                            <div style={{fontSize:11,color:C.text3,marginTop:3}}>{s.desc}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Deposito (se opzione_deposito) */}
+                    {gruppoForm.stato==="opzione_deposito" && (
+                      <div style={{background:C.amberL,border:`1px solid ${C.amberLb}`,
+                        borderRadius:8,padding:"14px 16px",marginBottom:16}}>
+                        <div className="section-title" style={{color:C.amber,marginBottom:10}}>
+                          💰 Deposito / Caparra
+                        </div>
+                        <div className="form-grid">
+                          <div>
+                            <label className="label">Importo deposito richiesto (€)</label>
+                            <input type="number" className="input-field" min={0} step={50}
+                              value={gruppoForm.depositoRichiesto||""}
+                              onChange={e=>setGruppoForm(f=>({...f,depositoRichiesto:parseFloat(e.target.value)||0}))}/>
+                          </div>
+                          <div>
+                            <label className="label">Scadenza opzione</label>
+                            <input type="date" className="input-field"
+                              value={gruppoForm.depositoScadenza||""}
+                              onChange={e=>setGruppoForm(f=>({...f,depositoScadenza:e.target.value}))}/>
+                          </div>
+                          <div>
+                            <label className="label">Deposito ricevuto (€)</label>
+                            <input type="number" className="input-field" min={0} step={50}
+                              value={gruppoForm.depositoRicevuto||""}
+                              onChange={e=>setGruppoForm(f=>({...f,depositoRicevuto:parseFloat(e.target.value)||0}))}/>
+                          </div>
+                          <div>
+                            <label className="label">Metodo deposito</label>
+                            <select className="input-field"
+                              value={gruppoForm.depositoMetodo||""}
+                              onChange={e=>setGruppoForm(f=>({...f,depositoMetodo:e.target.value}))}>
+                              <option value="">— Seleziona —</option>
+                              <option value="bonifico">Bonifico bancario</option>
+                              <option value="carta">Carta di credito</option>
+                              <option value="contanti">Contanti</option>
+                              <option value="assegno">Assegno</option>
+                            </select>
+                          </div>
+                        </div>
+                        {(gruppoForm.depositoRichiesto||0)>0&&(
+                          <div style={{marginTop:10,fontSize:12,color:C.amber,fontWeight:600}}>
+                            Saldo deposito: €{Math.max(0,(gruppoForm.depositoRichiesto||0)-(gruppoForm.depositoRicevuto||0)).toFixed(2)} da ricevere
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Garanzia (se garantita) */}
+                    {gruppoForm.stato==="garantita" && (
+                      <div style={{background:C.greenL,border:`1px solid ${C.greenLb}`,
+                        borderRadius:8,padding:"14px 16px",marginBottom:16}}>
+                        <div className="section-title" style={{color:C.green,marginBottom:10}}>
+                          🔒 Garanzia
+                        </div>
+                        <div className="form-grid">
+                          <div>
+                            <label className="label">Tipo garanzia</label>
+                            <select className="input-field"
+                              value={gruppoForm.garanziaType||""}
+                              onChange={e=>setGruppoForm(f=>({...f,garanziaType:e.target.value}))}>
+                              <option value="">— Seleziona —</option>
+                              <option value="carta">Carta di credito</option>
+                              <option value="bonifico">Bonifico di garanzia</option>
+                              <option value="lettera">Lettera di credito aziendale</option>
+                              <option value="fideiussione">Fideiussione bancaria</option>
+                              <option value="voucher">Voucher agenzia</option>
+                            </select>
+                          </div>
+                          <div style={{gridColumn:"1/-1"}}>
+                            <label className="label">Note garanzia</label>
+                            <input className="input-field" placeholder="es. CC Visa terminante 4242, scad 12/27"
+                              value={gruppoForm.garanziaNote||""}
+                              onChange={e=>setGruppoForm(f=>({...f,garanziaNote:e.target.value}))}/>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <hr className="divider"/>
+
+                    {/* Segmentazione */}
+                    <div className="section-title">Segmentazione</div>
+                    <div className="form-grid" style={{marginBottom:14}}>
+                      <div>
+                        <label className="label">Canale di Provenienza</label>
+                        <select className="input-field"
+                          value={gruppoForm.canale||""}
+                          onChange={e=>setGruppoForm(f=>({...f,canale:e.target.value}))}>
+                          <option value="">— Seleziona —</option>
+                          <option value="direct">Diretto</option>
+                          <option value="email">Email</option>
+                          <option value="telefono">Telefono</option>
+                          <option value="agenzia">Agenzia di Viaggi</option>
+                          <option value="to">Tour Operator</option>
+                          <option value="gds">GDS (Amadeus/Galileo)</option>
+                          <option value="corporate">Corporate / Accordo</option>
+                          <option value="mice">MICE / PCO</option>
+                          <option value="online">Online (sito web)</option>
+                          <option value="altro">Altro</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="label">Motivo / Tipologia Evento</label>
+                        <select className="input-field"
+                          value={gruppoForm.motivoSoggiorno||""}
+                          onChange={e=>setGruppoForm(f=>({...f,motivoSoggiorno:e.target.value}))}>
+                          <option value="">— Seleziona —</option>
+                          <option value="congresso">Congresso / Convegno</option>
+                          <option value="mice">MICE / Evento aziendale</option>
+                          <option value="team-building">Team Building</option>
+                          <option value="incentive">Incentive</option>
+                          <option value="formazione">Formazione / Training</option>
+                          <option value="wedding">Wedding / Matrimonio</option>
+                          <option value="tour">Tour / Gruppo turistico</option>
+                          <option value="sport">Sportivo / Competizione</option>
+                          <option value="scolastico">Scolastico / Universitario</option>
+                          <option value="religioso">Religioso / Pellegrinaggio</option>
+                          <option value="altro">Altro</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="label">Mercato di Provenienza</label>
+                        <select className="input-field"
+                          value={gruppoForm.mercato||""}
+                          onChange={e=>setGruppoForm(f=>({...f,mercato:e.target.value}))}>
+                          <option value="">— Seleziona —</option>
+                          <optgroup label="Italia">
+                            <option value="IT-nord">Nord Italia</option>
+                            <option value="IT-centro">Centro Italia</option>
+                            <option value="IT-sud">Sud Italia e Isole</option>
+                          </optgroup>
+                          <optgroup label="Europa">
+                            <option value="EU-dach">DACH (Germania/Austria/Svizzera)</option>
+                            <option value="EU-uk">Regno Unito</option>
+                            <option value="EU-fr">Francia</option>
+                            <option value="EU-benelux">Benelux</option>
+                            <option value="EU-scandinavia">Scandinavia</option>
+                            <option value="EU-est">Europa Orientale</option>
+                            <option value="EU-other">Altro Europa</option>
+                          </optgroup>
+                          <optgroup label="Resto del Mondo">
+                            <option value="AM-nord">Nord America</option>
+                            <option value="AM-sud">Sud America</option>
+                            <option value="ASIA">Asia</option>
+                            <option value="MENA">Medio Oriente / Africa</option>
+                            <option value="OCE">Oceania</option>
+                          </optgroup>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="label">Segmento</label>
+                        <select className="input-field"
+                          value={gruppoForm.segmento||""}
+                          onChange={e=>setGruppoForm(f=>({...f,segmento:e.target.value}))}>
+                          <option value="">— Seleziona —</option>
+                          <option value="leisure">Leisure</option>
+                          <option value="business">Business</option>
+                          <option value="gruppo-turistico">Gruppo Turistico</option>
+                          <option value="mice">MICE</option>
+                          <option value="corporate">Corporate</option>
+                          <option value="social">Social / Sociale</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="form-grid">
+                      <div>
+                        <label className="label">Note al gruppo</label>
+                        <textarea className="input-field" rows={2}
+                          value={gruppoForm.note||""}
+                          onChange={e=>setGruppoForm(f=>({...f,note:e.target.value}))}/>
+                      </div>
+                      <div>
+                        <label className="label">Note interne (non visibili ospite)</label>
+                        <textarea className="input-field" rows={2}
+                          value={gruppoForm.noteInterne||""}
+                          onChange={e=>setGruppoForm(f=>({...f,noteInterne:e.target.value}))}/>
+                      </div>
                     </div>
                   </div>
+                )}
 
-                  {gruppoCamere.length===0 && (
-                    <div style={{ textAlign:"center", padding:"40px 20px", color:C.text3,
-                      border:`2px dashed ${C.border}`, borderRadius:10 }}>
-                      <div style={{ fontSize:36, marginBottom:10 }}>🛏️</div>
-                      <div style={{ fontWeight:600 }}>Nessuna camera aggiunta</div>
-                      <div style={{ fontSize:13, marginTop:4 }}>Clicca "+ Aggiungi camera" per iniziare</div>
+                {/* ═══ TAB 3: BLOCCO CAMERE ═══ */}
+                {gruppoTab==="blocco" && (
+                  <div>
+                    {(!gruppoForm.checkIn||!gruppoForm.checkOut)&&(
+                      <div style={{background:C.amberL,border:`1px solid ${C.amberLb}`,borderRadius:7,
+                        padding:"10px 14px",marginBottom:14,fontSize:12,color:C.amber,fontWeight:600}}>
+                        ⚠️ Inserisci le date nel Tab 2 prima di configurare il blocco camere
+                      </div>
+                    )}
+
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                      <div className="section-title" style={{marginBottom:0}}>Blocco per Tipologia</div>
+                      <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+                        <span style={{fontSize:12,color:C.text3}}>Aggiungi tipologia:</span>
+                        {ROOM_TYPE_LIST.filter(t=>!blocco.find(b=>b.tipo===t)).map(t=>(
+                          <button key={t} onClick={()=>addBloccoTipo(t)}
+                            style={{background:C.navyL,color:C.navy,border:`1px solid ${C.navyLb}`,
+                              borderRadius:6,padding:"4px 10px",cursor:"pointer",fontSize:11,fontWeight:600,
+                              fontFamily:"'IBM Plex Sans',sans-serif"}}>
+                            + {t}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  )}
 
-                  {gruppoCamere.map((cam, idx) => {
-                    const room = ROOMS.find(r=>r.id===parseInt(cam.roomId));
-                    const n    = nights(cam.checkIn||gruppoForm.checkIn, cam.checkOut||gruppoForm.checkOut);
-                    const pax  = room?.priceMode==="persona"?((cam.adulti||1)+(cam.bambini||0)):1;
-                    const roomCost = room && n>0 ? (cam.gratuita?0:room.price*n*pax) : 0;
-                    return (
-                      <div key={cam._key} style={{
-                        border:`1px solid ${cam.gratuita?C.greenLb:C.border}`,
-                        borderLeft:`4px solid ${cam.gratuita?"#1b7a4a":C.navyLb}`,
-                        borderRadius:8, marginBottom:12, background:"#fff",
-                        overflow:"hidden" }}>
-                        {/* ── HEADER CAMERA ROW ── */}
-                        <div style={{ padding:"10px 14px", background:cam.gratuita?"#e6f7ee":"#f8faff",
-                          display:"flex", alignItems:"center", gap:10, borderBottom:`1px solid ${C.border}` }}>
-                          <div style={{ width:28, height:28, borderRadius:"50%",
-                            background:cam.gratuita?C.green:C.navy, color:"#fff",
-                            display:"flex", alignItems:"center", justifyContent:"center",
-                            fontSize:13, fontWeight:700, flexShrink:0 }}>{idx+1}</div>
-                          <div style={{ flex:1, fontWeight:700, fontSize:14 }}>
-                            {room ? `Cam ${room.id} · ${room.type}` : "Camera non selezionata"}
-                            {cam.guestName && <span style={{ fontWeight:400, color:C.text2 }}> — {cam.guestName}</span>}
-                          </div>
-                          {cam.gratuita && (
-                            <span style={{ fontSize:11, padding:"2px 8px", borderRadius:10,
-                              background:"#e6f7ee", color:"#1b7a4a", border:"1px solid #6fcf97", fontWeight:700 }}>
-                              🎁 GRATUITA
-                            </span>
-                          )}
-                          <div style={{ fontWeight:700, color:cam.gratuita?C.green:C.gold, fontSize:14 }}>
-                            {cam.gratuita?"€ 0":"€"+roomCost.toFixed(2)}
-                            {cam.gratuita&&room&&n>0 && (
-                              <span style={{ fontSize:10, color:C.text3, textDecoration:"line-through", marginLeft:6 }}>
-                                €{(room.price*n*pax).toFixed(2)}
-                              </span>
-                            )}
-                          </div>
-                          <button onClick={()=>removeCameraGruppo(cam._key)}
-                            style={{ background:"#fdecea", color:C.red, border:"1px solid #ef9a9a",
-                              borderRadius:5, padding:"4px 9px", cursor:"pointer", fontSize:13 }}>✕</button>
+                    {blocco.length===0?(
+                      <div style={{border:`2px dashed ${C.border}`,borderRadius:8,padding:32,
+                        textAlign:"center",color:C.text3}}>
+                        <div style={{fontSize:32,marginBottom:8}}>🛏️</div>
+                        <div style={{fontWeight:600}}>Nessuna tipologia aggiunta</div>
+                        <div style={{fontSize:12,marginTop:4}}>Usa i bottoni sopra per aggiungere le tipologie richieste</div>
+                      </div>
+                    ):(
+                      <>
+                        {/* Header tabella */}
+                        <div style={{display:"grid",
+                          gridTemplateColumns:"1fr 70px 130px 140px 120px 110px 80px 40px",
+                          gap:8,padding:"8px 12px",background:C.surface2,borderRadius:"6px 6px 0 0",
+                          border:`1px solid ${C.border}`,fontSize:10,fontWeight:700,
+                          color:C.text3,textTransform:"uppercase",letterSpacing:.5,minWidth:860}}>
+                          <div>Tipologia</div>
+                          <div>Qty</div>
+                          <div>Prezzo / Notte</div>
+                          <div>Trattamento</div>
+                          <div>Gratuite</div>
+                          <div>Motivo gratuità</div>
+                          <div style={{textAlign:"right"}}>Subtot.</div>
+                          <div/>
+                        </div>
+                        <div style={{overflowX:"auto"}}>
+                        {blocco.map(b=>{
+                          const listino = basePriceForType(b.tipo);
+                          const prezzo  = b.prezzoCampo==="manuale"?(b.prezzoManuale||0):listino;
+                          const sub     = prezzo*n*(b.qty||0);
+                          return (
+                            <div key={b.tipo} style={{display:"grid",
+                              gridTemplateColumns:"1fr 70px 130px 140px 120px 110px 80px 40px",
+                              gap:8,padding:"10px 12px",borderBottom:`1px solid ${C.border}`,
+                              background:"#fff",alignItems:"center",minWidth:860}}>
+                              <div>
+                                <div style={{fontWeight:700,fontSize:13}}>{b.tipo}</div>
+                                <div style={{fontSize:10,color:C.text3}}>
+                                  Listino: €{listino}/notte
+                                </div>
+                              </div>
+                              <div>
+                                <input type="number" min={0} max={100}
+                                  className="input-field" style={{padding:"5px 8px",textAlign:"center"}}
+                                  value={b.qty||0}
+                                  onChange={e=>updBlocco(b.tipo,{qty:parseInt(e.target.value)||0})}/>
+                              </div>
+                              <div>
+                                <div style={{display:"flex",gap:4,marginBottom:4}}>
+                                  {["listino","manuale"].map(m=>(
+                                    <button key={m} onClick={()=>updBlocco(b.tipo,{prezzoCampo:m})}
+                                      style={{flex:1,padding:"4px 6px",border:`1px solid ${b.prezzoCampo===m?C.navy:C.border}`,
+                                        borderRadius:4,cursor:"pointer",fontSize:10,fontWeight:600,
+                                        background:b.prezzoCampo===m?C.navyL:"#fff",
+                                        color:b.prezzoCampo===m?C.navy:C.text3,
+                                        fontFamily:"'IBM Plex Sans',sans-serif"}}>
+                                      {m==="listino"?"📋 Listino":"✏️ Manuale"}
+                                    </button>
+                                  ))}
+                                </div>
+                                {b.prezzoCampo==="manuale"?(
+                                  <input type="number" min={0} className="input-field"
+                                    style={{padding:"5px 8px"}}
+                                    value={b.prezzoManuale||""}
+                                    onChange={e=>updBlocco(b.tipo,{prezzoManuale:parseFloat(e.target.value)||0})}
+                                    placeholder="€/notte"/>
+                                ):(
+                                  <div style={{padding:"5px 8px",fontWeight:700,color:C.navy,fontSize:13}}>
+                                    €{listino}/n
+                                  </div>
+                                )}
+                              </div>
+                              <div>
+                                <select className="input-field" style={{padding:"5px 8px"}}
+                                  value={b.trattamento||"BB"}
+                                  onChange={e=>updBlocco(b.tipo,{trattamento:e.target.value})}>
+                                  <option value="RO">RO — Solo pernottamento</option>
+                                  <option value="BB">BB — Bed & Breakfast</option>
+                                  <option value="HB">HB — Mezza Pensione</option>
+                                  <option value="FB">FB — Pensione Completa</option>
+                                  <option value="AI">AI — All Inclusive</option>
+                                </select>
+                              </div>
+                              <div>
+                                <input type="number" min={0} max={b.qty||0}
+                                  className="input-field" style={{padding:"5px 8px",textAlign:"center"}}
+                                  value={b.gratuitaQty||0}
+                                  onChange={e=>updBlocco(b.tipo,{gratuitaQty:Math.min(parseInt(e.target.value)||0,b.qty||0)})}
+                                  placeholder="n gratuite"/>
+                                {(b.gratuitaQty||0)>0&&(
+                                  <div style={{fontSize:9,color:C.green,fontWeight:700,marginTop:2}}>
+                                    🎁 {b.gratuitaQty} gratuita/e
+                                  </div>
+                                )}
+                              </div>
+                              <div>
+                                {(b.gratuitaQty||0)>0&&(
+                                  <select className="input-field" style={{padding:"5px 8px",fontSize:11}}
+                                    value={b.gratuitaMotivo||""}
+                                    onChange={e=>updBlocco(b.tipo,{gratuitaMotivo:e.target.value})}>
+                                    <option value="">— Motivo —</option>
+                                    <option value="1su10">1 su 10</option>
+                                    <option value="1su20">1 su 20</option>
+                                    <option value="organizzatore">Organizzatore</option>
+                                    <option value="speaker">Speaker</option>
+                                    <option value="accompagnatore">Accompagnatore</option>
+                                    <option value="upgrade">Upgrade</option>
+                                    <option value="fidelizzazione">Fidelizzazione</option>
+                                    <option value="gestionale">Gestionale</option>
+                                    <option value="altro">Altro</option>
+                                  </select>
+                                )}
+                              </div>
+                              <div style={{textAlign:"right",fontWeight:700,color:C.gold,fontSize:13}}>
+                                €{sub.toLocaleString("it-IT",{minimumFractionDigits:0})}
+                              </div>
+                              <div>
+                                <button onClick={()=>removeBloccoTipo(b.tipo)}
+                                  style={{background:"none",border:"none",cursor:"pointer",
+                                    color:C.red,fontSize:16,padding:4}}>🗑</button>
+                              </div>
+                            </div>
+                          );
+                        })}
                         </div>
 
-                        {/* ── DETTAGLI CAMERA ── */}
-                        <div style={{ padding:"12px 14px" }}>
-                          <div className="form-grid" style={{ gap:10 }}>
-                            {/* Camera */}
+                        {/* Totali blocco */}
+                        <div style={{display:"grid",
+                          gridTemplateColumns:"1fr 70px 130px 140px 120px 110px 80px 40px",
+                          gap:8,padding:"12px 12px",background:C.navyL,
+                          border:`1px solid ${C.navyLb}`,borderTop:"none",
+                          borderRadius:"0 0 6px 6px",minWidth:860,minHeight:44}}>
+                          <div style={{fontWeight:800,color:C.navy,fontSize:13}}>TOTALE BLOCCO</div>
+                          <div style={{fontWeight:800,color:C.navy,fontSize:14,textAlign:"center"}}>{totCamere}</div>
+                          <div/>
+                          <div/>
+                          <div style={{fontWeight:700,color:C.green,fontSize:12}}>
+                            {totGratuite>0&&`🎁 ${totGratuite} grat.`}
+                          </div>
+                          <div/>
+                          <div style={{textAlign:"right",fontWeight:800,color:C.gold,fontSize:14}}>
+                            €{totValore.toLocaleString("it-IT",{minimumFractionDigits:0})}
+                          </div>
+                          <div/>
+                        </div>
+
+                        {/* Riepilogo KPI */}
+                        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginTop:16}}>
+                          {[
+                            {l:"Camere totali",v:totCamere,c:C.navy},
+                            {l:"Bednights",v:totCamere*n,c:C.blue},
+                            {l:"Roomnights",v:totCamere*n,c:C.purple},
+                            {l:"Valore lordo",v:"€"+totValore.toLocaleString("it-IT"),c:C.gold},
+                          ].map(k=>(
+                            <div key={k.l} style={{background:"#fff",border:`1px solid ${C.border}`,
+                              borderRadius:8,padding:"10px 14px"}}>
+                              <div style={{fontSize:10,color:C.text3,textTransform:"uppercase",
+                                letterSpacing:.5,marginBottom:4}}>{k.l}</div>
+                              <div style={{fontSize:20,fontWeight:700,color:k.c}}>{k.v}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* ═══ TAB 4: ROOMING LIST ═══ */}
+                {gruppoTab==="rooming" && (
+                  <div>
+                    {/* Toolbar */}
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",
+                      marginBottom:16,flexWrap:"wrap",gap:10}}>
+                      <div>
+                        <div className="section-title" style={{marginBottom:2}}>Rooming List</div>
+                        <div style={{fontSize:12,color:C.text3}}>
+                          {compilate}/{rooming.length} ospiti compilati
+                          {rooming.length>0&&compilate===rooming.length&&
+                            <span style={{color:C.green,fontWeight:700,marginLeft:8}}>✓ Completa</span>}
+                        </div>
+                      </div>
+                      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                        {blocco.length>0&&(
+                          <button onClick={generaRooming}
+                            style={{background:C.navyL,color:C.navy,border:`1px solid ${C.navyLb}`,
+                              borderRadius:6,padding:"7px 13px",cursor:"pointer",fontSize:12,fontWeight:600,
+                              fontFamily:"'IBM Plex Sans',sans-serif"}}>
+                            🔄 Genera da blocco {rooming.length>0?"(reset)":""}
+                          </button>
+                        )}
+                        {rooming.length>0&&(
+                          <button onClick={()=>{
+                            const token=roomingToken;
+                            setGruppoForm(f=>({...f,roomingToken:token,roomingPublished:true}));
+                            navigator.clipboard?.writeText(roomingUrl).catch(()=>{});
+                            showToast("Link rooming copiato! ✓");
+                          }}
+                            style={{background:gruppoForm.roomingPublished?C.green:C.navy,
+                              color:"#fff",border:"none",
+                              borderRadius:6,padding:"7px 13px",cursor:"pointer",fontSize:12,fontWeight:600,
+                              fontFamily:"'IBM Plex Sans',sans-serif"}}>
+                            {gruppoForm.roomingPublished?"🔗 Link attivo (copia)":"🌐 Pubblica per agenzia"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Link pubblicato */}
+                    {gruppoForm.roomingPublished&&(
+                      <div style={{background:C.greenL,border:`1px solid ${C.greenLb}`,borderRadius:7,
+                        padding:"10px 14px",marginBottom:14,fontSize:12}}>
+                        <div style={{fontWeight:700,color:C.green,marginBottom:4}}>
+                          🌐 Rooming list pubblicata — accessibile all'agenzia
+                        </div>
+                        <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+                          <code style={{background:"#fff",padding:"4px 8px",borderRadius:4,
+                            fontSize:11,color:C.navy,border:`1px solid ${C.navyLb}`,flex:1}}>
+                            {roomingUrl}
+                          </code>
+                          <button onClick={()=>setGruppoForm(f=>({...f,roomingPublished:false}))}
+                            style={{background:"none",border:`1px solid ${C.red}`,color:C.red,
+                              borderRadius:6,padding:"4px 10px",cursor:"pointer",fontSize:11,
+                              fontFamily:"'IBM Plex Sans',sans-serif"}}>
+                            Annulla pubblicazione
+                          </button>
+                        </div>
+                        <div style={{marginTop:8,display:"flex",gap:10,alignItems:"center"}}>
+                          <label className="label" style={{margin:0}}>Scadenza compilazione:</label>
+                          <input type="date" className="input-field" style={{maxWidth:160,padding:"4px 8px"}}
+                            value={gruppoForm.roomingDeadline||""}
+                            onChange={e=>setGruppoForm(f=>({...f,roomingDeadline:e.target.value}))}/>
+                        </div>
+                      </div>
+                    )}
+
+                    {rooming.length===0?(
+                      <div style={{border:`2px dashed ${C.border}`,borderRadius:8,padding:32,
+                        textAlign:"center",color:C.text3}}>
+                        <div style={{fontSize:32,marginBottom:8}}>📝</div>
+                        <div style={{fontWeight:600}}>Rooming list vuota</div>
+                        <div style={{fontSize:12,marginTop:4}}>
+                          {blocco.length>0?"Clicca \"Genera da blocco\" per creare gli slot":"Prima definisci il blocco camere nel Tab 3"}
+                        </div>
+                      </div>
+                    ):(
+                      <>
+                        {/* Header */}
+                        <div style={{display:"grid",
+                          gridTemplateColumns:"100px 1fr 1fr 70px 70px 100px 120px 90px",
+                          gap:8,padding:"8px 12px",background:C.surface2,
+                          border:`1px solid ${C.border}`,borderRadius:"6px 6px 0 0",
+                          fontSize:10,fontWeight:700,color:C.text3,
+                          textTransform:"uppercase",letterSpacing:.5,minWidth:800}}>
+                          <div>Tipologia</div><div>Ospite</div>
+                          <div>Camera</div><div>Adulti</div><div>Bambini</div>
+                          <div>Trattamento</div><div>Gratuità</div><div>Stato</div>
+                        </div>
+                        <div style={{overflowX:"auto"}}>
+                        {rooming.map((r,idx)=>(
+                          <div key={r._key||idx} style={{display:"grid",
+                            gridTemplateColumns:"100px 1fr 1fr 70px 70px 100px 120px 90px",
+                            gap:8,padding:"9px 12px",
+                            borderBottom:`1px solid ${C.border}`,
+                            background:idx%2===0?"#fff":C.surface2,
+                            borderLeft:`3px solid ${r.gratuita?C.green:r.guestName?C.navy:"transparent"}`,
+                            alignItems:"center",minWidth:800}}>
                             <div>
-                              <label className="label">Camera *</label>
-                              <select className="input-field" value={cam.roomId||""}
-                                onChange={e=>updCameraGruppo(cam._key,{roomId:e.target.value})}>
-                                <option value="">Seleziona...</option>
-                                {ROOMS.map(r=>{
-                                  const ci=cam.checkIn||gruppoForm.checkIn, co=cam.checkOut||gruppoForm.checkOut;
-                                  const okRes   = ci&&co ? roomAvail(r,ci,co,reservations,cam.id) : true;
-                                  const inGruppo= gruppoCamere.some(gc=>gc._key!==cam._key && parseInt(gc.roomId)===r.id);
-                                  const ok = okRes && !inGruppo;
-                                  const pm=r.priceMode==="persona"?"p.p.":"cam";
-                                  const note = !okRes?" (occupata)":inGruppo?" (già assegnata)":"";
-                                  return <option key={r.id} value={r.id} disabled={!ok}>
-                                    Cam {r.id} · {r.type} · P{r.floor} · {r.capacity}p · €{r.price}/{pm}/n{note}
+                              <div style={{fontSize:11,fontWeight:600}}>{r.tipo}</div>
+                              {r.gratuita&&<span style={{fontSize:9,background:C.greenL,color:C.green,
+                                border:`1px solid ${C.greenLb}`,borderRadius:4,
+                                padding:"1px 4px",fontWeight:700}}>🎁 COMP.</span>}
+                            </div>
+                            <div>
+                              <input className="input-field" placeholder="Cognome Nome"
+                                style={{padding:"4px 8px",fontSize:12}}
+                                value={r.guestName||""}
+                                onChange={e=>updRooming(idx,{guestName:e.target.value,stato:e.target.value?"compilata":"da_compilare"})}/>
+                              <select className="input-field" style={{padding:"3px 6px",fontSize:10,marginTop:3}}
+                                value={r.guestId||""}
+                                onChange={e=>{
+                                  const g=guests.find(x=>x.id===e.target.value);
+                                  updRooming(idx,{guestId:e.target.value,
+                                    guestName:g?`${g.cognome} ${g.nome}`:r.guestName,
+                                    stato:"compilata"});
+                                }}>
+                                <option value="">— da anagrafica —</option>
+                                {individui.map(g=><option key={g.id} value={g.id}>{g.cognome} {g.nome}</option>)}
+                              </select>
+                            </div>
+                            <div>
+                              <select className="input-field" style={{padding:"4px 8px",fontSize:11}}
+                                value={r.roomId||""}
+                                onChange={e=>updRooming(idx,{roomId:e.target.value})}>
+                                <option value="">— assegna —</option>
+                                {ROOMS.filter(rm=>rm.type===r.tipo).map(rm=>{
+                                  const ci=gruppoForm.checkIn, co=gruppoForm.checkOut;
+                                  const taken=rooming.some((rr,ii)=>ii!==idx&&rr.roomId===String(rm.id));
+                                  const ok=ci&&co?roomAvail(rm,ci,co,reservations,null):true;
+                                  return <option key={rm.id} value={rm.id} disabled={taken||!ok}>
+                                    Cam {rm.id} · P{rm.floor}{taken?" (assegnata)":!ok?" (occupata)":""}
                                   </option>;
                                 })}
                               </select>
                             </div>
-                            {/* Ospite */}
                             <div>
-                              <label className="label">Ospite *</label>
-                              <select className="input-field" value={cam.guestId||""}
-                                onChange={e=>{
-                                  const g=guests.find(x=>x.id===e.target.value);
-                                  updCameraGruppo(cam._key,{guestId:e.target.value,
-                                    guestName:g?`${g.cognome} ${g.nome}`:""});
-                                }}>
-                                <option value="">— Seleziona dall'anagrafica —</option>
-                                {guests.map(g=><option key={g.id} value={g.id}>{g.cognome} {g.nome}</option>)}
-                              </select>
-                              {!cam.guestId && (
-                                <input className="input-field" placeholder="Nome manuale ospite"
-                                  value={cam.guestName||""} style={{ marginTop:5 }}
-                                  onChange={e=>updCameraGruppo(cam._key,{guestName:e.target.value})}/>
-                              )}
-                            </div>
-                            {/* Adulti + Bambini */}
-                            <div>
-                              <label className="label">Adulti</label>
-                              <input type="number" className="input-field" min={1} max={8}
-                                value={cam.adulti||1}
-                                onChange={e=>updCameraGruppo(cam._key,{adulti:parseInt(e.target.value)||1})}/>
+                              <input type="number" min={1} max={8}
+                                className="input-field" style={{padding:"4px 6px",textAlign:"center"}}
+                                value={r.adulti||1}
+                                onChange={e=>updRooming(idx,{adulti:parseInt(e.target.value)||1})}/>
                             </div>
                             <div>
-                              <label className="label">Bambini</label>
-                              <input type="number" className="input-field" min={0} max={6}
-                                value={cam.bambini||0}
-                                onChange={e=>updCameraGruppo(cam._key,{bambini:parseInt(e.target.value)||0})}/>
-                            </div>
-                            {/* Date personalizzate */}
-                            <div>
-                              <label className="label">Check-In (se diverso)</label>
-                              <input type="date" className="input-field"
-                                value={cam.checkIn||""}
-                                onChange={e=>updCameraGruppo(cam._key,{checkIn:e.target.value})}/>
+                              <input type="number" min={0} max={4}
+                                className="input-field" style={{padding:"4px 6px",textAlign:"center"}}
+                                value={r.bambini||0}
+                                onChange={e=>updRooming(idx,{bambini:parseInt(e.target.value)||0})}/>
                             </div>
                             <div>
-                              <label className="label">Check-Out (se diverso)</label>
-                              <input type="date" className="input-field"
-                                value={cam.checkOut||""}
-                                onChange={e=>updCameraGruppo(cam._key,{checkOut:e.target.value})}/>
-                            </div>
-                            {/* Trattamento */}
-                            <div>
-                              <label className="label">Trattamento</label>
-                              <select className="input-field" value={cam.trattamento||""}
-                                onChange={e=>updCameraGruppo(cam._key,{trattamento:e.target.value})}>
-                                <option value="">— Seleziona —</option>
-                                <option value="RO">RO · Solo Pernottamento</option>
-                                <option value="BB">BB · B&B</option>
-                                <option value="HB">HB · Mezza Pensione</option>
-                                <option value="FB">FB · Pensione Completa</option>
+                              <select className="input-field" style={{padding:"4px 6px",fontSize:11}}
+                                value={r.trattamento||"BB"}
+                                onChange={e=>updRooming(idx,{trattamento:e.target.value})}>
+                                <option value="RO">RO</option>
+                                <option value="BB">BB</option>
+                                <option value="HB">HB</option>
+                                <option value="FB">FB</option>
+                                <option value="AI">AI</option>
                               </select>
                             </div>
-                            {/* Note camera */}
                             <div>
-                              <label className="label">Note camera</label>
-                              <input className="input-field" placeholder="Richieste speciali..."
-                                value={cam.notes||""} onChange={e=>updCameraGruppo(cam._key,{notes:e.target.value})}/>
-                            </div>
-                          </div>
-
-                          {/* Servizi */}
-                          <div style={{ marginTop:10 }}>
-                            <label className="label" style={{ marginBottom:6, display:"block" }}>Servizi</label>
-                            <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-                              {SERVICES.map(s=>{
-                                const sel=(cam.services||[]).includes(s.id);
-                                return <span key={s.id}
-                                  className={`service-chip${sel?" sel":""}`}
-                                  onClick={()=>updCameraGruppo(cam._key,{services:sel?(cam.services||[]).filter(x=>x!==s.id):[...(cam.services||[]),s.id]})}>
-                                  {sel?"✓ ":""}{s.label} <span style={{color:C.text3}}>+€{s.price}/n</span>
-                                </span>;
-                              })}
-                            </div>
-                          </div>
-
-                          {/* GRATUITÀ */}
-                          <div style={{ marginTop:10, padding:"10px 12px",
-                            background:cam.gratuita?"#e6f7ee":"#f8faff",
-                            border:`1px solid ${cam.gratuita?C.greenLb:C.border}`,
-                            borderRadius:7 }}>
-                            <label style={{ display:"flex", alignItems:"center", gap:8, cursor:"pointer" }}>
-                              <input type="checkbox" checked={!!cam.gratuita}
-                                onChange={e=>updCameraGruppo(cam._key,{gratuita:e.target.checked})}
-                                style={{ width:18, height:18, cursor:"pointer" }}/>
-                              <span style={{ fontSize:13, fontWeight:700, color:cam.gratuita?C.green:C.text2 }}>
-                                🎁 Camera gratuita (complimentary) — costo alloggio = €0
-                              </span>
-                            </label>
-                            {cam.gratuita && (
-                              <div style={{ marginTop:8 }}>
-                                <select className="input-field" value={cam.gratuitaMotivo||""}
-                                  onChange={e=>updCameraGruppo(cam._key,{gratuitaMotivo:e.target.value})}>
-                                  <option value="">— Motivazione —</option>
-                                  <option value="1su10">1 su 10 prenotate</option>
-                                  <option value="1su20">1 su 20 prenotate</option>
-                                  <option value="organizzatore">Camera organizzatore</option>
-                                  <option value="speaker">Camera speaker / relatore</option>
-                                  <option value="accompagnatore">Camera accompagnatore</option>
-                                  <option value="upgrade">Upgrade complimentary</option>
-                                  <option value="fidelizzazione">Fidelizzazione cliente</option>
-                                  <option value="gestionale">Uso gestionale interno</option>
+                              <label style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",fontSize:11}}>
+                                <input type="checkbox" checked={!!r.gratuita}
+                                  onChange={e=>updRooming(idx,{gratuita:e.target.checked})}/>
+                                🎁 Gratuita
+                              </label>
+                              {r.gratuita&&(
+                                <select className="input-field"
+                                  style={{padding:"3px 5px",fontSize:10,marginTop:3}}
+                                  value={r.gratuitaMotivo||""}
+                                  onChange={e=>updRooming(idx,{gratuitaMotivo:e.target.value})}>
+                                  <option value="">Motivo</option>
+                                  <option value="1su10">1/10</option>
+                                  <option value="organizzatore">Organizzatore</option>
+                                  <option value="speaker">Speaker</option>
+                                  <option value="accompagnatore">Accompagnatore</option>
+                                  <option value="upgrade">Upgrade</option>
                                   <option value="altro">Altro</option>
                                 </select>
-                              </div>
-                            )}
+                              )}
+                            </div>
+                            <div>
+                              <span style={{fontSize:10,padding:"2px 7px",borderRadius:8,fontWeight:700,
+                                background:{compilata:C.greenL,da_compilare:C.surface2,confermata:C.navyL}[r.stato||"da_compilare"],
+                                color:{compilata:C.green,da_compilare:C.text3,confermata:C.navy}[r.stato||"da_compilare"]}}>
+                                {{compilata:"✓ Compilata",da_compilare:"Da compilare",confermata:"Confermata"}[r.stato||"da_compilare"]}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                        </div>
+
+                        {/* Footer progress */}
+                        <div style={{padding:"10px 14px",background:C.navyL,
+                          borderRadius:"0 0 6px 6px",border:`1px solid ${C.navyLb}`,
+                          borderTop:"none",display:"flex",gap:16,alignItems:"center"}}>
+                          <div style={{fontWeight:700,color:C.navy}}>
+                            Avanzamento: {compilate}/{rooming.length}
+                          </div>
+                          <div style={{flex:1,height:8,background:C.border,borderRadius:4,overflow:"hidden"}}>
+                            <div style={{height:"100%",width:`${rooming.length?compilate/rooming.length*100:0}%`,
+                              background:compilate===rooming.length?C.green:C.navy,
+                              borderRadius:4,transition:"width .3s"}}/>
+                          </div>
+                          <div style={{fontSize:12,color:C.text3}}>
+                            {rooming.filter(r=>r.roomId).length} camere assegnate
+                          </div>
+                          <div style={{fontSize:12,color:C.green}}>
+                            {rooming.filter(r=>r.gratuita).length} gratuite
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* ═══ TAB 3: SPLIT CONTO ═══ */}
-              {gruppoTab==="split" && (
-                <div>
-                  <div style={{ background:"#e8f0ff", border:"1px solid #b3ccff",
-                    borderRadius:8, padding:"12px 16px", marginBottom:20, fontSize:13, color:"#1565c0" }}>
-                    <strong>Come funziona lo split conto:</strong> Scegli quali voci vanno sul conto master aziendale
-                    e quali rimangono sul conto della singola camera. I servizi selezionati saranno addebitati
-                    all'azienda/agenzia; tutto il resto è a carico del singolo ospite.
-                  </div>
-
-                  {/* Policy */}
-                  <div className="section-title">Politica di fatturazione</div>
-                  <div style={{ display:"flex", gap:0, marginBottom:20, border:`1px solid ${C.border}`,
-                    borderRadius:8, overflow:"hidden" }}>
-                    {[
-                      { k:"tutto_azienda", label:"🏢 Tutto all'azienda",   desc:"Ogni voce va sul master" },
-                      { k:"misto",         label:"✂️ Split misto",          desc:"Scegli voce per voce" },
-                      { k:"per_camera",    label:"👤 Solo camera individuale", desc:"Nessun conto master" },
-                    ].map(p=>(
-                      <button key={p.k} onClick={()=>setGruppoForm(f=>({...f,splitPolicy:p.k}))}
-                        style={{ flex:1, padding:"10px 8px", border:"none", cursor:"pointer",
-                          fontFamily:"'IBM Plex Sans',sans-serif", fontSize:12, fontWeight:600,
-                          background:(gruppoForm.splitPolicy||"misto")===p.k?C.navy:"#fff",
-                          color:(gruppoForm.splitPolicy||"misto")===p.k?"#fff":C.text3,
-                          borderRight:`1px solid ${C.border}`, transition:"all .15s",
-                          textAlign:"center" }}>
-                        <div>{p.label}</div>
-                        <div style={{ fontSize:10, fontWeight:400, marginTop:2 }}>{p.desc}</div>
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Voci split (solo in "misto") */}
-                  {(gruppoForm.splitPolicy||"misto")==="misto" && (
-                    <div>
-                      <div className="section-title">Voci sul conto aziendale</div>
-                      <div style={{ fontSize:12, color:C.text3, marginBottom:12 }}>
-                        Seleziona le voci che vuoi addebitare all'azienda/agenzia.
-                        Le voci non selezionate rimangono sul conto camera individuale.
-                      </div>
-                      <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                        {/* Alloggio */}
-                        {[
-                          { id:"room",      label:"🛏️ Alloggio (pernottamento)", always:false },
-                          ...SERVICES.map(s=>({ id:s.id, label:`${s.label} (+€${s.price}/n)`, always:false })),
-                        ].map(voce=>{
-                          const sel=(gruppoForm.contoAziendaVoci||[]).includes(voce.id);
-                          return (
-                            <label key={voce.id} style={{ display:"flex", alignItems:"center", gap:10,
-                              padding:"10px 14px", border:`1px solid ${sel?C.navyLb:C.border}`,
-                              borderRadius:7, cursor:"pointer",
-                              background:sel?"#e3f0ff":"#fff", transition:"all .12s" }}>
-                              <input type="checkbox" checked={sel}
-                                onChange={e=>setGruppoForm(f=>({...f,contoAziendaVoci:
-                                  e.target.checked?[...(f.contoAziendaVoci||[]),voce.id]
-                                  :(f.contoAziendaVoci||[]).filter(x=>x!==voce.id)
-                                }))}
-                                style={{ width:18, height:18, cursor:"pointer" }}/>
-                              <span style={{ fontSize:13, fontWeight:sel?700:400, color:sel?C.navy:C.text }}>
-                                {voce.label}
-                              </span>
-                              <span style={{ marginLeft:"auto", fontSize:11, fontWeight:700,
-                                color:sel?C.navy:C.text3 }}>
-                                {sel?"→ 🏢 Azienda":"→ 👤 Camera"}
-                              </span>
-                            </label>
-                          );
-                        })}
-                        <div style={{ padding:"10px 14px", border:`1px solid ${C.border}`, borderRadius:7,
-                          background:C.surface2, fontSize:12, color:C.text3 }}>
-                          📦 Extra in camera (room service, minibar, ecc.) — sempre sul conto camera individuale
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Riepilogo per camera */}
-                  {gruppoCamere.length>0 && (
-                    <div style={{ marginTop:24 }}>
-                      <div className="section-title">Riepilogo per camera</div>
-                      <div style={{ border:`1px solid ${C.border}`, borderRadius:8, overflow:"hidden" }}>
-                        <div style={{ display:"grid", gridTemplateColumns:"1fr 120px 120px 100px",
-                          padding:"9px 14px", background:C.surface2,
-                          borderBottom:`1px solid ${C.border}`,
-                          fontSize:10, fontWeight:700, color:C.text3, textTransform:"uppercase", gap:10 }}>
-                          <div>Camera / Ospite</div>
-                          <div style={{ textAlign:"right" }}>🏢 Azienda</div>
-                          <div style={{ textAlign:"right" }}>👤 Camera</div>
-                          <div style={{ textAlign:"right" }}>Totale</div>
-                        </div>
-                        {gruppoCamere.map((cam,i) => {
-                          const room=ROOMS.find(r=>r.id===parseInt(cam.roomId));
-                          const n=nights(cam.checkIn||gruppoForm.checkIn,cam.checkOut||gruppoForm.checkOut);
-                          const pax=room?.priceMode==="persona"?((cam.adulti||1)+(cam.bambini||0)):1;
-                          const totCam = room&&n>0 ? (cam.gratuita?0:room.price*n*pax)
-                            + (cam.services||[]).reduce((s,sid)=>{const sv=SERVICES.find(x=>x.id===sid);return s+(sv?sv.price*n:0);},0) : 0;
-
-                          let az=0, camera=0;
-                          if ((gruppoForm.splitPolicy||"misto")==="tutto_azienda") { az=totCam; }
-                          else if (gruppoForm.splitPolicy==="per_camera") { camera=totCam; }
-                          else { // misto
-                            const policy=gruppoForm.contoAziendaVoci||[];
-                            const rc=cam.gratuita?0:(room?room.price*n*pax:0);
-                            policy.includes("room")?(az+=rc):(camera+=rc);
-                            (cam.services||[]).forEach(sid=>{
-                              const sv=SERVICES.find(x=>x.id===sid);
-                              if(!sv)return;
-                              policy.includes(sid)?(az+=sv.price*n):(camera+=sv.price*n);
-                            });
-                          }
-
-                          return (
-                            <div key={cam._key} style={{ display:"grid",
-                              gridTemplateColumns:"1fr 120px 120px 100px",
-                              padding:"10px 14px", gap:10, alignItems:"center",
-                              borderBottom:i<gruppoCamere.length-1?`1px solid ${C.border}`:"none",
-                              background:i%2===0?"#fff":C.surface2 }}>
-                              <div>
-                                <div style={{ fontWeight:600, fontSize:13 }}>
-                                  {room?`Cam ${room.id} · ${room.type}`:"—"}
-                                  {cam.gratuita && <span style={{ marginLeft:6, fontSize:10, padding:"1px 6px",
-                                    borderRadius:8, background:"#e6f7ee", color:C.green, fontWeight:700 }}>GRATUITA</span>}
-                                </div>
-                                <div style={{ fontSize:11, color:C.text3 }}>{cam.guestName||"—"}</div>
-                              </div>
-                              <div style={{ textAlign:"right", fontWeight:700, color:C.navy }}>€{az.toFixed(2)}</div>
-                              <div style={{ textAlign:"right", fontWeight:700 }}>€{camera.toFixed(2)}</div>
-                              <div style={{ textAlign:"right", fontWeight:700, color:C.gold }}>€{totCam.toFixed(2)}</div>
-                            </div>
-                          );
-                        })}
-                        {/* TOTALI */}
-                        {(() => {
-                          let totAz=0, totCam=0, totAll=0;
-                          gruppoCamere.forEach(cam=>{
-                            const room=ROOMS.find(r=>r.id===parseInt(cam.roomId));
-                            const n=nights(cam.checkIn||gruppoForm.checkIn,cam.checkOut||gruppoForm.checkOut);
-                            const pax=room?.priceMode==="persona"?((cam.adulti||1)+(cam.bambini||0)):1;
-                            const tc = room&&n>0 ? (cam.gratuita?0:room.price*n*pax)
-                              + (cam.services||[]).reduce((s,sid)=>{const sv=SERVICES.find(x=>x.id===sid);return s+(sv?sv.price*n:0);},0) : 0;
-                            totAll+=tc;
-                            if ((gruppoForm.splitPolicy||"misto")==="tutto_azienda"){totAz+=tc;}
-                            else if(gruppoForm.splitPolicy==="per_camera"){totCam+=tc;}
-                            else {
-                              const policy=gruppoForm.contoAziendaVoci||[];
-                              const rc=cam.gratuita?0:(room?room.price*n*pax:0);
-                              let az=policy.includes("room")?rc:0, ca=policy.includes("room")?0:rc;
-                              (cam.services||[]).forEach(sid=>{const sv=SERVICES.find(x=>x.id===sid);if(!sv)return;policy.includes(sid)?(az+=sv.price*n):(ca+=sv.price*n);});
-                              totAz+=az;totCam+=ca;
-                            }
-                          });
-                          return (
-                            <div style={{ display:"grid", gridTemplateColumns:"1fr 120px 120px 100px",
-                              padding:"12px 14px", gap:10, background:C.navyL,
-                              borderTop:`2px solid ${C.navyLb}` }}>
-                              <div style={{ fontWeight:800, color:C.navy }}>TOTALE GRUPPO</div>
-                              <div style={{ textAlign:"right", fontWeight:800, color:C.navy, fontSize:15 }}>€{totAz.toFixed(2)}</div>
-                              <div style={{ textAlign:"right", fontWeight:800, fontSize:15 }}>€{totCam.toFixed(2)}</div>
-                              <div style={{ textAlign:"right", fontWeight:800, color:C.gold, fontSize:15 }}>€{totAll.toFixed(2)}</div>
-                            </div>
-                          );
-                        })()}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* ═══ PAGAMENTI CONTO MASTER AZIENDA ═══ */}
-              {gruppoTab==="split" && (
-                <div style={{ marginTop:24 }}>
-                  <div className="section-title">💳 Pagamenti conto master azienda</div>
-                  <div style={{ fontSize:12, color:C.text3, marginBottom:12 }}>
-                    Registra gli acconti e i pagamenti ricevuti dall'azienda/agenzia sul conto master.
-                    I pagamenti individuali di ogni camera vanno nella sezione Cassa.
-                  </div>
-
-                  {/* Lista pagamenti */}
-                  <div style={{ border:`1px solid ${C.border}`, borderRadius:8, overflow:"hidden", marginBottom:12 }}>
-                    <div style={{ display:"grid", gridTemplateColumns:"90px 1fr 100px 120px 30px",
-                      padding:"8px 14px", background:C.surface2, borderBottom:`1px solid ${C.border}`,
-                      fontSize:10, fontWeight:700, color:C.text3, textTransform:"uppercase", gap:8 }}>
-                      <div>Data</div><div>Note</div><div>Metodo</div><div style={{textAlign:"right"}}>Importo</div><div/>
-                    </div>
-                    {(gruppoForm.masterPagamenti||[]).length===0 && (
-                      <div style={{ padding:"14px", color:C.text3, fontSize:12, fontStyle:"italic" }}>
-                        Nessun pagamento registrato
-                      </div>
+                      </>
                     )}
-                    {(gruppoForm.masterPagamenti||[]).map((p,i)=>(
-                      <div key={p.id} style={{ display:"grid", gridTemplateColumns:"90px 1fr 100px 120px 30px",
-                        padding:"9px 14px", gap:8, alignItems:"center",
-                        borderBottom:i<(gruppoForm.masterPagamenti||[]).length-1?`1px solid ${C.border}`:"none",
-                        background:i%2===0?"#fff":C.surface2 }}>
-                        <div style={{ fontSize:12 }}>{p.data}</div>
-                        <div style={{ fontSize:12 }}>{p.note||"—"}</div>
-                        <div style={{ fontSize:12, color:C.text2 }}>{p.metodo}</div>
-                        <div style={{ textAlign:"right", fontWeight:700, color:C.green }}>€{parseFloat(p.importo||0).toFixed(2)}</div>
-                        <button onClick={()=>setGruppoForm(f=>({...f,masterPagamenti:(f.masterPagamenti||[]).filter(x=>x.id!==p.id)}))}
-                          style={{ background:"none", border:"none", cursor:"pointer", color:C.red, fontSize:14, padding:0 }}>✕</button>
-                      </div>
-                    ))}
-                    {/* Totale pagato */}
-                    {(gruppoForm.masterPagamenti||[]).length>0 && (() => {
-                      const totPag=(gruppoForm.masterPagamenti||[]).reduce((s,p)=>s+parseFloat(p.importo||0),0);
-                      // Calcola totale azienda
-                      let totAz=0;
-                      gruppoCamere.forEach(cam=>{
-                        const room=ROOMS.find(r=>r.id===parseInt(cam.roomId));
-                        const n=nights(cam.checkIn||gruppoForm.checkIn,cam.checkOut||gruppoForm.checkOut);
-                        const pax=room?.priceMode==="persona"?((cam.adulti||1)+(cam.bambini||0)):1;
-                        const rc=cam.gratuita?0:(room?room.price*n*pax:0);
-                        const svc=(cam.services||[]).reduce((s,sid)=>{const sv=SERVICES.find(x=>x.id===sid);return s+(sv?sv.price*n:0);},0);
-                        const tc=rc+svc;
-                        const pol=gruppoForm.splitPolicy||"misto";
-                        if(pol==="tutto_azienda"){totAz+=tc;}
-                        else if(pol==="misto"){
-                          const voci=gruppoForm.contoAziendaVoci||[];
-                          const azR=voci.includes("room")?rc:0;
-                          const azS=(cam.services||[]).reduce((s,sid)=>{const sv=SERVICES.find(x=>x.id===sid);if(!sv)return s;return s+(voci.includes(sid)?sv.price*n:0);},0);
-                          totAz+=azR+azS;
-                        }
-                      });
-                      const totConIva = totAz*1.10;
-                      const saldo = totConIva - totPag;
-                      return (
-                        <div style={{ padding:"10px 14px", background:C.navyL, borderTop:`2px solid ${C.navyLb}`,
-                          display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8 }}>
-                          <div>
-                            <div style={{fontSize:10,color:C.text3,textTransform:"uppercase",letterSpacing:.5}}>Tot. conto master</div>
-                            <div style={{fontWeight:800,color:C.navy,fontSize:14}}>€{totConIva.toFixed(2)}</div>
-                          </div>
-                          <div>
-                            <div style={{fontSize:10,color:C.text3,textTransform:"uppercase",letterSpacing:.5}}>Pagato</div>
-                            <div style={{fontWeight:800,color:C.green,fontSize:14}}>€{totPag.toFixed(2)}</div>
-                          </div>
-                          <div>
-                            <div style={{fontSize:10,color:C.text3,textTransform:"uppercase",letterSpacing:.5}}>Saldo</div>
-                            <div style={{fontWeight:800,color:saldo>0.01?C.red:C.green,fontSize:14}}>
-                              {saldo>0.01?`€${saldo.toFixed(2)} DA PAGARE`:"✓ SALDATO"}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })()}
                   </div>
-
-                  {/* Form aggiunta pagamento */}
-                  {(() => {
-                    const [mpForm, setMpForm] = useState({ data:new Date().toISOString().slice(0,10), importo:"", metodo:"Bonifico", note:"" });
-                    const addMp = () => {
-                      if (!mpForm.importo || parseFloat(mpForm.importo)<=0) return;
-                      setGruppoForm(f=>({...f, masterPagamenti:[
-                        ...(f.masterPagamenti||[]),
-                        { id:"MP"+Date.now().toString().slice(-6), ...mpForm, importo:parseFloat(mpForm.importo) }
-                      ]}));
-                      setMpForm({ data:new Date().toISOString().slice(0,10), importo:"", metodo:"Bonifico", note:"" });
-                    };
-                    return (
-                      <div style={{ display:"flex", gap:8, alignItems:"flex-end", flexWrap:"wrap" }}>
-                        <div>
-                          <label style={{fontSize:10,color:C.text3,fontWeight:700,textTransform:"uppercase",letterSpacing:.5,display:"block",marginBottom:4}}>Data</label>
-                          <input type="date" value={mpForm.data} onChange={e=>setMpForm(f=>({...f,data:e.target.value}))}
-                            style={{border:`1px solid ${C.border}`,borderRadius:5,padding:"7px 10px",fontSize:12,fontFamily:"'IBM Plex Sans',sans-serif"}}/>
-                        </div>
-                        <div>
-                          <label style={{fontSize:10,color:C.text3,fontWeight:700,textTransform:"uppercase",letterSpacing:.5,display:"block",marginBottom:4}}>Importo €</label>
-                          <input type="number" min="0" step="0.01" value={mpForm.importo} onChange={e=>setMpForm(f=>({...f,importo:e.target.value}))}
-                            placeholder="0.00" style={{width:100,border:`1px solid ${C.border}`,borderRadius:5,padding:"7px 10px",fontSize:12,fontFamily:"'IBM Plex Sans',sans-serif"}}/>
-                        </div>
-                        <div>
-                          <label style={{fontSize:10,color:C.text3,fontWeight:700,textTransform:"uppercase",letterSpacing:.5,display:"block",marginBottom:4}}>Metodo</label>
-                          <select value={mpForm.metodo} onChange={e=>setMpForm(f=>({...f,metodo:e.target.value}))}
-                            style={{border:`1px solid ${C.border}`,borderRadius:5,padding:"7px 10px",fontSize:12,fontFamily:"'IBM Plex Sans',sans-serif"}}>
-                            {["Bonifico","Carta di Credito","Contanti","Assegno","Credito note"].map(m=><option key={m} value={m}>{m}</option>)}
-                          </select>
-                        </div>
-                        <div style={{flex:1,minWidth:140}}>
-                          <label style={{fontSize:10,color:C.text3,fontWeight:700,textTransform:"uppercase",letterSpacing:.5,display:"block",marginBottom:4}}>Note</label>
-                          <input value={mpForm.note} onChange={e=>setMpForm(f=>({...f,note:e.target.value}))}
-                            placeholder="es. Acconto 30%"
-                            style={{width:"100%",border:`1px solid ${C.border}`,borderRadius:5,padding:"7px 10px",fontSize:12,fontFamily:"'IBM Plex Sans',sans-serif",outline:"none",boxSizing:"border-box"}}/>
-                        </div>
-                        <button onClick={addMp}
-                          style={{background:C.green,color:"#fff",border:"none",borderRadius:6,padding:"9px 16px",cursor:"pointer",fontSize:13,fontWeight:600,fontFamily:"'IBM Plex Sans',sans-serif",whiteSpace:"nowrap"}}>
-                          + Registra
-                        </button>
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
-            </div>
-
-            {/* ── FOOTER ── */}
-            <div className="modal-footer" style={{ flexShrink:0 }}>
-              <div style={{ fontSize:12, color:C.text3 }}>
-                {gruppoCamere.length} camere · {gruppoCamere.filter(c=>c.gratuita).length} gratuite ·{" "}
-                {gruppoForm.azienda && <span>🏢 {gruppoForm.azienda}</span>}
-              </div>
-              <div style={{ display:"flex", gap:8 }}>
-                {gruppoTab!=="info" && (
-                  <button className="btn-secondary" onClick={()=>setGruppoTab(gruppoTab==="camere"?"info":"camere")}>
-                    ← Indietro
-                  </button>
                 )}
-                {gruppoTab!=="split" && (
-                  <button className="btn-secondary"
-                    onClick={()=>setGruppoTab(gruppoTab==="info"?"camere":"split")}>
-                    Avanti →
-                  </button>
-                )}
-                <button className="btn-secondary" onClick={()=>setGruppoModal(false)}>Chiudi</button>
-                <button className="btn-primary" onClick={saveGruppo}>
-                  💾 Salva Gruppo ({gruppoCamere.length} camere)
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-
-      {/*   MODAL: CHECKOUT   */}
-      {modal==="checkout" && form && (() => {
-        const tot     = calcTotal(form);
-        const tax     = tot * TAX_RATE;
-        const grand   = tot + tax;
-        const paid    = calcPaid(form);
-        const bal     = grand - paid;
-        const lines   = buildInvoiceLines(form);
-        const n       = nights(form.checkIn, form.checkOut);
-        const room    = rooms.find(r => r.id === form.roomId) || ROOMS.find(r => r.id === form.roomId);
-
-        // Ricalcola importi equali quando cambiano le persone
-        const recalcEquale = (persone) => {
-          const share = parseFloat((grand / persone.length).toFixed(2));
-          return persone.map((p, i) => ({
-            ...p,
-            importo: i === persone.length-1
-              ? parseFloat((grand - share * (persone.length-1)).toFixed(2))
-              : share
-          }));
-        };
-
-        const totaleSplit  = splitPersone.reduce((s,p) => s + (parseFloat(p.importo)||0), 0);
-        const differenza   = parseFloat((grand - totaleSplit).toFixed(2));
-        const tuttiPagati  = splitPersone.length > 0 && splitPersone.every(p => p.paid);
-        const splitValido  = splitPersone.length > 0 && Math.abs(differenza) < 0.05;
-
-        const METHODS = ["Carta di Credito","Carta di Debito","Contanti","Bonifico","Buono Regalo"];
-
-        return (
-          <div className="modal-overlay" onClick={e=>e.target===e.currentTarget&&setModal(null)}>
-            <div className="modal-box" style={{ maxWidth: splitMode ? 860 : 500 }}>
-
-              {/* Header */}
-              <div className="modal-header">
-                <h2 style={{ fontSize:20, fontWeight:600 }}>Check-Out — {form.guestName}</h2>
-                <div style={{ fontSize:12, color:C.text3 }}>Camera {form.roomId} · {fmtDate(form.checkIn)} → {fmtDate(form.checkOut)} · {n} notti</div>
-              </div>
-
-              <div className="modal-body">
-                <div style={{ display:"grid", gridTemplateColumns: splitMode ? "1fr 1fr" : "1fr", gap:18 }}>
-
-                  {/*   Colonna sinistra: riepilogo conto   */}
+                {/* ═══ TAB 5: FATTURAZIONE ═══ */}
+                {gruppoTab==="split" && (
                   <div>
-                    {/* Riepilogo importo */}
-                    <div style={{ background:C.surface2, border:`1px solid ${C.border}`, borderRadius:8, padding:14, marginBottom:14 }}>
-                      <div style={{ fontSize:10, fontWeight:700, color:C.text3, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Riepilogo Conto</div>
-                      {lines.map(l => (
-                        <div key={l.id} style={{ display:"flex", justifyContent:"space-between", fontSize:13, padding:"4px 0", borderBottom:`1px solid ${C.border}` }}>
-                          <span style={{ color:C.text2 }}>{l.desc}</span>
-                          <span style={{ fontWeight:600 }}>€{l.amount.toFixed(2)}</span>
+                    <div className="section-title">Politica di Fatturazione</div>
+                    <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:18}}>
+                      {[
+                        {k:"tutto_azienda",label:"🏢 Tutto all'azienda",  desc:"Ogni voce va sul master"},
+                        {k:"misto",        label:"✂️ Split misto",         desc:"Scegli voce per voce"},
+                        {k:"per_camera",   label:"👤 Solo camera individuale",desc:"Nessun conto master"},
+                      ].map(p=>(
+                        <div key={p.k} onClick={()=>setGruppoForm(f=>({...f,splitPolicy:p.k}))}
+                          style={{flex:1,minWidth:180,border:`2px solid ${gruppoForm.splitPolicy===p.k?C.navy:C.border}`,
+                            borderRadius:8,padding:"12px 14px",cursor:"pointer",
+                            background:gruppoForm.splitPolicy===p.k?C.navyL:"#fff",transition:"all .15s"}}>
+                          <div style={{fontWeight:700,fontSize:13,color:gruppoForm.splitPolicy===p.k?C.navy:C.text}}>
+                            {p.label}
+                          </div>
+                          <div style={{fontSize:11,color:C.text3,marginTop:3}}>{p.desc}</div>
                         </div>
                       ))}
-                      <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, padding:"6px 0", color:C.text3 }}><span>Imponibile</span><span>€{tot.toFixed(2)}</span></div>
-                      <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, padding:"4px 0", color:C.text3 }}><span>IVA 10%</span><span>€{tax.toFixed(2)}</span></div>
-                      {paid > 0 && <div style={{ display:"flex", justifyContent:"space-between", fontSize:12, padding:"4px 0", color:C.green }}><span>Già pagato</span><span>−€{paid.toFixed(2)}</span></div>}
-                      <div style={{ display:"flex", justifyContent:"space-between", fontSize:17, fontWeight:700, padding:"8px 0", marginTop:4, borderTop:`2px solid ${C.border}` }}>
-                        <span>TOTALE DA SALDARE</span>
-                        <span style={{ color:C.gold }}>€{bal.toFixed(2)}</span>
-                      </div>
                     </div>
 
-                    {/* Bottone split */}
-                    {!splitMode ? (
-                      <div>
-                        <div style={{ fontSize:11, color:C.text3, marginBottom:10 }}>Scegli come procedere con il pagamento:</div>
-                        <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                          <button className="btn-primary" onClick={finalizeCheckout} style={{ justifyContent:"center" }}>
-                            ✓ Pagamento Unico — Emetti Conto
-                          </button>
-                          <button onClick={() => initSplit(form, 2)}
-                            style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"10px 16px", background:C.navyL, border:`1px solid ${C.navyLb}`, borderRadius:8, color:C.navy, fontWeight:700, fontSize:13, cursor:"pointer" }}>
-                            ⊘ Dividi il Conto
-                          </button>
+                    {/* Split misto - selezione voci */}
+                    {gruppoForm.splitPolicy==="misto" && (
+                      <div style={{background:C.surface2,border:`1px solid ${C.border}`,
+                        borderRadius:8,padding:"14px 16px",marginBottom:16}}>
+                        <div className="section-title" style={{marginBottom:12}}>
+                          Voci a carico dell'azienda
                         </div>
-                      </div>
-                    ) : (
-                      <div>
-                        {/* Controlli split */}
-                        <div style={{ marginBottom:12 }}>
-                          <div style={{ fontSize:10, fontWeight:700, color:C.text3, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Tipo di divisione</div>
-                          <div style={{ display:"flex", gap:0, border:`1px solid ${C.border}`, borderRadius:8, overflow:"hidden", marginBottom:10 }}>
-                            {[["equale","⊘ Parti uguali"],["personalizzata","✎ Importi liberi"],["per_voce","📋 Per voce"]].map(([v,l]) => (
-                              <button key={v} onClick={() => {
-                                setSplitType(v);
-                                if (v==="equale") setSplitPersone(p => recalcEquale(p));
-                              }} style={{ flex:1, padding:"8px 4px", background:splitType===v?C.navy:C.surface, color:splitType===v?"#fff":C.text2, border:"none", fontWeight:600, fontSize:11, cursor:"pointer", transition:"all .2s" }}>{l}</button>
-                            ))}
-                          </div>
-
-                          {/* N° persone */}
-                          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
-                            <span style={{ fontSize:13, color:C.text2, fontWeight:600 }}>Persone:</span>
-                            <div style={{ display:"flex", gap:0, border:`1px solid ${C.border}`, borderRadius:8, overflow:"hidden" }}>
-                              {[2,3,4,5,6].map(n => (
-                                <button key={n} onClick={() => {
-                                  const newP = Array.from({length:n}, (_,i) => splitPersone[i] || {
-                                    id:i, nome:`Persona ${i+1}`, importo:0, items:[], method:"Carta di Credito", paid:false
-                                  });
-                                  const updated = splitType==="equale" ? recalcEquale(newP) : newP;
-                                  setSplitPersone(updated);
-                                  if (splitTab >= n) setSplitTab(n-1);
-                                }} style={{ padding:"7px 14px", background:splitPersone.length===n?C.gold:C.surface, color:splitPersone.length===n?"#fff":C.text2, border:"none", fontWeight:700, fontSize:13, cursor:"pointer" }}>{n}</button>
-                              ))}
-                            </div>
-                            {differenza !== 0 && Math.abs(differenza) > 0.01 && (
-                              <span style={{ fontSize:11, fontWeight:700, color: differenza>0?C.red:C.green }}>
-                                {differenza>0 ? `⚠ mancano €${differenza.toFixed(2)}` : `⚠ eccesso €${Math.abs(differenza).toFixed(2)}`}
-                              </span>
-                            )}
-                            {splitValido && <span style={{ fontSize:11, color:C.green, fontWeight:700 }}>✓ Totale corretto</span>}
-                          </div>
+                        <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                          {[
+                            {id:"room",       label:"🛏 Alloggio"},
+                            ...SERVICES.map(s=>({id:s.id, label:s.label})),
+                          ].map(v=>{
+                            const sel=(gruppoForm.contoAziendaVoci||[]).includes(v.id);
+                            return (
+                              <div key={v.id} onClick={()=>setGruppoForm(f=>({...f,
+                                contoAziendaVoci:sel
+                                  ?(f.contoAziendaVoci||[]).filter(x=>x!==v.id)
+                                  :[...(f.contoAziendaVoci||[]),v.id]}))}
+                                style={{padding:"8px 14px",border:`2px solid ${sel?C.navy:C.border}`,
+                                  borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:600,
+                                  background:sel?C.navyL:"#fff",color:sel?C.navy:C.text2,
+                                  display:"flex",alignItems:"center",gap:6,transition:"all .15s"}}>
+                                {v.label}
+                                <span style={{fontSize:10,color:sel?C.navy:C.text3}}>
+                                  → {sel?"🏢 Azienda":"👤 Camera"}
+                                </span>
+                              </div>
+                            );
+                          })}
                         </div>
-
-                        {/* Barra progressione pagamenti */}
-                        <div style={{ marginBottom:12 }}>
-                          <div style={{ height:6, background:C.border, borderRadius:3, overflow:"hidden" }}>
-                            <div style={{ height:6, background:C.green, width:`${(splitPersone.filter(p=>p.paid).length/Math.max(splitPersone.length,1))*100}%`, transition:"width .4s", borderRadius:3 }}/>
-                          </div>
-                          <div style={{ fontSize:10, color:C.text3, marginTop:3 }}>
-                            {splitPersone.filter(p=>p.paid).length}/{splitPersone.length} pagamenti completati
-                          </div>
-                        </div>
-
-                        <button className="btn-secondary" style={{ width:"100%", fontSize:11 }} onClick={() => { setSplitMode(false); setSplitPersone([]); }}>← Torna al pagamento unico</button>
                       </div>
                     )}
-                  </div>
 
-                  {/*   Colonna destra: persone split   */}
-                  {splitMode && splitPersone.length > 0 && (
-                    <div>
-                      {/* Tab persone */}
-                      <div style={{ display:"flex", gap:4, marginBottom:14, flexWrap:"wrap" }}>
-                        {splitPersone.map((p, i) => (
-                          <button key={i} onClick={() => setSplitTab(i)} style={{
-                            padding:"6px 14px", borderRadius:20, fontWeight:700, fontSize:12, cursor:"pointer", border:"none", transition:"all .2s",
-                            background: p.paid ? C.greenL : splitTab===i ? C.gold : C.surface2,
-                            color: p.paid ? C.green : splitTab===i ? "#fff" : C.text2,
-                            outline: splitTab===i ? `2px solid ${C.gold}` : "none"
-                          }}>
-                            {p.paid ? "✓ " : ""}{p.nome.length > 10 ? p.nome.slice(0,9)+"…" : p.nome}
-                            <span style={{ marginLeft:5, fontSize:11 }}>€{p.importo.toFixed(0)}</span>
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Scheda persona attiva */}
-                      {(() => {
-                        const p = splitPersone[splitTab];
-                        if (!p) return null;
-                        return (
-                          <div style={{ background:C.surface2, border:`1.5px solid ${p.paid ? C.greenLb : C.border}`, borderRadius:10, padding:16 }}>
-                            {/* Nome */}
-                            <div style={{ marginBottom:10 }}>
-                              <label className="label">Nome</label>
-                              <input className="input-field" value={p.nome}
-                                onChange={e => setSplitPersone(prev => prev.map((x,i) => i===splitTab?{...x,nome:e.target.value}:x))} />
-                            </div>
-
-                            {/* Importo */}
-                            {splitType !== "per_voce" && (
-                              <div style={{ marginBottom:12 }}>
-                                <label className="label">Importo da pagare (€)</label>
-                                <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                                  <input type="number" className="input-field" value={p.importo} min={0} step={0.01}
-                                    readOnly={splitType==="equale"}
-                                    onChange={e => {
-                                      const val = parseFloat(e.target.value)||0;
-                                      setSplitPersone(prev => prev.map((x,i) => i===splitTab?{...x,importo:val}:x));
-                                    }}
-                                    style={{ flex:1, fontSize:18, fontWeight:700, color:C.gold, background: splitType==="equale"?C.surface2:"white" }} />
-                                  <div style={{ textAlign:"right" }}>
-                                    <div style={{ fontSize:13, color:C.text2 }}>{grand > 0 ? Math.round((p.importo/grand)*100) : 0}%</div>
-                                    <div style={{ fontSize:10, color:C.text3 }}>del totale</div>
-                                  </div>
-                                </div>
-                                {splitType==="equale" && (
-                                  <div style={{ fontSize:10, color:C.text3, marginTop:3 }}>Importo calcolato automaticamente</div>
-                                )}
-                              </div>
-                            )}
-
-                            {/* Vista per voce */}
-                            {splitType==="per_voce" && (
-                              <div style={{ marginBottom:12 }}>
-                                <label className="label">Seleziona le voci da addebitare</label>
-                                <div style={{ maxHeight:130, overflowY:"auto" }}>
-                                  {lines.map(l => {
-                                    const checked = (p.items||[]).some(x=>x.id===l.id);
-                                    const disabledBy = splitPersone.findIndex((x,i) => i!==splitTab && (x.items||[]).some(y=>y.id===l.id));
-                                    const disabled = disabledBy >= 0;
-                                    return (
-                                      <div key={l.id} onClick={() => {
-                                        if (disabled) return;
-                                        setSplitPersone(prev => prev.map((x,i) => {
-                                          if (i!==splitTab) return x;
-                                          const newItems = checked ? x.items.filter(y=>y.id!==l.id) : [...(x.items||[]),l];
-                                          const newImporto = newItems.reduce((s,item)=>s+item.amount*(1+TAX_RATE),0);
-                                          return {...x, items:newItems, importo:parseFloat(newImporto.toFixed(2))};
-                                        }));
-                                      }} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"6px 8px", borderRadius:6, marginBottom:3, cursor:disabled?"not-allowed":"pointer", opacity:disabled?0.4:1, background:checked?C.goldL:C.surface, border:`1px solid ${checked?C.goldLb:C.border}` }}>
-                                        <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                                          <div style={{ width:16, height:16, borderRadius:4, background:checked?C.gold:C.surface, border:`2px solid ${checked?C.gold:C.border2}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                                            {checked && <span style={{ color:"white", fontSize:10, fontWeight:900 }}>✓</span>}
-                                          </div>
-                                          <span style={{ fontSize:12, color:checked?C.gold:C.text }}>{l.desc}</span>
-                                        </div>
-                                        <div style={{ textAlign:"right" }}>
-                                          <span style={{ fontWeight:700, fontSize:12 }}>€{l.amount.toFixed(2)}</span>
-                                          {disabled && <div style={{ fontSize:9, color:C.text3 }}>{splitPersone[disabledBy]?.nome}</div>}
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                                <div style={{ fontSize:11, fontWeight:700, color:C.gold, marginTop:8, textAlign:"right" }}>
-                                  Subtotale: €{p.importo.toFixed(2)}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Metodo pagamento */}
-                            <div style={{ marginBottom:14 }}>
-                              <label className="label">Metodo di pagamento</label>
-                              <select className="input-field" value={p.method}
-                                onChange={e => setSplitPersone(prev => prev.map((x,i) => i===splitTab?{...x,method:e.target.value}:x))}>
-                                {METHODS.map(m => <option key={m}>{m}</option>)}
-                              </select>
-                            </div>
-
-                            {/* Bottone paga */}
-                            {!p.paid ? (
-                              <button className="btn-primary" style={{ width:"100%" }}
-                                onClick={() => {
-                                  if (p.importo <= 0) { showToast("Importo non valido","error"); return; }
-                                  setSplitPersone(prev => prev.map((x,i) => i===splitTab?{...x,paid:true}:x));
-                                  showToast(`${p.nome} — €${p.importo.toFixed(2)} (${p.method}) ✓`);
-                                  // Avanza alla prossima persona non pagata
-                                  const next = splitPersone.findIndex((x,i) => i>splitTab && !x.paid);
-                                  if (next>=0) setSplitTab(next);
-                                }}>
-                                💳 Incassa €{p.importo.toFixed(2)} — {p.nome}
-                              </button>
-                            ) : (
-                              <div style={{ background:C.greenL, border:`1px solid ${C.greenLb}`, borderRadius:8, padding:"10px 14px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                                <span style={{ color:C.green, fontWeight:700 }}>✓ Pagato — €{p.importo.toFixed(2)}</span>
-                                <button onClick={() => setSplitPersone(prev => prev.map((x,i) => i===splitTab?{...x,paid:false}:x))}
-                                  style={{ background:"none", border:`1px solid ${C.greenLb}`, borderRadius:6, padding:"3px 8px", fontSize:11, color:C.green, cursor:"pointer" }}>Annulla</button>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })()}
-
-                      {/* Riepilogo split */}
-                      <div style={{ marginTop:14, padding:"10px 14px", background:C.surface, border:`1px solid ${C.border}`, borderRadius:8 }}>
-                        <div style={{ fontSize:10, fontWeight:700, color:C.text3, letterSpacing:1, textTransform:"uppercase", marginBottom:8 }}>Riepilogo Divisione</div>
-                        {splitPersone.map((p,i) => (
-                          <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"4px 0", fontSize:12, borderBottom:`1px solid ${C.border}` }}>
-                            <span style={{ color: p.paid?C.green:C.text2 }}>{p.paid?"✓ ":""}{p.nome}</span>
-                            <div style={{ textAlign:"right" }}>
-                              <span style={{ fontWeight:700, color:p.paid?C.green:C.gold }}>€{p.importo.toFixed(2)}</span>
-                              <span style={{ fontSize:10, color:C.text3, marginLeft:5 }}>({p.method.split(" ")[0]})</span>
-                            </div>
-                          </div>
-                        ))}
-                        <div style={{ display:"flex", justifyContent:"space-between", fontWeight:700, fontSize:13, marginTop:6, padding:"4px 0" }}>
-                          <span>Totale diviso</span>
-                          <span style={{ color: splitValido?C.green: Math.abs(differenza)<0.01?C.green:C.red }}>€{totaleSplit.toFixed(2)} / €{grand.toFixed(2)}</span>
+                    {/* Pagamenti master */}
+                    <div className="section-title">Pagamenti Conto Master Azienda</div>
+                    <div style={{marginBottom:12}}>
+                      {(gruppoForm.masterPagamenti||[]).map((p,i)=>(
+                        <div key={p.id} style={{display:"flex",gap:8,alignItems:"center",
+                          padding:"7px 0",borderBottom:`1px solid ${C.border}`}}>
+                          <span style={{flex:1,fontSize:12}}>{p.data}</span>
+                          <span style={{fontSize:12,fontWeight:700,color:C.green}}>€{p.importo}</span>
+                          <span style={{fontSize:11,color:C.text3}}>{p.metodo}</span>
+                          <span style={{fontSize:11,color:C.text3,flex:1}}>{p.note}</span>
+                          <button onClick={()=>setGruppoForm(f=>({...f,
+                            masterPagamenti:(f.masterPagamenti||[]).filter((_,ii)=>ii!==i)}))}
+                            style={{background:"none",border:"none",cursor:"pointer",color:C.red,fontSize:14}}>✕</button>
                         </div>
+                      ))}
+                      <div style={{display:"flex",gap:7,marginTop:10,flexWrap:"wrap"}}>
+                        <input className="input-field" type="date" style={{flex:"0 0 130px"}}
+                          id="mp-data" defaultValue={new Date().toISOString().slice(0,10)}/>
+                        <input className="input-field" type="number" placeholder="€ Importo"
+                          style={{flex:"0 0 110px"}} id="mp-importo"/>
+                        <select className="input-field" style={{flex:"0 0 130px"}} id="mp-metodo">
+                          <option>Bonifico</option>
+                          <option>Carta di credito</option>
+                          <option>Contanti</option>
+                          <option>Assegno</option>
+                        </select>
+                        <input className="input-field" placeholder="Note pagamento"
+                          style={{flex:1}} id="mp-note"/>
+                        <button className="btn-secondary" onClick={()=>{
+                          const d=document.getElementById("mp-data")?.value;
+                          const imp=parseFloat(document.getElementById("mp-importo")?.value);
+                          const met=document.getElementById("mp-metodo")?.value;
+                          const note=document.getElementById("mp-note")?.value;
+                          if(!d||!imp)return;
+                          setGruppoForm(f=>({...f,masterPagamenti:[...(f.masterPagamenti||[]),
+                            {id:"MP"+Date.now(),data:d,importo:imp,metodo:met,note}]}));
+                          document.getElementById("mp-importo").value="";
+                          document.getElementById("mp-note").value="";
+                        }}>+ Aggiungi</button>
                       </div>
                     </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="modal-footer">
-                <button className="btn-secondary" onClick={()=>setModal(null)}>Annulla</button>
-                {!splitMode && (
-                  <button className="btn-primary" onClick={finalizeCheckout}>Conferma & Emetti Conto</button>
+                  </div>
                 )}
-                {splitMode && (
-                  <button className="btn-primary"
-                    disabled={!tuttiPagati || !splitValido}
-                    style={{ opacity: (tuttiPagati && splitValido) ? 1 : 0.5, cursor: (tuttiPagati && splitValido)?"pointer":"not-allowed" }}
-                    onClick={() => {
-                      // Registra tutti i pagamenti split e finalizza
-                      let res = {...form};
-                      splitPersone.forEach(p => {
-                        res = {...res, payments:[...(res.payments||[]),{amount:p.importo,method:p.method+" (Split: "+p.nome+")",date:new Date().toLocaleDateString("it-IT")}]};
-                      });
-                      setForm(res);
-                      setReservations(prev => prev.map(r => r.id===res.id ? res : r));
-                      finalizeCheckout();
-                    }}>
-                    {tuttiPagati && splitValido ? "✓ Finalizza Check-Out" : !splitValido ? "⚠ Correggi importi" : `In attesa di ${splitPersone.filter(p=>!p.paid).length} pagamenti`}
+
+              </div>{/* end modal-body */}
+
+              {/* ── FOOTER ── */}
+              <div className="modal-footer" style={{flexShrink:0}}>
+                {/* navigazione tab prev/next */}
+                {tabIdx>0&&(
+                  <button className="btn-secondary"
+                    onClick={()=>setGruppoTab(TABS[tabIdx-1].k)}>
+                    ← {TABS[tabIdx-1].label}
                   </button>
                 )}
+                <div style={{flex:1,display:"flex",alignItems:"center",gap:6}}>
+                  {totCamere>0&&(
+                    <span style={{fontSize:11,color:C.text3}}>
+                      {totCamere} cam · {totCamere*n} bnights · €{totValore.toLocaleString("it-IT")}
+                    </span>
+                  )}
+                </div>
+                <button className="btn-secondary" onClick={()=>setGruppoModal(false)}>Annulla</button>
+                {tabIdx<TABS.length-1&&(
+                  <button className="btn-secondary"
+                    onClick={()=>setGruppoTab(TABS[tabIdx+1].k)}>
+                    {TABS[tabIdx+1].label} →
+                  </button>
+                )}
+                <button className="btn-primary" onClick={saveGruppo}>
+                  💾 Salva Gruppo
+                </button>
               </div>
+
             </div>
           </div>
         );
       })()}
+
 
       {/*   MODAL: ANTEPRIMA EMAIL CONFERMA   */}
       {emailPreviewRes && (() => {
