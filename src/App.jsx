@@ -2842,7 +2842,7 @@ Rispondi in italiano, in modo conciso e professionale.`;
             </aside>
 
       {/*   TOPBAR CONTESTUALE   */}
-      <div className="topbar" style={{ position:"fixed", top:0, left:isMobile?0:sidebarOpen?230:64, right:0, height:52, transition:"left .22s cubic-bezier(.4,0,.2,1)", background:"#fff", borderBottom:"1px solid #dde3ec", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 24px 0 16px", zIndex:90, boxShadow:"0 1px 4px rgba(0,0,0,.06)", transition:"left .22s ease" }}>
+      <div className="topbar" style={{ position:"fixed", top:0, left:isMobile?0:sidebarOpen?230:64, right:0, height:52, transition:"left .22s cubic-bezier(.4,0,.2,1)", background:"#fff", borderBottom:"1px solid #dde3ec", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 24px 0 16px", zIndex:90, boxShadow:"0 1px 4px rgba(0,0,0,.06)" }}>
         <div style={{ display:"flex", alignItems:"center", gap:10, fontSize:13, color:C.text2 }}>
           <button onClick={() => setSidebarOpen(v=>!v)} style={{ background:"none", border:"none", cursor:"pointer", color:C.text3, fontSize:20, lineHeight:1, padding:"2px 4px", borderRadius:4, flexShrink:0 }} title={sidebarOpen?"Chiudi barra":"Apri barra"}>☰</button>
           <span style={{ color:"#8896a8", fontSize:12 }}>Hotel Gasparini</span>
