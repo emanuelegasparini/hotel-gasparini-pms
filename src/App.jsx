@@ -2151,6 +2151,29 @@ Rispondi in italiano, in modo conciso e professionale.`;
       const idx = prev.findIndex(g=>g.id===gruppoForm.id);
       return idx>=0 ? prev.map(g=>g.id===gruppoForm.id?gruppoForm:g) : [...prev, gruppoForm];
     });
+    // ── Se richiesta creazione rapida azienda → aggiunge ad anagrafica ─
+    if (gruppoForm._creaAzienda && gruppoForm.aziendaNome?.trim()) {
+      const newAz = { id:"az_"+Date.now(), tipo:"azienda",
+        ragioneSociale:gruppoForm.aziendaNome, pIva:gruppoForm.aziendaPIva||"",
+        email:gruppoForm.aziendaEmail||"", telefono:"", note:"", nazionalita:"IT",
+        cognome:"", nome:"", dataNascita:"", tipoDoc:"", numDoc:"",
+      };
+      setGuests(prev=>[...prev, newAz]);
+      dbSaveGuest(newAz).catch(()=>{});
+      gruppoForm = {...gruppoForm, aziendaId:newAz.id, _creaAzienda:false};
+    }
+    // ── Se richiesta creazione rapida agenzia → aggiunge ad anagrafica ─
+    if (gruppoForm._creaAgenzia && gruppoForm.agenziaNome?.trim()) {
+      const newAg = { id:"ag_"+Date.now(), tipo:"agenzia",
+        ragioneSociale:gruppoForm.agenziaNome, iata:gruppoForm.agenziaIata||"",
+        commissione:gruppoForm.agenziaCommissione||0, email:gruppoForm.agenziaEmail||"",
+        telefono:"", note:"", nazionalita:"IT",
+        cognome:"", nome:"", dataNascita:"", tipoDoc:"", numDoc:"",
+      };
+      setGuests(prev=>[...prev, newAg]);
+      dbSaveGuest(newAg).catch(()=>{});
+      gruppoForm = {...gruppoForm, agenziaId:newAg.id, _creaAgenzia:false};
+    }
     // ── Persiste gruppo su Supabase ───────────────────────────────────
     dbSaveGruppo(gruppoForm).catch(()=>{});
 
@@ -6460,94 +6483,177 @@ Rispondi in italiano, in modo conciso e professionale.`;
                     <hr className="divider"/>
 
                     {/* ── Azienda ── */}
-                    <div className="section-title" style={{marginBottom:10}}>🏢 Azienda</div>
-                    <div className="form-grid" style={{marginBottom:14}}>
-                      <div>
-                        <label className="label">Cerca in anagrafica aziende</label>
-                        <select className="input-field"
-                          value={gruppoForm.aziendaId||""}
-                          onChange={e=>{
-                            const az=aziende.find(x=>x.id===e.target.value);
-                            setGruppoForm(f=>({...f,
-                              aziendaId:e.target.value,
-                              aziendaNome:az?.ragioneSociale||az?.nome||"",
-                              aziendaPIva:az?.pIva||"",
-                              aziendaEmail:az?.email||"",
-                            }));
-                          }}>
-                          <option value="">— Seleziona azienda —</option>
-                          {aziende.map(a=><option key={a.id} value={a.id}>{a.ragioneSociale||a.nome} — {a.pIva||""}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="label">Ragione Sociale</label>
-                        <input className="input-field" placeholder="es. Fiera Milano S.p.A."
-                          value={gruppoForm.aziendaNome||""}
-                          onChange={e=>setGruppoForm(f=>({...f,aziendaNome:e.target.value,aziendaId:""}))}/>
-                      </div>
-                      <div>
-                        <label className="label">P.IVA / C.F.</label>
-                        <input className="input-field" placeholder="IT01234567890"
-                          value={gruppoForm.aziendaPIva||""}
-                          onChange={e=>setGruppoForm(f=>({...f,aziendaPIva:e.target.value}))}/>
-                      </div>
-                      <div>
-                        <label className="label">Email fatturazione</label>
-                        <input type="email" className="input-field"
-                          value={gruppoForm.aziendaEmail||""}
-                          onChange={e=>setGruppoForm(f=>({...f,aziendaEmail:e.target.value}))}/>
-                      </div>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                      <div className="section-title" style={{marginBottom:0}}>🏢 Azienda</div>
+                      {!gruppoForm._creaAzienda&&(
+                        <button style={{fontSize:11,color:C.blue,background:"none",border:`1px solid ${C.blue}`,
+                          borderRadius:4,padding:"2px 8px",cursor:"pointer"}}
+                          onClick={()=>setGruppoForm(f=>({...f,_creaAzienda:true,aziendaId:"",aziendaNome:"",aziendaPIva:"",aziendaEmail:""}))}>
+                          + Crea nuova
+                        </button>
+                      )}
                     </div>
+                    {gruppoForm._creaAzienda ? (
+                      <div style={{background:C.blueL,border:`1px solid ${C.blue}`,borderRadius:8,padding:12,marginBottom:14}}>
+                        <div style={{fontSize:11,fontWeight:700,color:C.blue,marginBottom:10}}>Nuova Azienda — verrà aggiunta all'anagrafica al salvataggio</div>
+                        <div className="form-grid">
+                          <div>
+                            <label className="label">Ragione Sociale *</label>
+                            <input className="input-field" placeholder="es. Fiera Milano S.p.A." autoFocus
+                              value={gruppoForm.aziendaNome||""}
+                              onChange={e=>setGruppoForm(f=>({...f,aziendaNome:e.target.value}))}/>
+                          </div>
+                          <div>
+                            <label className="label">P.IVA / C.F.</label>
+                            <input className="input-field" placeholder="IT01234567890"
+                              value={gruppoForm.aziendaPIva||""}
+                              onChange={e=>setGruppoForm(f=>({...f,aziendaPIva:e.target.value}))}/>
+                          </div>
+                          <div>
+                            <label className="label">Email fatturazione</label>
+                            <input type="email" className="input-field"
+                              value={gruppoForm.aziendaEmail||""}
+                              onChange={e=>setGruppoForm(f=>({...f,aziendaEmail:e.target.value}))}/>
+                          </div>
+                        </div>
+                        <button style={{marginTop:8,fontSize:11,color:C.text2,background:"none",border:"none",cursor:"pointer",textDecoration:"underline"}}
+                          onClick={()=>setGruppoForm(f=>({...f,_creaAzienda:false}))}>
+                          ← Annulla e cerca in anagrafica
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="form-grid" style={{marginBottom:14}}>
+                        <div>
+                          <label className="label">Cerca in anagrafica aziende</label>
+                          <select className="input-field"
+                            value={gruppoForm.aziendaId||""}
+                            onChange={e=>{
+                              const az=aziende.find(x=>x.id===e.target.value);
+                              setGruppoForm(f=>({...f,
+                                aziendaId:e.target.value,
+                                aziendaNome:az?.ragioneSociale||az?.nome||"",
+                                aziendaPIva:az?.pIva||"",
+                                aziendaEmail:az?.email||"",
+                              }));
+                            }}>
+                            <option value="">— Seleziona azienda —</option>
+                            {aziende.map(a=><option key={a.id} value={a.id}>{a.ragioneSociale||a.nome} — {a.pIva||""}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="label">Ragione Sociale</label>
+                          <input className="input-field" placeholder="es. Fiera Milano S.p.A."
+                            value={gruppoForm.aziendaNome||""}
+                            onChange={e=>setGruppoForm(f=>({...f,aziendaNome:e.target.value,aziendaId:""}))}/>
+                        </div>
+                        <div>
+                          <label className="label">P.IVA / C.F.</label>
+                          <input className="input-field" placeholder="IT01234567890"
+                            value={gruppoForm.aziendaPIva||""}
+                            onChange={e=>setGruppoForm(f=>({...f,aziendaPIva:e.target.value}))}/>
+                        </div>
+                        <div>
+                          <label className="label">Email fatturazione</label>
+                          <input type="email" className="input-field"
+                            value={gruppoForm.aziendaEmail||""}
+                            onChange={e=>setGruppoForm(f=>({...f,aziendaEmail:e.target.value}))}/>
+                        </div>
+                      </div>
+                    )}
 
                     <hr className="divider"/>
 
                     {/* ── Agenzia ── */}
-                    <div className="section-title" style={{marginBottom:10}}>✈️ Agenzia di Viaggi / TO</div>
-                    <div className="form-grid" style={{marginBottom:14}}>
-                      <div>
-                        <label className="label">Cerca in anagrafica agenzie</label>
-                        <select className="input-field"
-                          value={gruppoForm.agenziaId||""}
-                          onChange={e=>{
-                            const ag=agenzie.find(x=>x.id===e.target.value);
-                            setGruppoForm(f=>({...f,
-                              agenziaId:e.target.value,
-                              agenziaNome:ag?.ragioneSociale||ag?.nome||"",
-                              agenziaIata:ag?.iata||"",
-                              agenziaCommissione:ag?.commissione||f.agenziaCommissione,
-                              agenziaEmail:ag?.email||"",
-                            }));
-                          }}>
-                          <option value="">— Seleziona agenzia —</option>
-                          {agenzie.map(a=><option key={a.id} value={a.id}>{a.ragioneSociale||a.nome}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="label">Nome Agenzia / Tour Operator</label>
-                        <input className="input-field" placeholder="es. Kuoni Italia S.r.l."
-                          value={gruppoForm.agenziaNome||""}
-                          onChange={e=>setGruppoForm(f=>({...f,agenziaNome:e.target.value,agenziaId:""}))}/>
-                      </div>
-                      <div>
-                        <label className="label">Codice IATA</label>
-                        <input className="input-field" placeholder="es. 12345678"
-                          value={gruppoForm.agenziaIata||""}
-                          onChange={e=>setGruppoForm(f=>({...f,agenziaIata:e.target.value}))}/>
-                      </div>
-                      <div>
-                        <label className="label">Commissione (%)</label>
-                        <input type="number" className="input-field" min={0} max={30} step={0.5}
-                          placeholder="0"
-                          value={gruppoForm.agenziaCommissione||""}
-                          onChange={e=>setGruppoForm(f=>({...f,agenziaCommissione:parseFloat(e.target.value)||0}))}/>
-                      </div>
-                      <div>
-                        <label className="label">Email agenzia</label>
-                        <input type="email" className="input-field"
-                          value={gruppoForm.agenziaEmail||""}
-                          onChange={e=>setGruppoForm(f=>({...f,agenziaEmail:e.target.value}))}/>
-                      </div>
+                    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                      <div className="section-title" style={{marginBottom:0}}>✈️ Agenzia di Viaggi / TO</div>
+                      {!gruppoForm._creaAgenzia&&(
+                        <button style={{fontSize:11,color:C.blue,background:"none",border:`1px solid ${C.blue}`,
+                          borderRadius:4,padding:"2px 8px",cursor:"pointer"}}
+                          onClick={()=>setGruppoForm(f=>({...f,_creaAgenzia:true,agenziaId:"",agenziaNome:"",agenziaIata:"",agenziaCommissione:0,agenziaEmail:""}))}>
+                          + Crea nuova
+                        </button>
+                      )}
                     </div>
+                    {gruppoForm._creaAgenzia ? (
+                      <div style={{background:C.blueL,border:`1px solid ${C.blue}`,borderRadius:8,padding:12,marginBottom:14}}>
+                        <div style={{fontSize:11,fontWeight:700,color:C.blue,marginBottom:10}}>Nuova Agenzia / TO — verrà aggiunta all'anagrafica al salvataggio</div>
+                        <div className="form-grid">
+                          <div>
+                            <label className="label">Nome Agenzia / Tour Operator *</label>
+                            <input className="input-field" placeholder="es. Kuoni Italia S.r.l." autoFocus
+                              value={gruppoForm.agenziaNome||""}
+                              onChange={e=>setGruppoForm(f=>({...f,agenziaNome:e.target.value}))}/>
+                          </div>
+                          <div>
+                            <label className="label">Codice IATA</label>
+                            <input className="input-field" placeholder="es. 12345678"
+                              value={gruppoForm.agenziaIata||""}
+                              onChange={e=>setGruppoForm(f=>({...f,agenziaIata:e.target.value}))}/>
+                          </div>
+                          <div>
+                            <label className="label">Commissione (%)</label>
+                            <input type="number" className="input-field" min={0} max={30} step={0.5} placeholder="0"
+                              value={gruppoForm.agenziaCommissione||""}
+                              onChange={e=>setGruppoForm(f=>({...f,agenziaCommissione:parseFloat(e.target.value)||0}))}/>
+                          </div>
+                          <div>
+                            <label className="label">Email</label>
+                            <input type="email" className="input-field"
+                              value={gruppoForm.agenziaEmail||""}
+                              onChange={e=>setGruppoForm(f=>({...f,agenziaEmail:e.target.value}))}/>
+                          </div>
+                        </div>
+                        <button style={{marginTop:8,fontSize:11,color:C.text2,background:"none",border:"none",cursor:"pointer",textDecoration:"underline"}}
+                          onClick={()=>setGruppoForm(f=>({...f,_creaAgenzia:false}))}>
+                          ← Annulla e cerca in anagrafica
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="form-grid" style={{marginBottom:14}}>
+                        <div>
+                          <label className="label">Cerca in anagrafica agenzie</label>
+                          <select className="input-field"
+                            value={gruppoForm.agenziaId||""}
+                            onChange={e=>{
+                              const ag=agenzie.find(x=>x.id===e.target.value);
+                              setGruppoForm(f=>({...f,
+                                agenziaId:e.target.value,
+                                agenziaNome:ag?.ragioneSociale||ag?.nome||"",
+                                agenziaIata:ag?.iata||"",
+                                agenziaCommissione:ag?.commissione||f.agenziaCommissione,
+                                agenziaEmail:ag?.email||"",
+                              }));
+                            }}>
+                            <option value="">— Seleziona agenzia —</option>
+                            {agenzie.map(a=><option key={a.id} value={a.id}>{a.ragioneSociale||a.nome}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="label">Nome Agenzia / Tour Operator</label>
+                          <input className="input-field" placeholder="es. Kuoni Italia S.r.l."
+                            value={gruppoForm.agenziaNome||""}
+                            onChange={e=>setGruppoForm(f=>({...f,agenziaNome:e.target.value,agenziaId:""}))}/>
+                        </div>
+                        <div>
+                          <label className="label">Codice IATA</label>
+                          <input className="input-field" placeholder="es. 12345678"
+                            value={gruppoForm.agenziaIata||""}
+                            onChange={e=>setGruppoForm(f=>({...f,agenziaIata:e.target.value}))}/>
+                        </div>
+                        <div>
+                          <label className="label">Commissione (%)</label>
+                          <input type="number" className="input-field" min={0} max={30} step={0.5} placeholder="0"
+                            value={gruppoForm.agenziaCommissione||""}
+                            onChange={e=>setGruppoForm(f=>({...f,agenziaCommissione:parseFloat(e.target.value)||0}))}/>
+                        </div>
+                        <div>
+                          <label className="label">Email agenzia</label>
+                          <input type="email" className="input-field"
+                            value={gruppoForm.agenziaEmail||""}
+                            onChange={e=>setGruppoForm(f=>({...f,agenziaEmail:e.target.value}))}/>
+                        </div>
+                      </div>
+                    )
                   </div>
                 )}
 
@@ -8780,7 +8886,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
         })()}
 
         {/*   MICE & MEETING   */}
-        {page==="MICE & Meeting" && <MICEModule reservations={reservations} setReservations={setReservations} guests={guests} />}
+        {page==="MICE & Meeting" && <MICEModule reservations={reservations} setReservations={setReservations} guests={guests} setGuests={setGuests} dbSaveGuest={dbSaveGuest} />}
         {page==="Statistiche"   && <StatisticheModule reservations={reservations} guests={guests} rooms={rooms} gruppi={gruppi} />}
         {page==="Housekeeping"   && <HousekeepingModule rooms={rooms} reservations={reservations} isMobile={isMobile} />}
         {page==="Configurazione" && <ConfigurazioneModule rooms={rooms} setRooms={setRooms} />}
@@ -10120,7 +10226,7 @@ const DEMO_PREV = [
 // ════════════════════════════════════════════════════════════════
 //  COMPONENTE PRINCIPALE
 // ════════════════════════════════════════════════════════════════
-function MICEModule({ reservations=[], setReservations=()=>{}, guests=[] }) {
+function MICEModule({ reservations=[], setReservations=()=>{}, guests=[], setGuests=()=>{}, dbSaveGuest=async()=>{} }) {
   const [view, setView]           = useState("dashboard");   // dashboard | lista | form | dettaglio | sale | config
   const [preventivi, setPreventivi] = useState(DEMO_PREV);
   const [sale, setSale]           = useState(SALE_DEFAULT);
@@ -10209,6 +10315,17 @@ function MICEModule({ reservations=[], setReservations=()=>{}, guests=[] }) {
   };
 
   const salvaPreventivo = (data) => {
+    // ── Se nuova azienda → aggiunge ad anagrafica ─────────────────────
+    if (data._creaAzienda && data.cliente?.azienda?.trim()) {
+      const newAz = { id:"az_"+Date.now(), tipo:"azienda",
+        ragioneSociale:data.cliente.azienda, pIva:data.cliente.piva||"",
+        email:data.cliente.email||"", telefono:data.cliente.tel||"",
+        note:"", nazionalita:"IT", cognome:"", nome:"", dataNascita:"", tipoDoc:"", numDoc:"",
+      };
+      setGuests(prev=>[...prev, newAz]);
+      dbSaveGuest(newAz).catch(()=>{});
+      data = {...data, _creaAzienda:false, cliente:{...data.cliente, _aziendaId:newAz.id}};
+    }
     setPreventivi(prev => {
       const idx = prev.findIndex(p => p.id === data.id);
       if (idx >= 0) { const a = [...prev]; a[idx]=data; return a; }
@@ -10644,27 +10761,97 @@ function FormPreventivo({ data, setData, sale, calcTotale, activeTab, setActiveT
         {/* ── TAB 1: CLIENTE & EVENTO ── */}
         {activeTab === "preventivo" && (
           <div>
-            <SectionHeader icon="🏢" title="Dati Azienda / Cliente" />
-            <div style={grid2}>
-              <Field label="Ragione Sociale / Azienda *">
-                <input style={inp} value={data.cliente?.azienda||""} onChange={e=>upd("cliente.azienda",e.target.value)} placeholder="Nome azienda"/>
-              </Field>
-              <Field label="P.IVA">
-                <input style={inp} value={data.cliente?.piva||""} onChange={e=>upd("cliente.piva",e.target.value)} placeholder="01234567890"/>
-              </Field>
-              <Field label="Referente — Titolo">
-                <input style={inp} value={data.cliente?.nome||""} onChange={e=>upd("cliente.nome",e.target.value)} placeholder="Dott. / Ing. / Sig.ra"/>
-              </Field>
-              <Field label="Referente — Cognome e Nome">
-                <input style={inp} value={data.cliente?.cognome||""} onChange={e=>upd("cliente.cognome",e.target.value)} placeholder="Mario Rossi"/>
-              </Field>
-              <Field label="Email">
-                <input style={inp} type="email" value={data.cliente?.email||""} onChange={e=>upd("cliente.email",e.target.value)} placeholder="m.rossi@azienda.it"/>
-              </Field>
-              <Field label="Telefono">
-                <input style={inp} value={data.cliente?.tel||""} onChange={e=>upd("cliente.tel",e.target.value)} placeholder="+39 02 1234567"/>
-              </Field>
+            {/* ── Azienda: cerca in anagrafica o crea nuova ── */}
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+              <SectionHeader icon="🏢" title="Azienda / Cliente" style={{marginBottom:0}}/>
+              {!data._creaAzienda&&(
+                <button style={{fontSize:11,color:MC.blue,background:"none",border:`1px solid ${MC.blue}`,
+                  borderRadius:4,padding:"2px 10px",cursor:"pointer"}}
+                  onClick={()=>upd("_creaAzienda",true)}>
+                  + Crea nuova
+                </button>
+              )}
             </div>
+            {data._creaAzienda ? (
+              <div style={{background:"rgba(25,118,210,.06)",border:`1px solid ${MC.blue}`,
+                borderRadius:8,padding:14,marginBottom:16}}>
+                <div style={{fontSize:11,fontWeight:700,color:MC.blue,marginBottom:10}}>
+                  Nuova Azienda — verrà aggiunta all'anagrafica al salvataggio
+                </div>
+                <div style={grid2}>
+                  <Field label="Ragione Sociale *">
+                    <input style={inp} autoFocus value={data.cliente?.azienda||""}
+                      onChange={e=>upd("cliente.azienda",e.target.value)} placeholder="Nome azienda"/>
+                  </Field>
+                  <Field label="P.IVA">
+                    <input style={inp} value={data.cliente?.piva||""}
+                      onChange={e=>upd("cliente.piva",e.target.value)} placeholder="01234567890"/>
+                  </Field>
+                  <Field label="Referente">
+                    <input style={inp} value={data.cliente?.cognome||""}
+                      onChange={e=>upd("cliente.cognome",e.target.value)} placeholder="Mario Rossi"/>
+                  </Field>
+                  <Field label="Email">
+                    <input style={inp} type="email" value={data.cliente?.email||""}
+                      onChange={e=>upd("cliente.email",e.target.value)} placeholder="m.rossi@azienda.it"/>
+                  </Field>
+                  <Field label="Telefono">
+                    <input style={inp} value={data.cliente?.tel||""}
+                      onChange={e=>upd("cliente.tel",e.target.value)} placeholder="+39 02 1234567"/>
+                  </Field>
+                </div>
+                <button style={{marginTop:8,fontSize:11,color:MC.text3,background:"none",border:"none",cursor:"pointer",textDecoration:"underline"}}
+                  onClick={()=>upd("_creaAzienda",false)}>
+                  ← Annulla e cerca in anagrafica
+                </button>
+              </div>
+            ) : (
+              <div style={{...grid2, marginBottom:16}}>
+                <Field label="Cerca in anagrafica aziende" style={{gridColumn:"1/-1"}}>
+                  <select style={inp}
+                    value={data.cliente?._aziendaId||""}
+                    onChange={e=>{
+                      const az=guests.filter(g=>g.tipo==="azienda").find(x=>x.id===e.target.value);
+                      if(!az){upd("cliente._aziendaId","");return;}
+                      upd("cliente",{...data.cliente||{},
+                        _aziendaId:az.id,
+                        azienda:az.ragioneSociale||az.nome||"",
+                        piva:az.pIva||"",
+                        email:az.email||data.cliente?.email||"",
+                      });
+                    }}>
+                    <option value="">— Seleziona azienda esistente —</option>
+                    {guests.filter(g=>g.tipo==="azienda").map(a=>(
+                      <option key={a.id} value={a.id}>{a.ragioneSociale||a.nome} {a.pIva?`— ${a.pIva}`:""}</option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Ragione Sociale / Azienda *">
+                  <input style={inp} value={data.cliente?.azienda||""}
+                    onChange={e=>upd("cliente.azienda",e.target.value)} placeholder="Nome azienda"/>
+                </Field>
+                <Field label="P.IVA">
+                  <input style={inp} value={data.cliente?.piva||""}
+                    onChange={e=>upd("cliente.piva",e.target.value)} placeholder="01234567890"/>
+                </Field>
+                <Field label="Referente — Titolo">
+                  <input style={inp} value={data.cliente?.nome||""}
+                    onChange={e=>upd("cliente.nome",e.target.value)} placeholder="Dott. / Ing. / Sig.ra"/>
+                </Field>
+                <Field label="Referente — Cognome e Nome">
+                  <input style={inp} value={data.cliente?.cognome||""}
+                    onChange={e=>upd("cliente.cognome",e.target.value)} placeholder="Mario Rossi"/>
+                </Field>
+                <Field label="Email">
+                  <input style={inp} type="email" value={data.cliente?.email||""}
+                    onChange={e=>upd("cliente.email",e.target.value)} placeholder="m.rossi@azienda.it"/>
+                </Field>
+                <Field label="Telefono">
+                  <input style={inp} value={data.cliente?.tel||""}
+                    onChange={e=>upd("cliente.tel",e.target.value)} placeholder="+39 02 1234567"/>
+                </Field>
+              </div>
+            )}
 
             <SectionHeader icon="🎯" title="Dettagli Evento" mt={24} />
             <div style={grid2}>
