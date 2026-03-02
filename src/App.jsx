@@ -2236,10 +2236,9 @@ Rispondi in italiano, in modo conciso e professionale.`;
       guestName: g ? `${g.cognome} ${g.nome}` : form.guestName };
     if (modal==="new-res") { setReservations(p => [...p, saved]); showToast("Prenotazione creata! ✓"); setModal(null); setEmailPreviewRes(saved); const _g2=guests.find(x=>x.id===saved.guestId); setEmailTo(_g2?.email||""); setEmailCc(""); setEmailTab("preview"); }
     else                   { setReservations(p => p.map(r => r.id===form.id ? saved : r)); showToast("Prenotazione aggiornata!"); setModal(null); }
-  };
     // ── Persiste su Supabase ──────────────────────────────────────────
     dbSaveReservation(saved).catch(()=>{});
-
+  };
 
   // ─── Genera HTML email di conferma prenotazione ───
   const buildConfirmEmail = (res, guestObj) => {
