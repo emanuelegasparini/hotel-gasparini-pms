@@ -1997,46 +1997,72 @@ Rispondi in italiano, in modo conciso e professionale.`;
     setGruppoCamere(prev => prev.filter(c => c._key!==key));
   };
   const saveGruppo = () => {
-    if (!gruppoForm.nome)    { showToast("Inserisci il nome del gruppo","error"); return; }
-    if (!gruppoForm.checkIn || !gruppoForm.checkOut) { showToast("Inserisci le date del gruppo","error"); return; }
-    if (new Date(gruppoForm.checkOut)<=new Date(gruppoForm.checkIn)) { showToast("Check-out deve essere dopo il check-in","error"); return; }
-    if (gruppoCamere.length===0) { showToast("Aggiungi almeno una camera","error"); return; }
-    const camereValide = gruppoCamere.filter(c=>c.roomId&&(c.guestId||c.guestName));
-    if (camereValide.length===0) { showToast("Ogni camera deve avere camera e ospite selezionati","error"); return; }
-    // Controlla disponibilità camere
-    const camereConConflitto = camereValide.filter(c => {
-      const room = ROOMS.find(r=>r.id===parseInt(c.roomId));
-      const ci   = c.checkIn  || gruppoForm.checkIn;
-      const co   = c.checkOut || gruppoForm.checkOut;
-      if (!room) return true; // camera non trovata = errore
-      return !roomAvail(room, ci, co, reservations, c.id);
-    });
-    if (camereConConflitto.length>0) {
-      const rooms = camereConConflitto.map(c=>`Cam ${c.roomId}`).join(", ");
-      showToast(`Camere non disponibili: ${rooms}`, "error"); return;
+    // ── validazioni minime (solo nome e date) ─────────────────────────
+    if (!gruppoForm.nome.trim()) {
+      showToast("Inserisci il nome del gruppo","error"); return;
     }
-    // Salva o aggiorna il gruppo
+    if (!gruppoForm.checkIn || !gruppoForm.checkOut) {
+      setGruppoTab("prenotazione");
+      showToast("Inserisci le date nel Tab 2 · Prenotazione","error"); return;
+    }
+    if (new Date(gruppoForm.checkOut) <= new Date(gruppoForm.checkIn)) {
+      setGruppoTab("prenotazione");
+      showToast("Check-out deve essere dopo il check-in","error"); return;
+    }
+
+    // ── salva il gruppo (la rooming può essere incompleta) ─────────────
     setGruppi(prev => {
       const idx = prev.findIndex(g=>g.id===gruppoForm.id);
       return idx>=0 ? prev.map(g=>g.id===gruppoForm.id?gruppoForm:g) : [...prev, gruppoForm];
     });
-    // Crea/aggiorna le prenotazioni camera
-    const nuoveRes = camereValide.map(c => {
-      const g = guests.find(x=>x.id===c.guestId);
-      return { ...c, tipo:"gruppo", gruppoId:gruppoForm.id,
-        checkIn:c.checkIn||gruppoForm.checkIn, checkOut:c.checkOut||gruppoForm.checkOut,
-        guests:(c.adulti||1)+(c.bambini||0),
-        guestName: g ? `${g.cognome} ${g.nome}` : c.guestName,
-        roomId:parseInt(c.roomId) };
-    });
-    setReservations(prev => {
-      // rimuovi le vecchie camere dello stesso gruppo se in edit
-      const senzaGruppo = prev.filter(r=>r.gruppoId!==gruppoForm.id);
-      return [...senzaGruppo, ...nuoveRes];
-    });
+
+    // ── genera prenotazioni dalla rooming list compilata ───────────────
+    // Solo slot con camera assegnata E ospite: diventa una prenotazione reale
+    const roomingConCamera = (gruppoForm.roomingList||[]).filter(r=>r.roomId&&(r.guestName||r.guestId));
+
+    if (roomingConCamera.length > 0) {
+      // Avvisa (senza bloccare) se ci sono conflitti di disponibilità
+      const conflitti = roomingConCamera.filter(r=>{
+        const room = ROOMS.find(x=>x.id===parseInt(r.roomId));
+        if(!room) return false;
+        return !roomAvail(room, r.checkIn||gruppoForm.checkIn, r.checkOut||gruppoForm.checkOut, reservations, null);
+      });
+      if (conflitti.length>0) {
+        showToast(`⚠ ${conflitti.length} camere con possibile conflitto — verifica la rooming list`, "error");
+        // NON blocca: il salvataggio continua comunque
+      }
+      const nuoveRes = roomingConCamera.map(r=>{
+        const g = guests.find(x=>x.id===r.guestId);
+        const bt = (gruppoForm.blocco||[]).find(b=>b.tipo===r.tipo);
+        const rm = ROOMS.find(x=>x.id===parseInt(r.roomId));
+        return {
+          id:genId(), tipo:"gruppo", gruppoId:gruppoForm.id,
+          roomId:parseInt(r.roomId),
+          checkIn:r.checkIn||gruppoForm.checkIn, checkOut:r.checkOut||gruppoForm.checkOut,
+          guestId:r.guestId||"", guestName:g?`${g.cognome} ${g.nome}`:r.guestName,
+          adulti:r.adulti||1, bambini:r.bambini||0, guests:(r.adulti||1)+(r.bambini||0),
+          trattamento:r.trattamento||"BB", services:[], roomServiceItems:[], payments:[],
+          status:"reserved", notes:r.note||"",
+          gratuita:!!r.gratuita, gratuitaMotivo:r.gratuitaMotivo||"",
+          prezzoOverride: bt?.prezzoCampo==="manuale"&&bt.prezzoManuale!==rm?.price ? bt.prezzoManuale : null,
+          canale:gruppoForm.canale||"", mercato:gruppoForm.mercato||"",
+          segmento:gruppoForm.segmento||"", motivoSoggiorno:gruppoForm.motivoSoggiorno||"",
+          psInviato:false, istatRegistrato:false,
+        };
+      });
+      setReservations(prev=>[...prev.filter(r=>r.gruppoId!==gruppoForm.id), ...nuoveRes]);
+    }
+
+    const nBl = (gruppoForm.blocco||[]).reduce((s,b)=>s+(b.qty||0),0);
+    const nRL = roomingConCamera.length;
+    const nn  = nights(gruppoForm.checkIn,gruppoForm.checkOut);
+    let msg = `Gruppo "${gruppoForm.nome}" salvato`;
+    if (nBl>0) msg += ` · ${nBl} cam. bloccate`;
+    if (nRL>0) msg += ` · ${nRL} pren. generate (${nRL*nn} bnights)`;
+    else if (nBl>0) msg += ` · rooming da completare`;
     setGruppoModal(false);
     setPrenotazioniTab("gruppi");
-    showToast(`Gruppo ${gruppoForm.nome} salvato — ${camereValide.length} camere ✓`);
+    showToast(msg + " ✓");
   };
   const editGruppo = (grpId) => {
     const grp = gruppi.find(g=>g.id===grpId);
@@ -8613,7 +8639,7 @@ fetch('https://api.hotelgasparini.it/api/v1/reservations', {
 
         {/*   MICE & MEETING   */}
         {page==="MICE & Meeting" && <MICEModule reservations={reservations} setReservations={setReservations} guests={guests} />}
-        {page==="Statistiche"   && <StatisticheModule reservations={reservations} guests={guests} rooms={rooms} />}
+        {page==="Statistiche"   && <StatisticheModule reservations={reservations} guests={guests} rooms={rooms} gruppi={gruppi} />}
         {page==="Housekeeping"   && <HousekeepingModule rooms={rooms} reservations={reservations} isMobile={isMobile} />}
         {page==="Configurazione" && <ConfigurazioneModule rooms={rooms} setRooms={setRooms} />}
 
@@ -11971,29 +11997,67 @@ function HeatMap({ data, rows, cols, colorFn, cellW=32, cellH=22 }) {
 }
 
 // ─── MAIN MODULE ────────────────────────────────────────────────────
-function StatisticheModule({ reservations=[], guests=[], rooms=[] }) {
+function StatisticheModule({ reservations=[], guests=[], rooms=[], gruppi=[] }) {
   const [periodo,    setPeriodo]    = useState("12m");
   const [sezione,    setSezione]    = useState("overview");
   const [confronto,  setConfronto]  = useState(true);
   const [filtroTipo, setFiltroTipo] = useState("tutti");
 
-  // ─── MERGE dati reali + demo ──────────────────────────────────────
+  // ─── Dati reali PMS — usa rooms prop (stato live) ────────────────
+  const liveRooms = rooms.length > 0 ? rooms : ROOMS;
+  const roomsMap = useMemo(()=>{
+    const m={};
+    liveRooms.forEach(r=>{ m[r.id]=r; });
+    return m;
+  },[liveRooms]);
+
   const allRes = useMemo(()=>{
-    const reali = reservations.map(r=>{
-      if(r.roomType) return r;
-      const rm=ROOMS.find(x=>x.id===r.roomId);
-      return{...r,roomType:rm?.type||"Standard",prezzo:rm?.price||90,
-        totale:(r.payments||[]).reduce((s,p)=>s+(p.amount||0),0),
-        nazionalita:guests.find(g=>g.id===r.guestId)?.nazionalita||"IT",
-        notti:Math.max(1,Math.round((new Date(r.checkOut)-new Date(r.checkIn))/86400000)),
+    return reservations.map(r=>{
+      const rm = roomsMap[r.roomId] || roomsMap[parseInt(r.roomId)];
+      // Calcola notti con protezione contro date invalide/mancanti
+      let n = 1;
+      if (r.checkIn && r.checkOut) {
+        const d = Math.round((new Date(r.checkOut)-new Date(r.checkIn))/86400000);
+        if (d > 0 && d < 730) n = d;
+      }
+      // Prezzo: prezzoOverride (da blocco manuale) → prezzo camera → fallback 90
+      const prezzo = (r.prezzoOverride != null && r.prezzoOverride > 0)
+        ? r.prezzoOverride
+        : (rm?.price ?? 90);
+      // Revenue camera (0 se gratuita)
+      const revCam = r.gratuita ? 0 : prezzo * n;
+      // Revenue servizi periodici
+      const revSvc = (r.services||[]).reduce((s,sid)=>{
+        const sv=SERVICES.find(x=>x.id===sid); return s+(sv?sv.price*n:0);},0);
+      // Revenue extra in camera (singoli, non moltiplicati per notti)
+      const revExtra=(r.roomServiceItems||[]).reduce((s,x)=>s+(parseFloat(x.price)||0),0);
+      // Pagato
+      const pagato=(r.payments||[]).reduce((s,p)=>s+(parseFloat(p.amount)||0),0);
+      // Gruppo di riferimento
+      const grp = r.gruppoId ? gruppi.find(g=>g.id===r.gruppoId) : null;
+      return {
+        ...r,
+        roomType: rm?.type || r.roomType || "Standard",
+        prezzo, notti: n,
+        revCam, revSvc, revExtra,
+        totale: revCam + revSvc + revExtra,
+        pagato,
+        nazionalita: guests.find(g=>g.id===r.guestId)?.nazionalita || "IT",
+        bookingWindow: r.createdAt
+          ? Math.max(0,Math.round((new Date(r.checkIn)-new Date(r.createdAt))/86400000))
+          : Math.max(0,Math.round((new Date(r.checkIn)-new Date())/86400000)),
+        // Campi gruppo per reportistica
+        grpAzienda:  grp?.aziendaNome||grp?.azienda||"",
+        grpAgenzia:  grp?.agenziaNome||"",
+        grpCanale:   grp?.canale||r.canale||"",
+        grpSegmento: grp?.segmento||r.segmento||"",
       };
     });
-    return [...DEMO_STATS_RES,...reali];
-  },[reservations,guests]);
+  },[reservations,guests,gruppi,roomsMap]);
 
   // ─── RANGE PERIODI ────────────────────────────────────────────────
   const ranges = useMemo(()=>{
-    const oggi = new Date("2026-02-26");
+    const oggi = new Date();
     const sub  = (months) => { const d=new Date(oggi);d.setMonth(d.getMonth()-months);return d.toISOString().slice(0,10); };
     const map  = {
       "1m":  { cur:[sub(1),oggi.toISOString().slice(0,10)],   prev:[sub(2),sub(1)],   label:"Ultimo mese" },
@@ -12006,7 +12070,7 @@ function StatisticheModule({ reservations=[], guests=[], rooms=[] }) {
   },[periodo]);
 
   const filterRes = useCallback((from,to,tipo="tutti")=>
-    allRes.filter(r=>r.checkIn>=from&&r.checkIn<=to&&r.status!=="cancelled"&&(tipo==="tutti"||r.roomType===tipo))
+    allRes.filter(r=>r.checkIn&&r.checkIn<=to&&(r.checkOut||r.checkIn)>=from&&r.status!=="cancelled"&&(tipo==="tutti"||r.roomType===tipo))
   ,[allRes]);
 
   const resCur  = useMemo(()=>filterRes(...ranges.cur,filtroTipo),[filterRes,ranges,filtroTipo]);
@@ -12015,21 +12079,28 @@ function StatisticheModule({ reservations=[], guests=[], rooms=[] }) {
   // ─── KPI CALC ─────────────────────────────────────────────────────
   const calcKPI = useCallback((res,from,to)=>{
     const giorni=Math.max(1,Math.round((new Date(to)-new Date(from))/86400000));
-    const filteredRooms = filtroTipo==="tutti" ? ROOMS : ROOMS.filter(r=>r.type===filtroTipo);
+    const filteredRooms = filtroTipo==="tutti" ? liveRooms : liveRooms.filter(r=>r.type===filtroTipo);
     const totCam=filteredRooms.length;
     const dispNotti=totCam*giorni;
-    const venduteNotti=res.reduce((s,r)=>s+(r.notti||1),0);
-    const revCam=res.reduce((s,r)=>s+((r.prezzo||90)*(r.notti||1)),0);
-    const revSvc=res.reduce((s,r)=>s+Math.max(0,(r.totale||0)-((r.prezzo||90)*(r.notti||1))),0);
-    const n=res.length;
+    const nonCanc=res.filter(r=>r.status!=="cancelled");
+    const venduteNotti=nonCanc.reduce((s,r)=>s+(r.notti||1),0);
+    const revCam=nonCanc.reduce((s,r)=>s+(r.revCam||0),0);
+    const revSvc=nonCanc.reduce((s,r)=>s+(r.revSvc||0)+(r.revExtra||0),0);
+    const n=nonCanc.length;
+    const nCanc=res.filter(r=>r.status==="cancelled").length;
+    const nGrp=nonCanc.filter(r=>r.tipo==="gruppo").length;
+    const nNoShow=nonCanc.filter(r=>r.status==="no-show").length;
     return {
-      occ:   dispNotti>0?Math.min(100,(venduteNotti/dispNotti)*100):0,
-      adr:   venduteNotti>0?revCam/venduteNotti:0,
-      revpar:dispNotti>0?revCam/dispNotti:0,
-      trevpar:dispNotti>0?(revCam+revSvc)/dispNotti:0,
-      los:   n>0?venduteNotti/n:0,
-      rev:   revCam+revSvc,
-      revCam,revSvc,n,venduteNotti,dispNotti,
+      occ:     dispNotti>0?Math.min(100,(venduteNotti/dispNotti)*100):0,
+      adr:     venduteNotti>0?revCam/venduteNotti:0,
+      revpar:  dispNotti>0?revCam/dispNotti:0,
+      trevpar: dispNotti>0?(revCam+revSvc)/dispNotti:0,
+      los:     n>0?venduteNotti/n:0,
+      rev:     revCam+revSvc,
+      revCam, revSvc, n, venduteNotti, dispNotti,
+      nCanc, nGrp, nNoShow,
+      ospiti:  nonCanc.reduce((s,r)=>s+(r.guests||r.adulti||1),0),
+      bednights: nonCanc.reduce((s,r)=>s+(r.notti||1)*((r.guests||r.adulti||1)),0),
     };
   },[filtroTipo]);
 
@@ -12046,14 +12117,14 @@ function StatisticheModule({ reservations=[], guests=[], rooms=[] }) {
   // ─── TREND MENSILE ────────────────────────────────────────────────
   const trendMensile = useMemo(()=>{
     const mesi=[];
-    const base=new Date("2026-02-26");
+    const base=new Date();
     for(let i=11;i>=0;i--){
       const d=new Date(base); d.setMonth(d.getMonth()-i);
       const key=d.toISOString().slice(0,7);
       const label=d.toLocaleDateString("it-IT",{month:"short"}).slice(0,3).toUpperCase();
       const res=allRes.filter(r=>r.checkIn?.startsWith(key)&&r.status!=="cancelled"&&(filtroTipo==="tutti"||r.roomType===filtroTipo));
       const giorni=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
-      const filteredRooms=filtroTipo==="tutti"?ROOMS:ROOMS.filter(r=>r.type===filtroTipo);
+      const filteredRooms=filtroTipo==="tutti"?liveRooms:liveRooms.filter(r=>r.type===filtroTipo);
       const disp=filteredRooms.length*giorni;
       const notti=res.reduce((s,r)=>s+(r.notti||1),0);
       const rev=res.reduce((s,r)=>s+((r.prezzo||90)*(r.notti||1)),0);
@@ -12068,7 +12139,7 @@ function StatisticheModule({ reservations=[], guests=[], rooms=[] }) {
 
   // Sparkline data per KPI
   const sparklines = useMemo(()=>{
-    const base=new Date("2026-02-26");
+    const base=new Date();
     return ["occ","adr","revpar","rev","los"].reduce((acc,k)=>{
       acc[k]=Array.from({length:8},(_,i)=>{
         const d=new Date(base);d.setMonth(d.getMonth()-(7-i));
@@ -12077,7 +12148,7 @@ function StatisticheModule({ reservations=[], guests=[], rooms=[] }) {
         const giorni=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
         const disp=ROOMS.length*giorni;
         const notti=res.reduce((s,r)=>s+(r.notti||1),0);
-        const rev=res.reduce((s,r)=>s+((r.prezzo||90)*(r.notti||1)),0);
+        const rev=res.reduce((s,r)=>s+(r.revCam||0),0);
         if(k==="occ")    return disp>0?notti/disp*100:0;
         if(k==="adr")    return notti>0?rev/notti:0;
         if(k==="revpar") return disp>0?rev/disp:0;
@@ -12093,7 +12164,7 @@ function StatisticheModule({ reservations=[], guests=[], rooms=[] }) {
   const heatData = useMemo(()=>{
     const DOW=["Lun","Mar","Mer","Gio","Ven","Sab","Dom"];
     const MESI_12=[];
-    const base=new Date("2026-02-26");
+    const base=new Date();
     for(let i=5;i>=0;i--){const d=new Date(base);d.setMonth(d.getMonth()-i);MESI_12.push(d.toISOString().slice(0,7));}
     const grid=DOW.map(()=>MESI_12.map(()=>0));
     const cnt =DOW.map(()=>MESI_12.map(()=>0));
@@ -12105,7 +12176,7 @@ function StatisticheModule({ reservations=[], guests=[], rooms=[] }) {
       const mi=MESI_12.indexOf(mkey);
       if(mi>=0){grid[dow][mi]+=(r.notti||1);cnt[dow][mi]++;}
     });
-    const flatRooms=ROOMS.length;
+    const flatRooms=liveRooms.length;
     const maxVal=Math.max(1,...grid.flat());
     return{
       rows:DOW,
@@ -12117,16 +12188,22 @@ function StatisticheModule({ reservations=[], guests=[], rooms=[] }) {
 
   // ─── PERFORMANCE PER TIPO CAMERA ─────────────────────────────────
   const perfTipo = useMemo(()=>{
-    const tipi=[...new Set(ROOMS.map(r=>r.type))];
+    const tipi=[...new Set(liveRooms.map(r=>r.type))];
     return tipi.map(tipo=>{
       const res=resCur.filter(r=>r.roomType===tipo);
-      const nc=ROOMS.filter(r=>r.type===tipo).length;
+      const nc=liveRooms.filter(r=>r.type===tipo).length;
       const giorni=Math.max(1,Math.round((new Date(ranges.cur[1])-new Date(ranges.cur[0]))/86400000));
-      const disp=nc*giorni,notti=res.reduce((s,r)=>s+(r.notti||1),0);
-      const rev=res.reduce((s,r)=>s+((r.prezzo||90)*(r.notti||1)),0);
-      return{tipo,nc,res:res.length,occ:disp>0?Math.min(100,notti/disp*100):0,adr:notti>0?rev/notti:0,revpar:disp>0?rev/disp:0,rev};
+      const disp=nc*giorni;
+      const notti=res.reduce((s,r)=>s+(r.notti||1),0);
+      const rev=res.reduce((s,r)=>s+(r.revCam||0),0);
+      const revSvc=res.reduce((s,r)=>s+(r.revSvc||0)+(r.revExtra||0),0);
+      return{tipo,nc,res:res.length,
+        occ:disp>0?Math.min(100,notti/disp*100):0,
+        adr:notti>0?rev/notti:0,
+        revpar:disp>0?rev/disp:0,
+        rev, revTot:rev+revSvc};
     }).sort((a,b)=>b.rev-a.rev);
-  },[resCur,ranges]);
+  },[resCur,ranges,liveRooms]);
 
   // ─── TOP NAZIONALITÀ ─────────────────────────────────────────────
   const topNaz = useMemo(()=>{
@@ -12154,7 +12231,7 @@ function StatisticheModule({ reservations=[], guests=[], rooms=[] }) {
   const fN  = n=>(n||0).toFixed(1);
 
   // ─── TIPI CAMERA per filtro ───────────────────────────────────────
-  const tipiCamera = [...new Set(ROOMS.map(r=>r.type))];
+  const tipiCamera = [...new Set(liveRooms.map(r=>r.type))];
 
   // Heatmap color fn
   const heatColor = (v)=>{
@@ -12191,6 +12268,8 @@ function StatisticheModule({ reservations=[], guests=[], rooms=[] }) {
     {k:"revenue",icon:"◆",label:"Revenue"},
     {k:"ospiti",icon:"◉",label:"Ospiti"},
     {k:"camere",icon:"▣",label:"Camere"},
+    {k:"gruppi",icon:"🏨",label:"Gruppi"},
+    {k:"produzione",icon:"📊",label:"Produzione"},
     {k:"booking",icon:"◎",label:"Booking"},
   ];
 
@@ -12266,10 +12345,12 @@ function StatisticheModule({ reservations=[], guests=[], rooms=[] }) {
       {sezione==="overview"&&(
         <div>
           {/* KPI Row */}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:20}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:8,marginBottom:20}}>
             <KPICard label="Occupancy"   val={fP(kpiCur.occ)}    delta={delta(kpiCur.occ,kpiPrev.occ)}    spark={sparklines.occ}    sparkColor={BI.cyan}   icon="◈"/>
             <KPICard label="ADR"         val={fE(kpiCur.adr)}    delta={delta(kpiCur.adr,kpiPrev.adr)}    spark={sparklines.adr}    sparkColor={BI.green}  icon="◆"/>
             <KPICard label="RevPAR"      val={fE(kpiCur.revpar)} delta={delta(kpiCur.revpar,kpiPrev.revpar)} spark={sparklines.revpar} sparkColor={BI.purple} icon="◉"/>
+            <KPICard label="Bednights"   val={(kpiCur.venduteNotti||0).toLocaleString("it-IT")}  delta={delta(kpiCur.venduteNotti,kpiPrev.venduteNotti)} sparkColor={BI.cyan}  icon="🌙"/>
+            <KPICard label="Soggiorni"   val={(kpiCur.n||0).toLocaleString("it-IT")}             delta={delta(kpiCur.n,kpiPrev.n)}                        sparkColor={BI.text3} icon="📋"/>
             <KPICard label="LOS medio"   val={fN(kpiCur.los)}    delta={delta(kpiCur.los,kpiPrev.los)}     spark={sparklines.los}    sparkColor={BI.amber}  unit="notti" icon="▣"/>
             <KPICard label="Revenue"     val={fE(kpiCur.rev)}    delta={delta(kpiCur.rev,kpiPrev.rev)}     spark={sparklines.rev}    sparkColor={BI.green}  icon="◎"/>
           </div>
@@ -12441,7 +12522,7 @@ function StatisticheModule({ reservations=[], guests=[], rooms=[] }) {
           <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:20}}>
             {[
               {label:"Soggiorni",val:kpiCur.n,dlt:delta(kpiCur.n,kpiPrev.n),color:BI.cyan},
-              {label:"Ospiti totali",val:kpiCur.n>0?Math.round(kpiCur.n*1.8):0,color:BI.green},
+              {label:"Ospiti totali",val:resCur.reduce((s,r)=>s+(r.guests||r.adulti||1),0),color:BI.green},
               {label:"LOS medio",val:fN(kpiCur.los)+" notti",dlt:delta(kpiCur.los,kpiPrev.los),color:BI.purple},
               {label:"Mercati attivi",val:topNaz.length,color:BI.amber},
             ].map((k,i)=>(
@@ -12593,6 +12674,421 @@ function StatisticheModule({ reservations=[], guests=[], rooms=[] }) {
       )}
 
       {/* ════════ BOOKING WINDOW ════════ */}
+      {sezione==="gruppi"&&(
+        <div>
+          {/* ── KPI gruppi ── */}
+          {(() => {
+            const oggi = new Date().toISOString().slice(0,10);
+            const grpAttivi    = gruppi.filter(g=>g.checkOut>=oggi||!g.checkOut);
+            const allGrpRes    = reservations.filter(r=>r.tipo==="gruppo");
+            const totBednights = allGrpRes.filter(r=>r.status!=="cancelled").reduce((s,r)=>s+(r.notti||nights(r.checkIn,r.checkOut)||1),0);
+            const totRoomnights= allGrpRes.filter(r=>r.status!=="cancelled").length;
+            const totRevGrp    = allGrpRes.filter(r=>r.status!=="cancelled").reduce((s,r)=>s+(r.revCam||0),0);
+            const nCanc        = allGrpRes.filter(r=>r.status==="cancelled").length;
+            const nGrat        = allGrpRes.filter(r=>r.gratuita).length;
+
+            // Per azienda
+            const byAzienda = {};
+            gruppi.forEach(g=>{
+              const nome = g.aziendaNome||g.azienda||"—";
+              if(!byAzienda[nome]) byAzienda[nome]={nome,grp:0,cam:0,bnights:0,rev:0,canc:0};
+              byAzienda[nome].grp++;
+              const gRes=reservations.filter(r=>r.gruppoId===g.id);
+              byAzienda[nome].cam+=gRes.filter(r=>r.status!=="cancelled").length;
+              byAzienda[nome].bnights+=gRes.filter(r=>r.status!=="cancelled").reduce((s,r)=>s+(r.notti||1),0);
+              byAzienda[nome].rev+=gRes.filter(r=>r.status!=="cancelled").reduce((s,r)=>s+(r.revCam||0),0);
+              byAzienda[nome].canc+=gRes.filter(r=>r.status==="cancelled").length;
+            });
+
+            // Per agenzia
+            const byAgenzia = {};
+            gruppi.filter(g=>g.agenziaNome).forEach(g=>{
+              const nome=g.agenziaNome;
+              if(!byAgenzia[nome]) byAgenzia[nome]={nome,grp:0,cam:0,bnights:0,rev:0,comm:g.agenziaCommissione||0};
+              byAgenzia[nome].grp++;
+              const gRes=reservations.filter(r=>r.gruppoId===g.id&&r.status!=="cancelled");
+              byAgenzia[nome].cam+=gRes.length;
+              byAgenzia[nome].bnights+=gRes.reduce((s,r)=>s+(r.notti||1),0);
+              byAgenzia[nome].rev+=gRes.reduce((s,r)=>s+(r.revCam||0),0);
+            });
+
+            // Per canale
+            const byCan={};
+            gruppi.forEach(g=>{
+              const k=g.canale||"diretto";
+              if(!byCan[k]) byCan[k]={k,grp:0,cam:0,rev:0};
+              byCan[k].grp++; byCan[k].cam+=reservations.filter(r=>r.gruppoId===g.id&&r.status!=="cancelled").length;
+              byCan[k].rev+=reservations.filter(r=>r.gruppoId===g.id&&r.status!=="cancelled").reduce((s,r)=>s+(r.revCam||0),0);
+            });
+
+            // Per stato
+            const byStato={opzione:0,opzione_deposito:0,garantita:0};
+            gruppi.forEach(g=>{ if(byStato[g.stato]!==undefined) byStato[g.stato]++; });
+
+            const fE = v=>`€${(v||0).toLocaleString("it-IT",{minimumFractionDigits:0})}`;
+            const aziendaList = Object.values(byAzienda).sort((a,b)=>b.bnights-a.bnights);
+            const agenziaList = Object.values(byAgenzia).sort((a,b)=>b.bnights-a.bnights);
+
+            return (
+              <div>
+                {/* KPI cards */}
+                <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:10,marginBottom:20}}>
+                  {[
+                    {l:"Gruppi totali",    v:gruppi.length,       c:BI.cyan},
+                    {l:"Gruppi attivi",    v:grpAttivi.length,    c:BI.green},
+                    {l:"Roomnights grp",   v:totRoomnights,       c:BI.amber},
+                    {l:"Bednights grp",    v:totBednights,        c:BI.purple||"#9b59b6"},
+                    {l:"Revenue gruppi",   v:fE(totRevGrp),       c:BI.yellow||"#f1c40f"},
+                    {l:"Camere gratuite",  v:nGrat,               c:BI.green},
+                  ].map(k=>(
+                    <div key={k.l} style={{background:BI.surface,border:`1px solid ${BI.border}`,
+                      borderRadius:8,padding:"12px 14px"}}>
+                      <div style={{fontSize:9,color:BI.text3,textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>{k.l}</div>
+                      <div style={{fontSize:18,fontWeight:800,color:k.c,fontFamily:"'IBM Plex Mono',monospace"}}>{k.v}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Stato prenotazioni */}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:20}}>
+                  <div style={{background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:8,padding:14}}>
+                    <div style={{fontSize:12,fontWeight:700,color:BI.text,marginBottom:12}}>Stato prenotazioni gruppo</div>
+                    {[
+                      {k:"opzione",         label:"🔵 Opzione",            c:"#1565c0"},
+                      {k:"opzione_deposito", label:"🟡 Opzione + Deposito", c:"#e65100"},
+                      {k:"garantita",        label:"🟢 Garantita",          c:"#1b7a4a"},
+                    ].map(s=>{
+                      const tot=gruppi.length||1;
+                      const pct=((byStato[s.k]||0)/tot*100).toFixed(0);
+                      return (
+                        <div key={s.k} style={{marginBottom:10}}>
+                          <div style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:4}}>
+                            <span style={{color:BI.text2}}>{s.label}</span>
+                            <span style={{fontWeight:700,color:s.c}}>{byStato[s.k]||0} ({pct}%)</span>
+                          </div>
+                          <div style={{height:6,background:BI.surface3,borderRadius:3,overflow:"hidden"}}>
+                            <div style={{width:`${pct}%`,height:"100%",background:s.c,borderRadius:3,transition:"width .4s"}}/>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div style={{background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:8,padding:14}}>
+                    <div style={{fontSize:12,fontWeight:700,color:BI.text,marginBottom:12}}>Produzione per canale</div>
+                    {Object.values(byCan).sort((a,b)=>b.rev-a.rev).map((c,i)=>{
+                      const maxR=Math.max(...Object.values(byCan).map(x=>x.rev),1);
+                      return (
+                        <div key={c.k} style={{marginBottom:8}}>
+                          <div style={{display:"flex",justifyContent:"space-between",fontSize:11,marginBottom:3}}>
+                            <span style={{color:BI.text2,textTransform:"capitalize"}}>{c.k||"—"}</span>
+                            <span style={{fontWeight:700,color:BI.cyan}}>{fE(c.rev)} · {c.cam} cam</span>
+                          </div>
+                          <div style={{height:5,background:BI.surface3,borderRadius:3}}>
+                            <div style={{width:`${c.rev/maxR*100}%`,height:"100%",
+                              background:BI.series[i%BI.series.length]||BI.cyan,borderRadius:3}}/>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {Object.keys(byCan).length===0&&<div style={{color:BI.text3,fontSize:12}}>Nessun dato canale</div>}
+                  </div>
+                </div>
+
+                {/* Produzione per azienda */}
+                <div style={{background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:8,padding:14,marginBottom:14}}>
+                  <div style={{fontSize:12,fontWeight:700,color:BI.text,marginBottom:12}}>
+                    🏢 Produzione per Azienda
+                  </div>
+                  {aziendaList.length===0?(
+                    <div style={{color:BI.text3,fontSize:12}}>Nessun dato azienda disponibile</div>
+                  ):(
+                    <>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 60px 80px 90px 70px 50px",
+                        gap:8,padding:"6px 10px",background:BI.surface2,borderRadius:4,
+                        fontSize:9,fontWeight:700,color:BI.text3,textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>
+                        <div>Azienda</div><div>Gruppi</div><div>Roomnights</div>
+                        <div>Bednights</div><div>Revenue</div><div>Canc.</div>
+                      </div>
+                      {aziendaList.map((a,i)=>(
+                        <div key={a.nome} style={{display:"grid",
+                          gridTemplateColumns:"1fr 60px 80px 90px 70px 50px",
+                          gap:8,padding:"8px 10px",borderBottom:`1px solid ${BI.border}`,
+                          background:i%2===0?BI.surface:BI.surface2,fontSize:12,alignItems:"center"}}>
+                          <div style={{fontWeight:600,color:BI.text}}>{a.nome}</div>
+                          <div style={{textAlign:"center",color:BI.text3}}>{a.grp}</div>
+                          <div style={{textAlign:"center",fontWeight:700,color:BI.cyan}}>{a.cam}</div>
+                          <div style={{textAlign:"center",fontWeight:700,color:BI.amber}}>{a.bnights}</div>
+                          <div style={{textAlign:"right",fontWeight:700,color:BI.green}}>{fE(a.rev)}</div>
+                          <div style={{textAlign:"center",color:a.canc>0?BI.red:BI.text3}}>{a.canc||"—"}</div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+
+                {/* Produzione per agenzia */}
+                <div style={{background:BI.surface,border:`1px solid ${BI.border}`,borderRadius:8,padding:14}}>
+                  <div style={{fontSize:12,fontWeight:700,color:BI.text,marginBottom:12}}>
+                    ✈️ Produzione per Agenzia / TO
+                  </div>
+                  {agenziaList.length===0?(
+                    <div style={{color:BI.text3,fontSize:12}}>Nessuna agenzia collegata ai gruppi</div>
+                  ):(
+                    <>
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 60px 80px 90px 70px 60px",
+                        gap:8,padding:"6px 10px",background:BI.surface2,borderRadius:4,
+                        fontSize:9,fontWeight:700,color:BI.text3,textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>
+                        <div>Agenzia</div><div>Gruppi</div><div>Roomnights</div>
+                        <div>Bednights</div><div>Revenue</div><div>Comm.%</div>
+                      </div>
+                      {agenziaList.map((a,i)=>(
+                        <div key={a.nome} style={{display:"grid",
+                          gridTemplateColumns:"1fr 60px 80px 90px 70px 60px",
+                          gap:8,padding:"8px 10px",borderBottom:`1px solid ${BI.border}`,
+                          background:i%2===0?BI.surface:BI.surface2,fontSize:12,alignItems:"center"}}>
+                          <div style={{fontWeight:600,color:BI.text}}>{a.nome}</div>
+                          <div style={{textAlign:"center",color:BI.text3}}>{a.grp}</div>
+                          <div style={{textAlign:"center",fontWeight:700,color:BI.cyan}}>{a.cam}</div>
+                          <div style={{textAlign:"center",fontWeight:700,color:BI.amber}}>{a.bnights}</div>
+                          <div style={{textAlign:"right",fontWeight:700,color:BI.green}}>{fE(a.rev)}</div>
+                          <div style={{textAlign:"center",color:BI.text3}}>{a.comm>0?`${a.comm}%`:"—"}</div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+
+      {/* ════════ PRODUZIONE ════════ */}
+      {sezione==="produzione"&&(()=>{
+        // ── Produzione individuale (per ogni cliente) ─────────────────
+        const byContatto={};
+        reservations.filter(r=>r.status!=="cancelled").forEach(r=>{
+          const g=guests.find(x=>x.id===r.guestId);
+          const nome=g?`${g.cognome||""} ${g.nome||""}`.trim():r.guestName||"Sconosciuto";
+          if(!byContatto[nome]) byContatto[nome]={nome,res:0,notti:0,ospiti:0,rev:0,canc:0,noshow:0};
+          byContatto[nome].res++;
+          byContatto[nome].notti+=r.notti||1;
+          byContatto[nome].ospiti+=(r.guests||r.adulti||1);
+          byContatto[nome].rev+=(r.revCam||0);
+        });
+        reservations.filter(r=>r.status==="cancelled").forEach(r=>{
+          const g=guests.find(x=>x.id===r.guestId);
+          const nome=g?`${g.cognome||""} ${g.nome||""}`.trim():r.guestName||"Sconosciuto";
+          if(!byContatto[nome]) byContatto[nome]={nome,res:0,notti:0,ospiti:0,rev:0,canc:0,noshow:0};
+          byContatto[nome].canc++;
+        });
+        reservations.filter(r=>r.status==="no-show").forEach(r=>{
+          const g=guests.find(x=>x.id===r.guestId);
+          const nome=g?`${g.cognome||""} ${g.nome||""}`.trim():r.guestName||"";
+          if(byContatto[nome]) byContatto[nome].noshow++;
+        });
+
+        // ── Produzione per azienda ──────────────────────────────────
+        const byAzienda={};
+        const allNonCanc=allRes.filter(r=>r.status!=="cancelled");
+        allNonCanc.forEach(r=>{
+          const grp=r.gruppoId?gruppi.find(g=>g.id===r.gruppoId):null;
+          let az=grp?.aziendaNome||grp?.azienda||"";
+          if(!az){
+            const g=guests.find(x=>x.id===r.guestId);
+            az=g?.azienda||"";
+          }
+          if(!az) az="—";
+          if(!byAzienda[az]) byAzienda[az]={nome:az,res:0,bnights:0,rnights:0,rev:0,canc:0,noshow:0,gruppi:new Set()};
+          byAzienda[az].res++;
+          byAzienda[az].bnights+=(r.notti||1)*((r.guests||r.adulti||1));
+          byAzienda[az].rnights+=(r.notti||1);
+          byAzienda[az].rev+=(r.revCam||0);
+          if(r.gruppoId) byAzienda[az].gruppi.add(r.gruppoId);
+        });
+        reservations.filter(r=>r.status==="cancelled").forEach(r=>{
+          const grp=r.gruppoId?gruppi.find(g=>g.id===r.gruppoId):null;
+          const az=grp?.aziendaNome||grp?.azienda||"—";
+          if(byAzienda[az]) byAzienda[az].canc++;
+        });
+        reservations.filter(r=>r.status==="no-show").forEach(r=>{
+          const grp=r.gruppoId?gruppi.find(g=>g.id===r.gruppoId):null;
+          const az=grp?.aziendaNome||grp?.azienda||"—";
+          if(byAzienda[az]) byAzienda[az].noshow++;
+        });
+
+        // ── Produzione per agenzia ──────────────────────────────────
+        const byAgenzia={};
+        gruppi.forEach(grp=>{
+          if(!grp.agenziaNome) return;
+          const ag=grp.agenziaNome;
+          if(!byAgenzia[ag]) byAgenzia[ag]={nome:ag,iata:grp.agenziaIata||"",comm:grp.agenziaCommissione||0,grp:0,rnights:0,bnights:0,rev:0,canc:0,noshow:0};
+          byAgenzia[ag].grp++;
+          const gRes=allRes.filter(r=>r.gruppoId===grp.id);
+          gRes.filter(r=>r.status!=="cancelled").forEach(r=>{
+            byAgenzia[ag].rnights+=(r.notti||1);
+            byAgenzia[ag].bnights+=(r.notti||1)*((r.guests||r.adulti||1));
+            byAgenzia[ag].rev+=(r.revCam||0);
+          });
+          gRes.filter(r=>r.status==="cancelled").forEach(()=>{ byAgenzia[ag].canc++; });
+          gRes.filter(r=>r.status==="no-show").forEach(()=>{ byAgenzia[ag].noshow++; });
+        });
+
+        const fE=v=>`€${(v||0).toLocaleString("it-IT",{maximumFractionDigits:0})}`;
+        const contattoList=Object.values(byContatto).filter(c=>c.nome!=="—").sort((a,b)=>b.rnights-a.rnights).slice(0,50);
+        const aziendaList=Object.values(byAzienda).filter(a=>a.nome!=="—").sort((a,b)=>b.rnights-a.rnights);
+        const agenziaList=Object.values(byAgenzia).sort((a,b)=>b.rnights-a.rnights);
+
+        const TableHead=({cols})=>(
+          <div style={{display:"grid",gridTemplateColumns:cols,gap:8,
+            padding:"7px 12px",background:BI.surface2,borderRadius:"6px 6px 0 0",
+            border:`1px solid ${BI.border}`,
+            fontSize:10,fontWeight:700,color:BI.text3,textTransform:"uppercase",letterSpacing:.5}}>
+          </div>
+        );
+
+        const thStyle={padding:"7px 10px",textAlign:"left",fontSize:10,fontWeight:700,
+          letterSpacing:.5,textTransform:"uppercase",color:BI.text3,borderBottom:`1px solid ${BI.border}`};
+        const tdStyle={padding:"9px 10px",fontSize:12,borderBottom:`1px solid ${BI.border}`};
+
+        return (
+          <div>
+            {/* ── KPI sommario produzione ── */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:20}}>
+              {[
+                {l:"Soggiorni attivi", v:allNonCanc.length,                       c:BI.cyan},
+                {l:"Bednights totali", v:allNonCanc.reduce((s,r)=>s+(r.notti||1)*((r.guests||r.adulti||1)),0), c:BI.green},
+                {l:"Roomnights",       v:allNonCanc.reduce((s,r)=>s+(r.notti||1),0), c:BI.amber},
+                {l:"Cancellazioni",    v:reservations.filter(r=>r.status==="cancelled").length, c:BI.red},
+                {l:"No Show",          v:reservations.filter(r=>r.status==="no-show").length,  c:BI.purple},
+              ].map(k=>(
+                <div key={k.l} style={{background:BI.surface,border:`1px solid ${BI.border}`,
+                  borderRadius:8,padding:"12px 14px"}}>
+                  <div style={{fontSize:9,color:BI.text3,textTransform:"uppercase",
+                    letterSpacing:1,marginBottom:4}}>{k.l}</div>
+                  <div style={{fontSize:22,fontWeight:800,color:k.c,
+                    fontFamily:"'IBM Plex Mono',monospace"}}>{k.v.toLocaleString("it-IT")}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* ── Produzione per azienda ── */}
+            <div style={{background:BI.surface,border:`1px solid ${BI.border}`,
+              borderRadius:8,padding:14,marginBottom:14}}>
+              <div style={{fontSize:13,fontWeight:700,color:BI.text,marginBottom:12}}>
+                🏢 Produzione per Azienda
+              </div>
+              {aziendaList.length===0?(
+                <div style={{color:BI.text3,fontSize:12}}>Nessun dato azienda — collega le prenotazioni all'anagrafica aziende</div>
+              ):(
+                <div style={{overflowX:"auto"}}>
+                  <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,minWidth:700}}>
+                    <thead>
+                      <tr>
+                        {["Azienda","Soggiorni","Roomnights","Bednights","Revenue","Gruppi","Canc.","No Show"].map(h=>(
+                          <th key={h} style={thStyle}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {aziendaList.map((a,i)=>(
+                        <tr key={a.nome} style={{background:i%2===0?BI.surface:BI.surface2}}>
+                          <td style={{...tdStyle,fontWeight:700,color:BI.text}}>{a.nome}</td>
+                          <td style={tdStyle}>{a.res}</td>
+                          <td style={{...tdStyle,fontWeight:700,color:BI.cyan}}>{a.rnights}</td>
+                          <td style={{...tdStyle,fontWeight:700,color:BI.amber}}>{a.bnights}</td>
+                          <td style={{...tdStyle,fontWeight:700,color:BI.green}}>{fE(a.rev)}</td>
+                          <td style={tdStyle}>{a.gruppi.size||0}</td>
+                          <td style={{...tdStyle,color:a.canc>0?BI.red:BI.text3}}>{a.canc||"—"}</td>
+                          <td style={{...tdStyle,color:a.noshow>0?BI.purple:BI.text3}}>{a.noshow||"—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* ── Produzione per agenzia ── */}
+            <div style={{background:BI.surface,border:`1px solid ${BI.border}`,
+              borderRadius:8,padding:14,marginBottom:14}}>
+              <div style={{fontSize:13,fontWeight:700,color:BI.text,marginBottom:12}}>
+                ✈️ Produzione per Agenzia / Tour Operator
+              </div>
+              {agenziaList.length===0?(
+                <div style={{color:BI.text3,fontSize:12}}>Nessuna agenzia collegata — aggiungi agenzie nei gruppi (Tab 1 · Contatti)</div>
+              ):(
+                <div style={{overflowX:"auto"}}>
+                  <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,minWidth:750}}>
+                    <thead>
+                      <tr>
+                        {["Agenzia","IATA","Gruppi","Roomnights","Bednights","Revenue","Comm. %","Val. comm.","Canc.","No Show"].map(h=>(
+                          <th key={h} style={thStyle}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {agenziaList.map((a,i)=>(
+                        <tr key={a.nome} style={{background:i%2===0?BI.surface:BI.surface2}}>
+                          <td style={{...tdStyle,fontWeight:700,color:BI.text}}>{a.nome}</td>
+                          <td style={{...tdStyle,color:BI.text3}}>{a.iata||"—"}</td>
+                          <td style={tdStyle}>{a.grp}</td>
+                          <td style={{...tdStyle,fontWeight:700,color:BI.cyan}}>{a.rnights}</td>
+                          <td style={{...tdStyle,fontWeight:700,color:BI.amber}}>{a.bnights}</td>
+                          <td style={{...tdStyle,fontWeight:700,color:BI.green}}>{fE(a.rev)}</td>
+                          <td style={tdStyle}>{a.comm>0?`${a.comm}%`:"—"}</td>
+                          <td style={{...tdStyle,color:BI.green}}>{a.comm>0?fE(a.rev*a.comm/100):"—"}</td>
+                          <td style={{...tdStyle,color:a.canc>0?BI.red:BI.text3}}>{a.canc||"—"}</td>
+                          <td style={{...tdStyle,color:a.noshow>0?BI.purple:BI.text3}}>{a.noshow||"—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* ── Top contatti individuali ── */}
+            <div style={{background:BI.surface,border:`1px solid ${BI.border}`,
+              borderRadius:8,padding:14}}>
+              <div style={{fontSize:13,fontWeight:700,color:BI.text,marginBottom:12}}>
+                👤 Top Contatti (per roomnights)
+              </div>
+              {contattoList.length===0?(
+                <div style={{color:BI.text3,fontSize:12}}>Nessun soggiorno registrato</div>
+              ):(
+                <div style={{overflowX:"auto"}}>
+                  <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,minWidth:600}}>
+                    <thead>
+                      <tr>
+                        {["Ospite","Soggiorni","Roomnights","Bednights","Revenue","Canc.","No Show"].map(h=>(
+                          <th key={h} style={thStyle}>{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {contattoList.map((c,i)=>(
+                        <tr key={c.nome} style={{background:i%2===0?BI.surface:BI.surface2}}>
+                          <td style={{...tdStyle,fontWeight:700,color:BI.text}}>{c.nome}</td>
+                          <td style={tdStyle}>{c.res}</td>
+                          <td style={{...tdStyle,fontWeight:700,color:BI.cyan}}>{c.notti}</td>
+                          <td style={{...tdStyle,fontWeight:700,color:BI.amber}}>{c.bnights}</td>
+                          <td style={{...tdStyle,fontWeight:700,color:BI.green}}>{fE(c.rev)}</td>
+                          <td style={{...tdStyle,color:c.canc>0?BI.red:BI.text3}}>{c.canc||"—"}</td>
+                          <td style={{...tdStyle,color:c.noshow>0?BI.purple:BI.text3}}>{c.noshow||"—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       {sezione==="booking"&&(
         <div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
@@ -12664,7 +13160,7 @@ function StatisticheModule({ reservations=[], guests=[], rooms=[] }) {
       {/* ── Footer ── */}
       <div style={{marginTop:20,padding:"8px 14px",borderRadius:6,border:`1px solid ${BI.border}`,
         fontSize:10,color:BI.text3,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        <span>KPI · Standard USALI · Dati dimostrativi integrati con dati PMS reali da Supabase</span>
+        <span>KPI · Standard USALI · Dati PMS reali · {reservations.filter(r=>r.status!=="cancelled").length} soggiorni attivi</span>
         <span style={{fontFamily:"'IBM Plex Mono',monospace",color:BI.text3}}>
           {resCur.length} records · aggiornato ora
           <span style={{display:"inline-block",width:6,height:6,borderRadius:"50%",background:BI.green,marginLeft:6,animation:"biPulse 2s infinite"}}/>
