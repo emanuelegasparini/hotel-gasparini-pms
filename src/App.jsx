@@ -10400,9 +10400,9 @@ function MICEModule({ reservations=[], setReservations=()=>{}, guests=[], setGue
 
       {/* BODY */}
       <div style={{ padding:24 }}>
-        {view === "dashboard"  && <Dashboard preventivi={preventivi} sale={sale} calcTotale={calcTotale} onNew={nuovoPreventivo} onView={p=>{setSelected(p);setView("dettaglio");}} />}
+        {view === "dashboard"  && <Dashboard preventivi={preventivi} sale={sale} calcTotale={calcTotale} onNew={nuovoPreventivo} onView={p=>{setSelected(p);setView("dettaglio");}} />}guests={guests}
         {view === "lista"      && <ListaPreventivi preventivi={listFiltrata} sale={sale} calcTotale={calcTotale} filterStato={filterStato} setFilterStato={setFilterStato} searchQ={searchQ} setSearchQ={setSearchQ} onNew={nuovoPreventivo} onEdit={editPreventivo} onView={p=>{setSelected(p);setView("dettaglio");}} onStato={cambiaStato} onDelete={eliminaPreventivo} />}
-        {view === "form"       && formData && <FormPreventivo data={formData} setData={setFormData} sale={sale} calcTotale={calcTotale} activeTab={activeTab} setActiveTab={setActiveTab} onSave={salvaPreventivo} onCancel={() => setView("lista")} reservations={reservations} />}
+        {view === "form"       && formData && <FormPreventivo data={formData} setData={setFormData} sale={sale} calcTotale={calcTotale} activeTab={activeTab} setActiveTab={setActiveTab} onSave={salvaPreventivo} onCancel={() => setView("lista")} reservations={reservations} guests={guests} />}
         {view === "dettaglio"  && selected && <DettaglioPreventivo prev={selected} sale={sale} calcTotale={calcTotale} onEdit={() => editPreventivo(selected)} onStato={cambiaStato} onDelete={eliminaPreventivo} onBack={() => setView("lista")} reservations={reservations} setReservations={setReservations} guests={guests} />}
         {view === "planning"  && <PlanningMeeting preventivi={preventivi} sale={sale} onNuovoPreventivo={nuovoPreventivo} />}
         {view === "ordini"    && <OrdiniServizio preventivi={preventivi} sale={sale} />}
@@ -10693,7 +10693,7 @@ const btnSmall = { padding:"5px 8px", borderRadius:5, border:`1px solid ${MC.bor
 // ════════════════════════════════════════════════════════════════
 //  FORM PREVENTIVO (multi-tab)
 // ════════════════════════════════════════════════════════════════
-function FormPreventivo({ data, setData, sale, calcTotale, activeTab, setActiveTab, onSave, onCancel, reservations=[] }) {
+function FormPreventivo({ data, setData, sale, calcTotale, activeTab, setActiveTab, onSave, onCancel, reservations=[], guests=[] }) {
   const upd = (path, val) => {
     setData(prev => {
       const clone = JSON.parse(JSON.stringify(prev));
