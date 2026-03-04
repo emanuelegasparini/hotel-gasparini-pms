@@ -2174,17 +2174,8 @@ Rispondi in italiano, in modo conciso e professionale.`;
       dbSaveGuest(newAg).catch(()=>{});
       gruppoForm = {...gruppoForm, agenziaId:newAg.id, _creaAgenzia:false};
     }
-   dbSaveGruppo(gruppoForm).catch((err) => {
-  console.error("❌ Errore salvataggio gruppo:", err);
-  showToast("Errore salvataggio gruppo: " + err.message, "error");
-});
-```
-
-Poi prova a salvare un gruppo — guarda la console (F12) e dimmi **esattamente cosa appare in rosso**.
-
-Nel frattempo, trovami anche la funzione `dbSaveGruppo` — cerca con `Ctrl+Shift+F`:
-```
-dbSaveGruppo
+    // ── Persiste gruppo su Supabase ───────────────────────────────────
+    dbSaveGruppo(gruppoForm).catch(()=>{});
 
     // ── genera prenotazioni dalla rooming list compilata ───────────────
     // Solo slot con camera assegnata E ospite: diventa una prenotazione reale
